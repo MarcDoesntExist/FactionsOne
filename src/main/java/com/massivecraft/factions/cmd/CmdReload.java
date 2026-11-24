@@ -3,30 +3,34 @@ package com.massivecraft.factions.cmd;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.struct.Permission;
 
-public class CmdReload extends FCommand
-{
-	
-	public CmdReload()
-	{
-		super();
-		this.aliases.add("reload");
-		
-		//this.requiredArgs.add("");
-		this.optionalArgs.put("file", "all");
-		
-		this.permission = Permission.RELOAD.node;
-		this.disableOnLock = false;
-		
-		senderMustBePlayer = false;
-		senderMustBeMember = false;
-		senderMustBeOfficer = false;
-		senderMustBeLeader = false;
-	}
-	
-	@Override
-	public void perform()
-	{
-		long timeInitStart = System.currentTimeMillis();
+/**
+ * @author drtshock
+ * @author externo6
+ * @author Olof Cayorion Larsson
+ * @author Brett Flannigan
+ * @author Daniel Saukel
+ */
+public class CmdReload extends FCommand {
+
+    public CmdReload() {
+        super();
+        this.aliases.add("reload");
+
+        //this.requiredArgs.add("");
+        this.optionalArgs.put("file", "all");
+
+        this.permission = Permission.RELOAD.node;
+        this.disableOnLock = false;
+
+        senderMustBePlayer = false;
+        senderMustBeMember = false;
+        senderMustBeOfficer = false;
+        senderMustBeLeader = false;
+    }
+
+    @Override
+    public void perform() {
+        long timeInitStart = System.currentTimeMillis();
 	/*	String file = this.argAsString(0, "all").toLowerCase();
 		
 		String fileName;
@@ -46,7 +50,7 @@ public class CmdReload extends FCommand
 			Factions.i.loadFromDisc();
 			fileName = "factions.json";
 		}
-		else if (file.startsWith("p"))
+		else if (file.startsWith("main"))
 		{
 			FPlayers.i.loadFromDisc();
 			fileName = "players.json";
@@ -61,16 +65,16 @@ public class CmdReload extends FCommand
 		}
 		else
 		{
-			P.p.log("RELOAD CANCELLED - SPECIFIED FILE INVALID");
+			Main.main.log("RELOAD CANCELLED - SPECIFIED FILE INVALID");
 			msg("<b>Invalid file specified. <i>Valid files: all, conf, board, factions, players");
 			return;
 		} */
-		Conf.load();
-		
-		long timeReload = (System.currentTimeMillis()-timeInitStart);
-		
-	//	msg("<i>Reloaded <h>%s <i>from disk, took <h>%dms<i>.", fileName, timeReload);
-		msg("<i>Reloaded <h>config <i>from disk, took <h>%dms<i>.", timeReload);
-	}
-	
+        Conf.load();
+
+        long timeReload = (System.currentTimeMillis() - timeInitStart);
+
+        //	msg("<i>Reloaded <h>%s <i>from disk, took <h>%dms<i>.", fileName, timeReload);
+        msg("<i>Reloaded <h>config <i>from disk, took <h>%dms<i>.", timeReload);
+    }
+
 }

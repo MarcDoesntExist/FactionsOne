@@ -1,241 +1,250 @@
 package com.massivecraft.factions.zcore.persist;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.Map.Entry;
-
-import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
 import com.google.gson.Gson;
-
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.zcore.util.DiscUtil;
 import com.massivecraft.factions.zcore.util.TextUtil;
 import com.massivecraft.factions.zcore.util.UUIDFetcher;
+import org.bukkit.Bukkit;
 
-public abstract class EntityCollection<E extends Entity>
-{	
-	// -------------------------------------------- //
-	// FIELDS
-	// -------------------------------------------- //
-	
-	// These must be instantiated in order to allow for different configuration (orders, comparators etc)
-	private Collection<E> entities;
-	protected Map<String, E> id2entity;
-	
-	// If the entities are creative they will create a new instance if a non existent id was requested
-	private boolean creative;
-	public boolean isCreative() { return creative; }
-	public void setCreative(boolean creative) { this.creative = creative; }
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.logging.Level;
 
-	// This is the auto increment for the primary key "id"
-	private int nextId;
-	
-	// This ugly crap is necessary due to java type erasure
-	private Class<E> entityClass;
-	public abstract Type getMapType(); // This is special stuff for GSON.
-	
-	// Info on how to persist
-	private Gson gson;
-	public Gson getGson() { return gson; }
-	public void setGson(Gson gson) { this.gson = gson; }
+/**
+ * @author drtshock
+ * @author externo6
+ * @author Olof Cayorion Larsson
+ * @author Brett Flannigan
+ * @author Daniel Saukel
+ */
+public abstract class EntityCollection<E extends Entity> {
+    // -------------------------------------------- //
+    // FIELDS
+    // -------------------------------------------- //
 
-	private File file;
-	public File getFile() { return file; }
-	public void setFile(File file) { this.file = file; }
-	
-	// -------------------------------------------- //
-	// CONSTRUCTORS
-	// -------------------------------------------- //
+    // These must be instantiated in order to allow for different configuration (orders, comparators etc)
+    private final Collection<E> entities;
+    // This ugly crap is necessary due to java type erasure
+    private final Class<E> entityClass;
+    protected Map<String, E> id2entity;
+    // If the entities are creative they will create a new instance if a non existent id was requested
+    private boolean creative;
+    // This is the auto increment for the primary key "id"
+    private int nextId;
+    // Info on how to persist
+    private Gson gson;
+    private File file;
+    // we don't want to let saveToDisc() run multiple iterations simultaneously
+    private boolean saveIsRunning = false;
 
-	public EntityCollection(Class<E> entityClass, Collection<E> entities, Map<String, E> id2entity, File file, Gson gson, boolean creative)
-	{
-		this.entityClass = entityClass;
-		this.entities = entities;
-		this.id2entity = id2entity;
-		this.file = file;
-		this.gson = gson;
-		this.creative = creative;
-		this.nextId = 1;
-		
-		EM.setEntitiesCollectionForEntityClass(this.entityClass, this);
-	}
-	
-	public EntityCollection(Class<E> entityClass, Collection<E> entities, Map<String, E> id2entity, File file, Gson gson)
-	{
-		this(entityClass, entities, id2entity, file, gson, false);
-	}
-	
-	// -------------------------------------------- //
-	// GET
-	// -------------------------------------------- //
+    public EntityCollection(Class<E> entityClass, Collection<E> entities, Map<String, E> id2entity,
+                            File file, Gson gson, boolean creative) {
+        this.entityClass = entityClass;
+        this.entities = entities;
+        this.id2entity = id2entity;
+        this.file = file;
+        this.gson = gson;
+        this.creative = creative;
+        this.nextId = 1;
 
-	public Collection<E> get()
-	{
-		return entities;
-	}
-	
-	public Map<String, E> getMap()
-	{
-		return this.id2entity;
-	}
-	
-	public E get(String id)
-	{
-		if (this.creative) return this.getCreative(id);
-		return id2entity.get(id);
-	}
-	
-	public E getCreative(String id)
-	{
-		E e = id2entity.get(id);
-		if (e != null) return e;
-		return this.create(id);
-	}
-	
-	public boolean exists(String id)
-	{
-		if (id == null) return false;
-		return id2entity.get(id) != null;
-	}
-	
-	public E getBestIdMatch(String pattern)
-	{
-		String id = TextUtil.getBestStartWithCI(this.id2entity.keySet(), pattern);
-		if (id == null) return null;
-		return this.id2entity.get(id);
-	}
-	
-	// -------------------------------------------- //
-	// CREATE
-	// -------------------------------------------- //
-	
-	public synchronized E create()
-	{
-		return this.create(this.getNextId());
-	}
-	
-	public synchronized E create(String id)
-	{
-		if ( ! this.isIdFree(id)) return null;
-		
-		E e = null;
-		try
-		{
-			e = this.entityClass.newInstance();
-		} catch (Exception ignored) {
-			ignored.printStackTrace();
-		}
-		
-		e.setId(id);
-		this.entities.add(e);
-		this.id2entity.put(e.getId(), e);
-		this.updateNextIdForId(id);
-		return e;
-	}
-	
-	// -------------------------------------------- //
-	// ATTACH AND DETACH
-	// -------------------------------------------- //
-	
-	public void attach(E entity)
-	{
-		if (entity.getId() != null) return;
-		entity.setId(this.getNextId());
-		this.entities.add(entity);
-		this.id2entity.put(entity.getId(), entity);
-	}
-	
-	public void detach(E entity)
-	{
-		entity.preDetach();
-		this.entities.remove(entity);
-		this.id2entity.remove(entity.getId());
-		entity.postDetach();
-	}
-	
-	public void detach(String id)
-	{
-		E entity = this.id2entity.get(id);
-		if (entity == null) return;
-		this.detach(entity);
-	}
-	
-	public boolean attached(E entity)
-	{
-		return this.entities.contains(entity);
-	}
-	
-	public boolean detached(E entity)
-	{
-		return ! this.attached(entity);
-	}
-	
-	// -------------------------------------------- //
-	// DISC
-	// -------------------------------------------- //
+        EM.setEntitiesCollectionForEntityClass(this.entityClass, this);
+    }
 
-	// we don't want to let saveToDisc() run multiple iterations simultaneously
-	private boolean saveIsRunning = false;
+    public EntityCollection(Class<E> entityClass, Collection<E> entities, Map<String, E> id2entity,
+                            File file, Gson gson) {
+        this(entityClass, entities, id2entity, file, gson, false);
+    }
 
-	public boolean saveToDisc()
-	{
-		if (saveIsRunning) return true;
-		saveIsRunning = true;
+    public boolean isCreative() {
+        return creative;
+    }
 
-		Map<String, E> entitiesThatShouldBeSaved = new HashMap<>();
-		for (E entity : this.entities)
-		{
-			if (entity.shouldBeSaved())
-			{
-				entitiesThatShouldBeSaved.put(entity.getId(), entity);
-			}
-		}
+    public void setCreative(boolean creative) {
+        this.creative = creative;
+    }
 
-		saveIsRunning = false;
-		return this.saveCore(this.file, entitiesThatShouldBeSaved);
-	}
-	
-	private boolean saveCore(File target, Map<String, E> entities) {
-		return DiscUtil.writeCatch(target, this.gson.toJson(entities));
-	}
-	
-	public boolean loadFromDisc()
-	{
-		Map<String, E> id2entity = this.loadCore();
-		if (id2entity == null) return false;
-		this.entities.clear();
-		this.entities.addAll(id2entity.values());
-		this.id2entity.clear();
-		this.id2entity.putAll(id2entity);
-		this.fillIds();
-		return true;
-	}
-	
-	private Map<String, E> loadCore()
-	{
-		if ( ! this.file.exists())
-		{
-			return new HashMap<>();
-		}
-		
-		String content = DiscUtil.readCatch(this.file);
-		if (content == null)
-		{
-			return null;
-		}
-		
+    public abstract Type getMapType(); // This is special stuff for GSON.
+
+    public Gson getGson() {
+        return gson;
+    }
+
+    // -------------------------------------------- //
+    // CONSTRUCTORS
+    // -------------------------------------------- //
+
+    public void setGson(Gson gson) {
+        this.gson = gson;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    // -------------------------------------------- //
+    // GET
+    // -------------------------------------------- //
+
+    public void setFile(File file) {
+        this.file = file;
+    }
+
+    public Collection<E> get() {
+        return entities;
+    }
+
+    public Map<String, E> getMap() {
+        return this.id2entity;
+    }
+
+    public E get(String id) {
+        if (this.creative)
+            return this.getCreative(id);
+        return id2entity.get(id);
+    }
+
+    public E getCreative(String id) {
+        E e = id2entity.get(id);
+        if (e != null)
+            return e;
+        return this.create(id);
+    }
+
+    public boolean exists(String id) {
+        if (id == null)
+            return false;
+        return id2entity.get(id) != null;
+    }
+
+    // -------------------------------------------- //
+    // CREATE
+    // -------------------------------------------- //
+
+    public E getBestIdMatch(String pattern) {
+        String id = TextUtil.getBestStartWithCI(this.id2entity.keySet(), pattern);
+        if (id == null)
+            return null;
+        return this.id2entity.get(id);
+    }
+
+    public synchronized E create() {
+        return this.create(this.getNextId());
+    }
+
+    // -------------------------------------------- //
+    // ATTACH AND DETACH
+    // -------------------------------------------- //
+
+    public synchronized E create(String id) {
+        if (!this.isIdFree(id))
+            return null;
+
+        E e = null;
+        try {
+            e = this.entityClass.getDeclaredConstructor().newInstance();
+        } catch (Exception ignored) {
+            ignored.printStackTrace();
+        }
+
+        e.setId(id);
+        this.entities.add(e);
+        this.id2entity.put(e.getId(), e);
+        this.updateNextIdForId(id);
+        return e;
+    }
+
+    public void attach(E entity) {
+        if (entity.getId() != null)
+            return;
+        entity.setId(this.getNextId());
+        this.entities.add(entity);
+        this.id2entity.put(entity.getId(), entity);
+    }
+
+    public void detach(E entity) {
+        entity.preDetach();
+        this.entities.remove(entity);
+        this.id2entity.remove(entity.getId());
+        entity.postDetach();
+    }
+
+    public void detach(String id) {
+        E entity = this.id2entity.get(id);
+        if (entity == null)
+            return;
+        this.detach(entity);
+    }
+
+    public boolean attached(E entity) {
+        return this.entities.contains(entity);
+    }
+
+    // -------------------------------------------- //
+    // DISC
+    // -------------------------------------------- //
+
+    public boolean detached(E entity) {
+        return !this.attached(entity);
+    }
+
+    public boolean saveToDisc() {
+        if (saveIsRunning)
+            return true;
+        saveIsRunning = true;
+
+        Map<String, E> entitiesThatShouldBeSaved = new HashMap<>();
+        for (E entity : this.entities) {
+            if (entity.shouldBeSaved()) {
+                entitiesThatShouldBeSaved.put(entity.getId(), entity);
+            }
+        }
+
+        saveIsRunning = false;
+        return this.saveCore(this.file, entitiesThatShouldBeSaved);
+    }
+
+    private boolean saveCore(File target, Map<String, E> entities) {
+        return DiscUtil.writeCatch(target, this.gson.toJson(entities));
+    }
+
+    public boolean loadFromDisc() {
+        Map<String, E> id2entity = this.loadCore();
+        if (id2entity == null)
+            return false;
+        this.entities.clear();
+        this.entities.addAll(id2entity.values());
+        this.id2entity.clear();
+        this.id2entity.putAll(id2entity);
+        this.fillIds();
+        return true;
+    }
+
+    private Map<String, E> loadCore() {
+        if (!this.file.exists()) {
+            return new HashMap<>();
+        }
+
+        String content = DiscUtil.readCatch(this.file);
+        if (content == null) {
+            return null;
+        }
+
         Type type = this.getMapType();
         if (type.toString().contains("FPlayer")) {
             Map<String, FPlayer> data = this.gson.fromJson(content, type);
+            if (data == null) {
+                return new HashMap<>();
+            }
             List<String> invalidNames = new ArrayList<String>();
             // Convert any leftover player names in this file
             ArrayList<String> list = new ArrayList<String>();
             for (String value : data.keySet()) {
-                if (!value.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
+                if (!value
+                        .matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
                     // Not a valid UUID..
                     if (!value.matches("[a-zA-Z0-9_]{2,16}")) {
                         // Not even a valid player name.. go ahead and mark it for removal
@@ -247,19 +256,22 @@ public abstract class EntityCollection<E extends Entity>
                 }
             }
             if (list.size() > 0) {
-            	//Got some converting to do
-                Bukkit.getLogger().log(Level.INFO, "Please wait while Factions converts " + list.size() + " old player names to UUID. This may take a while.");
-             // First we'll make a backup, because god forbid anybody heed a warning
-                                File file = new File(this.file.getParentFile(), "players.json.old");
-                                try {
-                                    file.createNewFile();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                                saveCore(file, (Map<String, E>) data);
-                                Bukkit.getLogger().log(Level.INFO, "Backed up your old data at " + file.getAbsolutePath());
-                
-                                // Start fetching those UUIDs
+                //Got some converting to do
+                Bukkit.getLogger().log(Level.INFO,
+                        "Please wait while Factions converts " + list.size()
+                                + " old player names to UUID. This may take a while.");
+                // First we'll make a backup, because god forbid anybody heed a warning
+                File file = new File(this.file.getParentFile(), "players.json.old");
+                try {
+                    file.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                saveCore(file, (Map<String, E>) data);
+                Bukkit.getLogger()
+                        .log(Level.INFO, "Backed up your old data at " + file.getAbsolutePath());
+
+                // Start fetching those UUIDs
                 UUIDFetcher fetcher = new UUIDFetcher(list);
                 try {
                     Map<String, UUID> response = fetcher.call();
@@ -294,8 +306,10 @@ public abstract class EntityCollection<E extends Entity>
                         // Remove all the invalid names we collected
                         data.remove(name);
                     }
-                    Bukkit.getLogger().log(Level.INFO, "While converting we found names that either don't have a UUID or aren't players and removed them from storage.");
-                    Bukkit.getLogger().log(Level.INFO, "The following names were detected as being invalid: " + StringUtils.join(invalidNames, ", "));
+                    Bukkit.getLogger().log(Level.INFO,
+                            "While converting we found names that either don't have a UUID or aren't players and removed them from storage.");
+                    Bukkit.getLogger().log(Level.INFO,
+                            "The following names were detected as being invalid: " + String.join(", ", invalidNames));
                 }
                 saveCore(this.file, (Map<String, E>) data);
                 Bukkit.getLogger().log(Level.INFO, "Done converting to UUID.");
@@ -305,11 +319,13 @@ public abstract class EntityCollection<E extends Entity>
         try {
             return this.gson.fromJson(content, type);
         } catch (Exception ex) {
-            Bukkit.getLogger().log(Level.WARNING, "JSON error encountered loading \"" + file + "\": " + ex.getLocalizedMessage());
+            Bukkit.getLogger().log(Level.WARNING,
+                    "JSON error encountered loading \"" + file + "\": " + ex.getLocalizedMessage());
 
             // backup bad file, so user can attempt to recover something from it
             File backup = new File(file.getPath() + "_bad");
-            if (backup.exists()) backup.delete();
+            if (backup.exists())
+                backup.delete();
             Bukkit.getLogger().log(Level.WARNING, "Backing up copy of bad file to: " + backup);
             file.renameTo(backup);
             return null;
@@ -317,55 +333,46 @@ public abstract class EntityCollection<E extends Entity>
         }
     }
 
-	// -------------------------------------------- //
-	// ID MANAGEMENT
-	// -------------------------------------------- //
-	
-	public String getNextId()
-	{
-		while ( ! isIdFree(this.nextId) )
-		{
-			this.nextId += 1;
-		}
-		return Integer.toString(this.nextId);
-	}
-	
-	public boolean isIdFree(String id)
-	{
-		return ! this.id2entity.containsKey(id);
-	}
-	public boolean isIdFree(int id)
-	{
-		return this.isIdFree(Integer.toString(id));
-	}
-	
-	protected synchronized void fillIds()
-	{
-		this.nextId = 1;
-		for(Entry<String, E> entry : this.id2entity.entrySet())
-		{
-			String id = entry.getKey();
-			E entity = entry.getValue();
-			entity.id = id;
-			this.updateNextIdForId(id);
-		}
-	}
-	
-	protected synchronized void updateNextIdForId(int id)
-	{
-		if (this.nextId < id)
-		{
-			this.nextId = id + 1;
-		}
-	}
-	
-	protected void updateNextIdForId(String id)
-	{
-		try
-		{
-			int idAsInt = Integer.parseInt(id);
-			this.updateNextIdForId(idAsInt);
-		}
-		catch (Exception ignored) { }
-	}
+    // -------------------------------------------- //
+    // ID MANAGEMENT
+    // -------------------------------------------- //
+
+    public String getNextId() {
+        while (!isIdFree(this.nextId)) {
+            this.nextId += 1;
+        }
+        return Integer.toString(this.nextId);
+    }
+
+    public boolean isIdFree(String id) {
+        return !this.id2entity.containsKey(id);
+    }
+
+    public boolean isIdFree(int id) {
+        return this.isIdFree(Integer.toString(id));
+    }
+
+    protected synchronized void fillIds() {
+        this.nextId = 1;
+        for (Entry<String, E> entry : this.id2entity.entrySet()) {
+            String id = entry.getKey();
+            E entity = entry.getValue();
+            entity.id = id;
+            this.updateNextIdForId(id);
+        }
+    }
+
+    protected synchronized void updateNextIdForId(int id) {
+        if (this.nextId < id) {
+            this.nextId = id + 1;
+        }
+    }
+
+    protected void updateNextIdForId(String id) {
+        try {
+            int idAsInt = Integer.parseInt(id);
+            this.updateNextIdForId(idAsInt);
+        } catch (Exception ignored) {
+        }
+    }
 }

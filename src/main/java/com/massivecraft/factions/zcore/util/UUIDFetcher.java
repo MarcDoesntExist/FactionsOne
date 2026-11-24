@@ -1,15 +1,13 @@
 package com.massivecraft.factions.zcore.util;
 
-import com.google.common.collect.ImmutableList;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import com.google.gson.*;
 
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -18,14 +16,15 @@ import java.util.concurrent.Callable;
  */
 
 public class UUIDFetcher implements Callable<Map<String, UUID>> {
-    private static final double PROFILES_PER_REQUEST = 100;
+    private static final int PROFILES_PER_REQUEST = 100;
+    private static final int TIMEOUT_MILLIS = 5000;
     private static final String PROFILE_URL = "https://api.mojang.com/profiles/minecraft";
-    private final JSONParser jsonParser = new JSONParser();
+    private final Gson gson = new Gson();
     private final List<String> names;
     private final boolean rateLimiting;
 
     public UUIDFetcher(List<String> names, boolean rateLimiting) {
-        this.names = ImmutableList.copyOf(names);
+        this.names = List.copyOf(names);
         this.rateLimiting = rateLimiting;
     }
 
@@ -33,48 +32,23 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
         this(names, true);
     }
 
-    public Map<String, UUID> call() throws Exception {
-        Map<String, UUID> uuidMap = new HashMap<String, UUID>();
-        int requests = (int) Math.ceil(names.size() / PROFILES_PER_REQUEST);
-        for (int i = 0; i < requests; i++) {
-            HttpURLConnection connection = createConnection();
-            String body = JSONArray.toJSONString(names.subList(i * 100, Math.min((i + 1) * 100, names.size())));
-            writeBody(connection, body);
-            JSONArray array = (JSONArray) jsonParser.parse(new InputStreamReader(connection.getInputStream()));
-            for (Object profile : array) {
-                JSONObject jsonProfile = (JSONObject) profile;
-                String id = (String) jsonProfile.get("id");
-                String name = (String) jsonProfile.get("name");
-                UUID uuid = UUIDFetcher.getUUID(id);
-                uuidMap.put(name, uuid);
-            }
-            if (rateLimiting && i != requests - 1) {
-                Thread.sleep(100L);
-            }
-        }
-        return uuidMap;
-    }
-
-    private static void writeBody(HttpURLConnection connection, String body) throws Exception {
-        OutputStream stream = connection.getOutputStream();
-        stream.write(body.getBytes());
-        stream.flush();
-        stream.close();
-    }
-
     private static HttpURLConnection createConnection() throws Exception {
-        URL url = new URL(PROFILE_URL);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        HttpURLConnection connection =
+                (HttpURLConnection) URI.create(PROFILE_URL).toURL().openConnection();
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setUseCaches(false);
         connection.setDoInput(true);
         connection.setDoOutput(true);
+        connection.setConnectTimeout(TIMEOUT_MILLIS);
+        connection.setReadTimeout(TIMEOUT_MILLIS);
         return connection;
     }
 
     private static UUID getUUID(String id) {
-    	return UUID.fromString(id.substring(0, 8) + "-" + id.substring(8, 12) + "-" + id.substring(12, 16) + "-" + id.substring(16, 20) + "-" + id.substring(20, 32));
+        return UUID.fromString(
+                id.substring(0, 8) + "-" + id.substring(8, 12) + "-" + id.substring(12, 16) + "-" + id
+                        .substring(16, 20) + "-" + id.substring(20, 32));
     }
 
     public static byte[] toBytes(UUID uuid) {
@@ -96,5 +70,55 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
 
     public static UUID getUUIDOf(String name) throws Exception {
         return new UUIDFetcher(Arrays.asList(name)).call().get(name);
+    }
+
+    public Map<String, UUID> call() throws Exception {
+        Map<String, UUID> uuidMap = new HashMap<String, UUID>();
+        int requests = (int) Math.ceil((double) names.size() / PROFILES_PER_REQUEST);
+        for (int i = 0; i < requests; i++) {
+            HttpURLConnection connection = createConnection();
+            try {
+                String body = gson
+                        .toJson(names.subList(i * PROFILES_PER_REQUEST,
+                                Math.min((i + 1) * PROFILES_PER_REQUEST, names.size())));
+                writeBody(connection, body);
+
+                int responseCode = connection.getResponseCode();
+                if (responseCode != HttpURLConnection.HTTP_OK) {
+                    throw new IllegalStateException(
+                            "Mojang profile lookup failed with HTTP " + responseCode);
+                }
+
+                JsonArray array;
+                try (InputStreamReader reader = new InputStreamReader(connection.getInputStream(),
+                        StandardCharsets.UTF_8)) {
+                    JsonElement parsed = JsonParser.parseReader(reader);
+                    if (!parsed.isJsonArray())
+                        return uuidMap;
+                    array = parsed.getAsJsonArray();
+                }
+
+                for (JsonElement element : array) {
+                    JsonObject profile = element.getAsJsonObject();
+                    String id = profile.get("id").getAsString();
+                    String name = profile.get("name").getAsString();
+                    uuidMap.put(name, getUUID(id));
+                }
+            } finally {
+                connection.disconnect();
+            }
+
+            if (rateLimiting && i != requests - 1) {
+                Thread.sleep(100L);
+            }
+        }
+        return uuidMap;
+    }
+
+    private void writeBody(HttpURLConnection connection, String body) throws Exception {
+        try (OutputStream stream = connection.getOutputStream()) {
+            stream.write(body.getBytes(StandardCharsets.UTF_8));
+            stream.flush();
+        }
     }
 }

@@ -16,12 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package de.erethon.factionsone;
+package com.massivecraft.factions.api;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 
 import java.util.HashSet;
 import java.util.Set;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
 
 /**
  * Workarounds to support API versions 1.7.10 - 1.13 and hopefully higher. For internal usage.
@@ -30,25 +31,33 @@ import org.bukkit.Material;
  */
 public class LegacyUtil {
 
-    public static String version = Bukkit.getServer().getVersion().split("\\(MC: ")[1].split("\\)")[0];
-
-    public static boolean is1_7 = version.equals("1.7.9") || version.equals("1.7.10");
-    public static boolean is1_8 = version.equals("1.8") || version.matches("1.8.*");
-    public static boolean is1_13 = !version.matches("(^|.*[^\\.\\d])1\\.1[0-2]([^\\d].*|$)") && !version.matches("(^|.*[^\\.\\d])1\\.[0-9]([^\\d].*|$)");
-
-    public static final Material COMMAND_BLOCK = Material.valueOf(is1_13 ? "COMMAND_BLOCK" : "COMMAND");
-    public static final Material LAVA = Material.valueOf(is1_13 ? "LAVA" : "STATIONARY_LAVA");
-    public static final Material WATER = Material.valueOf(is1_13 ? "WATER" : "STATIONARY_WATER");
-    public static final Material ENCHANTING_TABLE = Material.valueOf(is1_13 ? "ENCHANTING_TABLE" : "ENCHANTMENT_TABLE");
-    public static final Material OAK_TRAPDOOR = Material.valueOf(is1_13 ? "OAK_TRAPDOOR" : "TRAP_DOOR");
-    public static final Material OAK_FENCE_GATE = Material.valueOf(is1_13 ? "OAK_FENCE_GATE" : "FENCE_GATE");
-    public static final Material FIRE_CHARGE = Material.valueOf(is1_13 ? "FIRE_CHARGE" : "FIREBALL");
-    public static final Material FARMLAND = Material.valueOf(is1_13 ? "FARMLAND" : "SOIL");
-    public static final Material END_PORTAL = Material.valueOf(is1_13 ? "END_PORTAL" : "ENDER_PORTAL_FRAME");
-    public static final Material END_PORTAL_FRAME = Material.valueOf(is1_13 ? "END_PORTAL_FRAME" : "ENDER_PORTAL_FRAME");
-    public static final Material NETHER_PORTAL = Material.valueOf(is1_13 ? "NETHER_PORTAL" : "PORTAL");
     public static final Set<Material> DOORS = new HashSet<>();
     public static final Set<Material> MATERIALS_WITH_HIGH_BLAST_RESISTANCE = new HashSet<>();
+    public static String version = Bukkit.getMinecraftVersion();
+    // This build targets Paper 26.3 (api-version 26.3). The pre-1.13 branches
+    // below are kept only so the shared helper stays source-compatible.
+    public static boolean is1_7 = false;
+    public static boolean is1_8 = false;
+    public static boolean is1_13 = true;
+    public static final Material COMMAND_BLOCK =
+            Material.valueOf(is1_13 ? "COMMAND_BLOCK" : "COMMAND");
+    public static final Material LAVA = Material.valueOf(is1_13 ? "LAVA" : "STATIONARY_LAVA");
+    public static final Material WATER = Material.valueOf(is1_13 ? "WATER" : "STATIONARY_WATER");
+    public static final Material ENCHANTING_TABLE =
+            Material.valueOf(is1_13 ? "ENCHANTING_TABLE" : "ENCHANTMENT_TABLE");
+    public static final Material OAK_TRAPDOOR =
+            Material.valueOf(is1_13 ? "OAK_TRAPDOOR" : "TRAP_DOOR");
+    public static final Material OAK_FENCE_GATE =
+            Material.valueOf(is1_13 ? "OAK_FENCE_GATE" : "FENCE_GATE");
+    public static final Material FIRE_CHARGE =
+            Material.valueOf(is1_13 ? "FIRE_CHARGE" : "FIREBALL");
+    public static final Material FARMLAND = Material.valueOf(is1_13 ? "FARMLAND" : "SOIL");
+    public static final Material END_PORTAL =
+            Material.valueOf(is1_13 ? "END_PORTAL" : "ENDER_PORTAL_FRAME");
+    public static final Material END_PORTAL_FRAME =
+            Material.valueOf(is1_13 ? "END_PORTAL_FRAME" : "ENDER_PORTAL_FRAME");
+    public static final Material NETHER_PORTAL =
+            Material.valueOf(is1_13 ? "NETHER_PORTAL" : "PORTAL");
 
     static {
         DOORS.add(OAK_TRAPDOOR);
@@ -89,7 +98,8 @@ public class LegacyUtil {
 
     public static boolean isGlassPane(Material material) {
         String name = material.name();
-        return name.endsWith("GLASS_PANE") || name.equals("THIN_GLASS") || name.equals("IRON_BARS") || name.equals("IRON_FENCE");
+        return name.endsWith("GLASS_PANE") || name.equals("THIN_GLASS") || name.equals("IRON_BARS")
+                || name.equals("IRON_FENCE");
     }
 
     public static boolean isLava(Material type) {

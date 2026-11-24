@@ -1,13 +1,19 @@
 package com.massivecraft.factions.zcore.util;
 
-import java.io.File;
-
 import org.bukkit.Bukkit;
 
-public class WorldUtil
-{
-	// Previously We had crappy support for multiworld management.
-	// This should however be handled by an external plugin!
+import java.io.File;
+
+/**
+ * @author drtshock
+ * @author externo6
+ * @author Olof Cayorion Larsson
+ * @author Brett Flannigan
+ * @author Daniel Saukel
+ */
+public class WorldUtil {
+    // Previously We had crappy support for multiworld management.
+    // This should however be handled by an external plugin!
 	/*public static boolean load(String name) {
 		if (isWorldLoaded(name)) {
 			return true;
@@ -19,21 +25,19 @@ public class WorldUtil
 		
 		Environment env = WorldEnv.get(name);
 		if (env == null) {
-			P.log(Level.WARNING, "Failed to load world. Environment was unknown.");
+			Main.log(Level.WARNING, "Failed to load world. Environment was unknown.");
 			return false;
 		}
 		
-		P.p.getServer().createWorld(name, env);
+		Main.main.getServer().createWorld(name, env);
 		return true;
 	}*/
-	
-	public static boolean isWorldLoaded(String name)
-	{
-		return Bukkit.getServer().getWorld(name) != null;
-	}
-	
-	public static boolean doesWorldExist(String name)
-	{
-		return new File(name, "level.dat").exists();
-	}
+
+    public static boolean isWorldLoaded(String name) {
+        return Bukkit.getServer().getWorld(name) != null;
+    }
+
+    public static boolean doesWorldExist(String name) {
+        return new File(name, "level.dat").exists();
+    }
 }

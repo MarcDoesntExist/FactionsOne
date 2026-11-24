@@ -18,20 +18,19 @@
  */
 package de.erethon.factionsone;
 
-import com.massivecraft.factions.Board;
 import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.FPlayers;
 import com.massivecraft.factions.Faction;
-import com.massivecraft.factions.struct.TerritoryAccess;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
+import com.massivecraft.factions.api.SkyAPI;
+
 import java.util.Set;
 import java.util.UUID;
 
 /**
  * API additions that are specific to FactionsOne.
+ *
+ * <p>Kept as a delegating facade over {@link SkyAPI} so that plugins compiled
+ * against the original FactionsOne API keep linking without changes.</p>
  *
  * @author Daniel Saukel
  */
@@ -41,31 +40,22 @@ public class FactionsOneAPI {
      * @return All of the claims of the faction.
      */
     public static Set<FLocation> getFactionClaims(Faction faction) {
-        Set<FLocation> claims = new HashSet<>();
-        Iterator<Map.Entry<FLocation, TerritoryAccess>> iter = Board.flocationIds.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry<FLocation, TerritoryAccess> entry = iter.next();
-            if (entry.getValue().getHostFactionID().equals(faction.getId())) {
-                claims.add(entry.getKey());
-            }
-        }
-        return claims;
+        return SkyAPI.getFactionClaims(faction);
     }
 
     /**
      * Unclaims all of the land of the faction.
      */
     public static void unclaimAll(Faction faction) {
-        Board.unclaimAll(faction.getId());
+        SkyAPI.unclaimAll(faction);
     }
 
     /**
-     * @param uuid
-     * A player's UUID
+     * @param uuid A player's UUID
      * @return The FPlayer that has this UUID
      */
     public static FPlayer getFPlayer(UUID uuid) {
-        return FPlayers.i.get(uuid.toString());
+        return SkyAPI.getFPlayer(uuid);
     }
 
 }

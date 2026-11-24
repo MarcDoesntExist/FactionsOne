@@ -1,85 +1,78 @@
 package com.massivecraft.factions.event;
 
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.Faction;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-import com.massivecraft.factions.FPlayer;
-import com.massivecraft.factions.Faction;
 
-import org.bukkit.entity.Player;
+/**
+ * @author drtshock
+ * @author externo6
+ * @author Olof Cayorion Larsson
+ * @author Brett Flannigan
+ * @author Daniel Saukel
+ */
+public class PowerLossEvent extends Event implements Cancellable {
+    private static final HandlerList handlers = new HandlerList();
+    private final Faction faction;
+    private final FPlayer fplayer;
+    private boolean cancelled;
+    private String message;
 
+    public PowerLossEvent(Faction f, FPlayer p) {
+        cancelled = false;
+        faction = f;
+        fplayer = p;
+    }
 
-public class PowerLossEvent extends Event implements Cancellable
-{
-	private static final HandlerList handlers = new HandlerList();
+    public static HandlerList getHandlerList() {
+        return handlers;
+    }
 
-	private boolean cancelled;
-	private Faction faction;
-	private FPlayer fplayer;
-	private String message;
+    @Override
+    public HandlerList getHandlers() {
+        return handlers;
+    }
 
-	public PowerLossEvent(Faction f, FPlayer p)
-	{
-		cancelled = false;
-		faction = f;
-		fplayer = p;
-	}
+    public Faction getFaction() {
+        return faction;
+    }
 
-	@Override
-	public HandlerList getHandlers()
-	{
-		return handlers;
-	}
+    public String getFactionId() {
+        return faction.getId();
+    }
 
-	public static HandlerList getHandlerList()
-	{
-		return handlers;
-	}
+    public String getFactionTag() {
+        return faction.getTag();
+    }
 
-	public Faction getFaction()
-	{
-		return faction;
-	}
+    public FPlayer getFPlayer() {
+        return fplayer;
+    }
 
-	public String getFactionId()
-	{
-		return faction.getId();
-	}
+    public Player getPlayer() {
+        return fplayer.getPlayer();
+    }
 
-	public String getFactionTag()
-	{
-		return faction.getTag();
-	}
+    public String getMessage() {
+        return message;
+    }
 
-	public FPlayer getFPlayer()
-	{
-		return fplayer;
-	}
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-	public Player getPlayer()
-	{
-		return fplayer.getPlayer();
-	}
+    @Override
+    public boolean isCancelled() {
+        return cancelled;
+    }
 
-	public String getMessage() {
-		return message;
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	@Override
-	public boolean isCancelled()
-	{
-		return cancelled;
-	}
-
-	@Override
-	public void setCancelled(boolean c)
-	{
-		this.cancelled = c;
-	}
+    @Override
+    public void setCancelled(boolean c) {
+        this.cancelled = c;
+    }
 
 }

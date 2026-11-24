@@ -1,4 +1,4 @@
-Factions - 1.8.2 - UUID update
+FactionsOne - 1.4.0 - Paper 26.3
 ====================
 Note from externo6:<br>
 Credit to [RenegadeEagle](https://github.com/RenegadeEagle) and [drtshock](https://github.com/drtshock) for their code in this.<br> 
