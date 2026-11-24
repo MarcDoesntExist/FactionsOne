@@ -7,7 +7,7 @@ import org.bukkit.plugin.Plugin;
 
 /**
  * Worldguard Region Checking.
- *
+ * <p>
  * WorldGuard is a soft dependency. This class deliberately contains no
  * WorldGuard types: the implementation is loaded only when the plugin is
  * installed, otherwise the JVM would fail to enable Factions with a

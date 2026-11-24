@@ -19,14 +19,15 @@ import com.massivecraft.factions.util.AutoLeaveTask;
 import com.massivecraft.factions.util.EconLandRewardTask;
 import com.massivecraft.factions.util.LazyLocation;
 import com.massivecraft.factions.zcore.MPlugin;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import io.papermc.paper.event.player.AsyncChatEvent;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.jspecify.annotations.NonNull;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -169,7 +170,7 @@ public class Main extends MPlugin {
 
         if (Conf.econEnabled && Conf.econLandRewardTaskRunsEveryXMinutes > 0.0
                 && Conf.econLandReward > 0.0) {
-            long ticks = 20 * 60 * Conf.econLandRewardTaskRunsEveryXMinutes;
+            long ticks = 20L * 60 * Conf.econLandRewardTaskRunsEveryXMinutes;
             econLandRewardTaskID = getServer().getScheduler()
                     .scheduleSyncRepeatingTask(this, new EconLandRewardTask(), ticks, ticks);
         }
@@ -182,7 +183,7 @@ public class Main extends MPlugin {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] split) {
+    public boolean onCommand(@NonNull CommandSender sender, Command command, String label, String[] split) {
         this.cmdBase.execute(sender, new ArrayList<String>(Arrays.asList(split)));
         return true;
     }
@@ -218,6 +219,7 @@ public class Main extends MPlugin {
     /**
      * @deprecated As of release 1.8, there is no built in faction chat.
      */
+    @Deprecated
     public boolean isPlayerFactionChatting(Player player) {
         return false;
     }
@@ -227,6 +229,7 @@ public class Main extends MPlugin {
     /**
      * @deprecated As of release 1.8.1 the normal Bukkit command-handling is used.
      */
+    @Deprecated
     public boolean isFactionsCommand(String check) {
         return false;
     }

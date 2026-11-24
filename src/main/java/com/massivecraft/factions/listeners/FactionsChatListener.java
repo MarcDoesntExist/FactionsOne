@@ -1,12 +1,12 @@
 package com.massivecraft.factions.listeners;
 
-import io.papermc.paper.chat.ChatRenderer;
-import io.papermc.paper.event.player.AsyncChatEvent;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.FPlayers;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.Rel;
+import io.papermc.paper.chat.ChatRenderer;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -155,6 +155,26 @@ public class FactionsChatListener implements Listener {
             this.relationColors = relationColors;
         }
 
+        private static String formatPrefix(String format) {
+            try {
+                return String.format(format, "", "");
+            } catch (RuntimeException ignored) {
+                return "";
+            }
+        }
+
+        private static String formatMessage(String format, String displayName, String message) {
+            try {
+                return String.format(format, displayName, message);
+            } catch (RuntimeException ignored) {
+                return displayName + ": " + message;
+            }
+        }
+
+        private static Component deserialize(String legacy) {
+            return LEGACY.deserialize(legacy);
+        }
+
         @Override
         public Component render(Player source, Component sourceDisplayName, Component message,
                                 Audience viewer) {
@@ -179,26 +199,6 @@ public class FactionsChatListener implements Listener {
             String displayName = LEGACY.serialize(sourceDisplayName);
             String body = LEGACY.serialize(message);
             return deserialize(formatMessage(resolved, displayName, body));
-        }
-
-        private static String formatPrefix(String format) {
-            try {
-                return String.format(format, "", "");
-            } catch (RuntimeException ignored) {
-                return "";
-            }
-        }
-
-        private static String formatMessage(String format, String displayName, String message) {
-            try {
-                return String.format(format, displayName, message);
-            } catch (RuntimeException ignored) {
-                return displayName + ": " + message;
-            }
-        }
-
-        private static Component deserialize(String legacy) {
-            return LEGACY.deserialize(legacy);
         }
     }
 }

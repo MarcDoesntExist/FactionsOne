@@ -25,3 +25,5 @@
 # Gradle
 /.gradle/
 /.gradle
+/test-server/
+/docs/
