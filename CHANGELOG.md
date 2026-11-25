@@ -6,6 +6,8 @@ the project uses semantic versioning.
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-25
+
 ### Added
 
 - Menu items support independent `view` and `click` requirements; hidden entries
