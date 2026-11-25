@@ -62,7 +62,7 @@ class PluginYamlContractTest {
         assertTrue(plugin.getString("api-version").matches("\\d+\\.\\d+"),
                 "api-version must look like 26.3, was " + plugin.getString("api-version"));
         assertNotNull(plugin.getString("version"));
-        assertTrue(plugin.getStringList("authors").contains("MarcDoesntExist"));
+        assertTrue(plugin.getStringList("authors").contains("MarcDoesntExists"));
     }
 
     @Test

@@ -14,7 +14,7 @@ import org.bukkit.plugin.Plugin;
  * NoClassDefFoundError on servers without WorldGuard.
  *
  * @author Spathizilla
- * @author MarcDoesntExist
+ * @author MarcDoesntExists
  */
 public class Worldguard {
     private static Hook hook;
