@@ -2,7 +2,11 @@ package com.massivecraft.factions.bank;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.massivecraft.factions.zcore.util.BackupService;
+import com.massivecraft.factions.zcore.util.VersionedFile;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +42,8 @@ import java.util.logging.Logger;
  */
 public final class BankJournal {
 
+    private static final int CURRENT_VERSION = 2;
+
     public enum State {
         PENDING, COMMITTED, ABORTED, COMPENSATION_PENDING, COMPENSATED
     }
@@ -52,6 +58,7 @@ public final class BankJournal {
     private final Clock clock;
     private final Gson gson = new GsonBuilder().create();
     private final Map<String, Entry> latest = new LinkedHashMap<>();
+    private boolean locked;
 
     public BankJournal(Path file, Logger logger) {
         this(file, logger, Clock.systemUTC());
@@ -123,6 +130,9 @@ public final class BankJournal {
      * @return number of entries removed
      */
     public synchronized int retain(long now, long retentionMillis) {
+        if (this.locked) {
+            return 0;
+        }
         long cutoff = now - Math.max(0L, retentionMillis);
         Map<String, Entry> kept = new LinkedHashMap<>();
         int removed = 0;
@@ -151,6 +161,9 @@ public final class BankJournal {
     }
 
     private boolean rewrite(Map<String, Entry> entries) {
+        if (this.locked) {
+            return false;
+        }
         if (Files.exists(this.file)) {
             BackupService.backupBeforeWrite(this.file);
         }
@@ -161,7 +174,7 @@ public final class BankJournal {
             if (parent != null) {
                 Files.createDirectories(parent);
             }
-            StringBuilder text = new StringBuilder();
+            StringBuilder text = new StringBuilder(headerLine()).append('\n');
             for (Entry entry : entries.values()) {
                 text.append(this.gson.toJson(Stored.from(entry))).append('\n');
             }
@@ -197,13 +210,18 @@ public final class BankJournal {
     }
 
     private boolean append(Entry entry) {
+        if (this.locked) {
+            return false;
+        }
         try {
             Path parent = this.file.getParent();
             if (parent != null) {
                 Files.createDirectories(parent);
             }
             String line = this.gson.toJson(Stored.from(entry)) + "\n";
-            Files.writeString(this.file, line, StandardCharsets.UTF_8,
+            boolean empty = !Files.exists(this.file) || Files.size(this.file) == 0L;
+            String text = empty ? headerLine() + "\n" + line : line;
+            Files.writeString(this.file, text, StandardCharsets.UTF_8,
                     StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             this.latest.put(entry.id(), entry);
             return true;
@@ -217,24 +235,95 @@ public final class BankJournal {
         if (!Files.exists(this.file)) {
             return;
         }
+        List<String> lines;
         try {
-            for (String line : Files.readAllLines(this.file, StandardCharsets.UTF_8)) {
-                if (line.isBlank()) {
-                    continue;
-                }
-                try {
-                    Stored stored = this.gson.fromJson(line, Stored.class);
-                    Entry entry = stored == null ? null : stored.toEntry();
-                    if (entry != null) {
-                        this.latest.put(entry.id(), entry);
-                    }
-                } catch (RuntimeException malformed) {
-                    this.logger.log(Level.WARNING,
-                            "Ignoring a malformed bank journal line in " + this.file, malformed);
+            lines = Files.readAllLines(this.file, StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            this.logger.log(Level.SEVERE, "Could not read bank journal " + this.file,
+                    exception);
+            VersionedFile.quarantine(this.file, this.logger);
+            return;
+        }
+
+        int firstNonBlank = -1;
+        for (int index = 0; index < lines.size(); index++) {
+            if (!lines.get(index).isBlank()) {
+                firstNonBlank = index;
+                break;
+            }
+        }
+
+        int headerIndex = -1;
+        Integer headerVersion = null;
+        if (firstNonBlank >= 0) {
+            JsonElement element = parseLine(lines.get(firstNonBlank));
+            if (element != null && element.isJsonObject()) {
+                JsonObject object = element.getAsJsonObject();
+                if (object.has("version") && !object.has("id")) {
+                    headerIndex = firstNonBlank;
+                    headerVersion = VersionedFile.version(object);
                 }
             }
-        } catch (IOException exception) {
-            this.logger.log(Level.SEVERE, "Could not read bank journal " + this.file, exception);
+        }
+
+        if (headerVersion != null && headerVersion > CURRENT_VERSION) {
+            this.locked = true;
+            this.logger.severe("Bank journal " + this.file + " uses version " + headerVersion
+                    + " but this build supports " + CURRENT_VERSION
+                    + "; refusing to load or append.");
+            return;
+        }
+
+        int validEntries = 0;
+        for (int index = 0; index < lines.size(); index++) {
+            if (index == headerIndex || lines.get(index).isBlank()) {
+                continue;
+            }
+            try {
+                Stored stored = this.gson.fromJson(lines.get(index), Stored.class);
+                Entry entry = stored == null ? null : stored.toEntry();
+                if (entry != null) {
+                    this.latest.put(entry.id(), entry);
+                    validEntries++;
+                }
+            } catch (RuntimeException malformed) {
+                this.logger.log(Level.WARNING,
+                        "Ignoring a malformed bank journal line in " + this.file, malformed);
+            }
+        }
+
+        if (headerVersion == null && validEntries == 0 && firstNonBlank >= 0) {
+            this.logger.severe("Bank journal " + this.file
+                    + " has no readable records; quarantining it.");
+            VersionedFile.quarantine(this.file, this.logger);
+            this.latest.clear();
+            return;
+        }
+
+        if (headerVersion == null || headerVersion < CURRENT_VERSION) {
+            int fromVersion = headerVersion == null
+                    ? VersionedFile.LEGACY_VERSION : headerVersion;
+            if (rewrite(this.latest)) {
+                this.logger.info("Migrated bank journal " + this.file + " from version "
+                        + fromVersion + " to " + CURRENT_VERSION);
+            } else {
+                this.logger.warning("Could not migrate bank journal " + this.file
+                        + " to version " + CURRENT_VERSION);
+            }
+        }
+    }
+
+    private String headerLine() {
+        JsonObject header = new JsonObject();
+        header.addProperty("version", CURRENT_VERSION);
+        return this.gson.toJson(header);
+    }
+
+    private static JsonElement parseLine(String line) {
+        try {
+            return JsonParser.parseString(line);
+        } catch (RuntimeException invalid) {
+            return null;
         }
     }
 

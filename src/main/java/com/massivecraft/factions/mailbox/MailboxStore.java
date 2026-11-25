@@ -2,19 +2,18 @@ package com.massivecraft.factions.mailbox;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.massivecraft.factions.zcore.util.VersionedFile;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,9 +22,15 @@ import java.util.logging.Logger;
  * delivery/reconciliation rules so the mailbox stays under the project's
  * per-file limit.
  *
+ * <p>The file carries a {@code version} field. Unversioned files are migrated
+ * after a rotated backup; a corrupt file is quarantined and the mailbox starts
+ * empty instead of overwriting the evidence.</p>
+ *
  * @author MarcDoesntExists
  */
 final class MailboxStore {
+
+    static final int CURRENT_VERSION = 2;
 
     private final Path file;
     private final Logger logger;
@@ -38,58 +43,61 @@ final class MailboxStore {
 
     synchronized Map<String, FactionMailbox.Claim> load() {
         Map<String, FactionMailbox.Claim> claims = new LinkedHashMap<>();
-        if (!Files.exists(this.file)) {
+        JsonElement element = VersionedFile.read(this.file, this.logger);
+        if (element == null) {
             return claims;
         }
+        if (!element.isJsonObject()) {
+            VersionedFile.quarantine(this.file, this.logger);
+            return claims;
+        }
+
+        JsonObject root = element.getAsJsonObject();
+        int version = VersionedFile.version(root);
+        if (version > CURRENT_VERSION) {
+            this.logger.severe("Mailbox " + this.file + " uses version " + version
+                    + " but this build supports " + CURRENT_VERSION
+                    + "; leaving it untouched.");
+            return claims;
+        }
+
+        Storage storage;
         try {
-            Storage storage = this.gson.fromJson(
-                    Files.readString(this.file, StandardCharsets.UTF_8), Storage.class);
-            if (storage == null || storage.claims == null) {
-                return claims;
-            }
+            storage = this.gson.fromJson(root, Storage.class);
+        } catch (RuntimeException exception) {
+            this.logger.log(Level.SEVERE, "Could not parse mailbox " + this.file, exception);
+            VersionedFile.quarantine(this.file, this.logger);
+            return claims;
+        }
+        if (storage != null && storage.claims != null) {
             for (ClaimData data : storage.claims) {
                 FactionMailbox.Claim claim = data == null ? null : data.toClaim();
                 if (claim != null) {
                     claims.put(claim.id(), claim);
                 }
             }
-        } catch (IOException | RuntimeException exception) {
-            this.logger.log(Level.SEVERE, "Could not read mailbox " + this.file, exception);
+        }
+
+        if (version < CURRENT_VERSION) {
+            VersionedFile.backup(this.file);
+            if (save(claims.values())) {
+                this.logger.info("Migrated mailbox " + this.file + " from version "
+                        + version + " to " + CURRENT_VERSION);
+            } else {
+                this.logger.warning("Could not migrate mailbox " + this.file
+                        + " to version " + CURRENT_VERSION);
+            }
         }
         return claims;
     }
 
     synchronized boolean save(Collection<FactionMailbox.Claim> claims) {
-        Path temporary = this.file.resolveSibling(
-                this.file.getFileName() + "." + UUID.randomUUID() + ".tmp");
-        try {
-            Path parent = this.file.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-            Storage storage = new Storage();
-            storage.claims = new ArrayList<>();
-            for (FactionMailbox.Claim claim : claims) {
-                storage.claims.add(ClaimData.from(claim));
-            }
-            Files.writeString(temporary, this.gson.toJson(storage), StandardCharsets.UTF_8);
-            try {
-                Files.move(temporary, this.file, StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException fallback) {
-                Files.move(temporary, this.file, StandardCopyOption.REPLACE_EXISTING);
-            }
-            return true;
-        } catch (IOException exception) {
-            this.logger.log(Level.SEVERE, "Could not write mailbox " + this.file, exception);
-            return false;
-        } finally {
-            try {
-                Files.deleteIfExists(temporary);
-            } catch (IOException ignored) {
-                // A fresh temporary name is used on the next save.
-            }
+        Storage storage = new Storage();
+        storage.claims = new ArrayList<>();
+        for (FactionMailbox.Claim claim : claims) {
+            storage.claims.add(ClaimData.from(claim));
         }
+        return VersionedFile.write(this.file, this.gson.toJson(storage), this.logger);
     }
 
     /**
@@ -127,6 +135,7 @@ final class MailboxStore {
     }
 
     private static final class Storage {
+        int version = CURRENT_VERSION;
         List<ClaimData> claims = new ArrayList<>();
     }
 

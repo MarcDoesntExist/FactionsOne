@@ -2,17 +2,14 @@ package com.massivecraft.factions.bank;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.massivecraft.factions.zcore.util.VersionedFile;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +24,8 @@ import java.util.logging.Logger;
  * @author MarcDoesntExists
  */
 public final class IdempotencyStore {
+
+    private static final int CURRENT_VERSION = 2;
 
     private final Path file;
     private final Logger logger;
@@ -99,17 +98,43 @@ public final class IdempotencyStore {
     }
 
     private void load() {
-        if (!Files.exists(this.file)) {
+        JsonElement element = VersionedFile.read(this.file, this.logger);
+        if (element == null) {
             return;
         }
-        try {
-            Storage storage = this.gson.fromJson(
-                    Files.readString(this.file, StandardCharsets.UTF_8), Storage.class);
-            if (storage == null) {
+        long now = System.currentTimeMillis();
+        int version = VersionedFile.LEGACY_VERSION;
+
+        if (element.isJsonArray()) {
+            // Oldest format: a JSON array of keys without timestamps.
+            for (JsonElement item : element.getAsJsonArray()) {
+                if (item != null && item.isJsonPrimitive()
+                        && item.getAsJsonPrimitive().isString()) {
+                    String key = item.getAsString();
+                    if (!key.isBlank()) {
+                        this.claimedAt.putIfAbsent(key, now);
+                    }
+                }
+            }
+        } else if (element.isJsonObject()) {
+            JsonObject root = element.getAsJsonObject();
+            version = VersionedFile.version(root);
+            if (version > CURRENT_VERSION) {
+                this.logger.severe("Idempotency store " + this.file + " uses version "
+                        + version + " but this build supports " + CURRENT_VERSION
+                        + "; leaving it untouched.");
                 return;
             }
-            long now = System.currentTimeMillis();
-            if (storage.entries != null) {
+            Storage storage;
+            try {
+                storage = this.gson.fromJson(root, Storage.class);
+            } catch (RuntimeException exception) {
+                this.logger.log(Level.SEVERE,
+                        "Could not parse idempotency store " + this.file, exception);
+                VersionedFile.quarantine(this.file, this.logger);
+                return;
+            }
+            if (storage != null && storage.entries != null) {
                 for (Map.Entry<String, Long> entry : storage.entries.entrySet()) {
                     if (entry.getKey() != null && !entry.getKey().isBlank()
                             && entry.getValue() != null) {
@@ -117,46 +142,34 @@ public final class IdempotencyStore {
                     }
                 }
             }
-            // Old format: a JSON array of keys without timestamps.
-            if (storage.keys != null) {
+            // Legacy object of keys without timestamps.
+            if (storage != null && storage.keys != null) {
                 for (String key : storage.keys) {
                     if (key != null && !key.isBlank()) {
                         this.claimedAt.putIfAbsent(key, now);
                     }
                 }
             }
-        } catch (IOException | RuntimeException exception) {
-            this.logger.log(Level.SEVERE, "Could not read idempotency store " + this.file, exception);
+        } else {
+            VersionedFile.quarantine(this.file, this.logger);
+            return;
+        }
+
+        if (version < CURRENT_VERSION) {
+            VersionedFile.backup(this.file);
+            if (save()) {
+                this.logger.info("Migrated idempotency store " + this.file
+                        + " from version " + version + " to " + CURRENT_VERSION);
+            } else {
+                this.logger.warning("Could not migrate idempotency store " + this.file
+                        + " to version " + CURRENT_VERSION);
+            }
         }
     }
 
     private boolean save() {
-        Path temporary = this.file.resolveSibling(
-                this.file.getFileName() + "." + UUID.randomUUID() + ".tmp");
-        try {
-            Path parent = this.file.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-            Files.writeString(temporary, this.gson.toJson(new Storage(this.claimedAt)),
-                    StandardCharsets.UTF_8);
-            try {
-                Files.move(temporary, this.file, StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException fallback) {
-                Files.move(temporary, this.file, StandardCopyOption.REPLACE_EXISTING);
-            }
-            return true;
-        } catch (IOException exception) {
-            this.logger.log(Level.SEVERE, "Could not write idempotency store " + this.file, exception);
-            return false;
-        } finally {
-            try {
-                Files.deleteIfExists(temporary);
-            } catch (IOException ignored) {
-                // The next save uses a fresh temporary name.
-            }
-        }
+        return VersionedFile.write(this.file, this.gson.toJson(new Storage(this.claimedAt)),
+                this.logger);
     }
 
     /**
@@ -164,6 +177,7 @@ public final class IdempotencyStore {
      * {@code keys} is read-only compatibility for files written before timestamps.
      */
     private static final class Storage {
+        int version = CURRENT_VERSION;
         Map<String, Long> entries = new LinkedHashMap<>();
         Set<String> keys;
 

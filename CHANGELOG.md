@@ -8,6 +8,15 @@ the project uses semantic versioning.
 
 ### Added
 
+- Durable data files are versioned. `mailbox.json` and `idempotency.json`
+  carry a root `version` field; `bank-journal.jsonl` starts with a
+  `{"version":2}` header. Legacy files are migrated after a rotated
+  `backups/<file>.<timestamp>.bak` copy, preserving claims, keys and entries.
+  A corrupt file is moved to `<file>.corrupt-<timestamp>` and the plugin starts
+  empty instead of overwriting it; a newer version is left untouched. The data
+  folder version is now 2, so the first upgrade also takes a full
+  pre-migration snapshot. See `docs/RECOVERY.md` for restore and reconcile
+  procedures.
 - Durable bank journal (`bank-journal.jsonl`): every movement is written as
   `PENDING` and then committed or aborted. A transfer whose credit and refund
   both fail is recorded as `COMPENSATION_PENDING`; the periodic retry and

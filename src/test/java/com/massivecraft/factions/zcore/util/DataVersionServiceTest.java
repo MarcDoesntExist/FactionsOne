@@ -31,7 +31,7 @@ class DataVersionServiceTest {
     void freshFolderGetsACurrentVersionWithoutSnapshot() throws IOException {
         assertTrue(DataVersionService.prepare(tempDir, LOGGER));
 
-        assertEquals(1, readVersion());
+        assertEquals(2, readVersion());
         assertTrue(snapshots().isEmpty());
     }
 
@@ -42,7 +42,7 @@ class DataVersionServiceTest {
 
         assertTrue(DataVersionService.prepare(tempDir, LOGGER));
 
-        assertEquals(1, readVersion());
+        assertEquals(2, readVersion());
         List<Path> snapshots = snapshots();
         assertEquals(1, snapshots.size());
 
@@ -60,7 +60,7 @@ class DataVersionServiceTest {
         assertTrue(DataVersionService.prepare(tempDir, LOGGER));
         assertTrue(DataVersionService.prepare(tempDir, LOGGER));
 
-        assertEquals(1, readVersion());
+        assertEquals(2, readVersion());
         assertEquals(1, snapshots().size());
     }
 

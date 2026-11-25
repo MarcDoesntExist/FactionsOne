@@ -14,7 +14,7 @@ import java.nio.file.Path;
  */
 final class Migrations {
 
-    static final int CURRENT_VERSION = 1;
+    static final int CURRENT_VERSION = 2;
 
     private Migrations() {
     }
@@ -24,6 +24,10 @@ final class Migrations {
             switch (target) {
                 case 1 -> {
                     // Initial versioned format: the existing JSON layout is kept.
+                }
+                case 2 -> {
+                    // Per-file versions (bank journal, idempotency, mailbox) are
+                    // migrated by the owning stores after the folder snapshot.
                 }
                 default -> throw new IOException(
                         "No migration registered for data version " + target);
