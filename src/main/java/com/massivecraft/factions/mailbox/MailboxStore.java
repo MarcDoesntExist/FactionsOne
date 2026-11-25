@@ -94,7 +94,8 @@ final class MailboxStore {
 
     /**
      * Drops delivered claims and fully refunded expired claims older than the
-     * window, leaving pending and ambiguous deliveries untouched.
+     * window, leaving pending work and ambiguous deliveries or refunds
+     * untouched.
      */
     synchronized int retain(Map<String, FactionMailbox.Claim> claims, long now,
                             long retentionMillis) {

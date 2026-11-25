@@ -43,10 +43,14 @@ public class Lang {
     public static final String mailboxUnknown = "<b>The delivery status of that payout is unknown; ask an admin to reconcile it.";
     public static final String mailboxNoUnknown = "<i>No mailbox delivery needs reconciliation.";
     public static final String mailboxUnknownHeader = "<i>Mailbox deliveries with unknown status: <h>%d<i>.";
+    public static final String mailboxRefundUnknownHeader = "<i>Mailbox refunds with unknown status: <h>%d<i>.";
     public static final String mailboxReconcileUsage = "<i>Usage: <h>/f mail reconcile [id] paid|retry";
     public static final String mailboxReconcileNotFound = "<b>No unknown payout with that id.";
     public static final String mailboxReconciledPaid = "<g>Marked <h>%s<i> as paid.";
     public static final String mailboxReconciledRetry = "<g>Released <h>%s<i>; the player can claim it again.";
+    public static final String mailboxRefundReconcileUsage = "<i>Usage: <h>/f mail reconcile <id> refunded|retry-refund";
+    public static final String mailboxReconciledRefunded = "<g>Marked the refund of <h>%s<i> as completed.";
+    public static final String mailboxReconciledRefundRetry = "<g>Released the refund of <h>%s<i>; it will be retried.";
     public static final String mailboxFull = "<b>That player's mailbox is full.";
     public static final String mailboxSent = "<g>Queued <h>%s<i> for <h>%s<i> in the mailbox.";
     public static final String mailboxSendFailed = "<b>The source account could not fund that payout.";

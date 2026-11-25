@@ -10,8 +10,8 @@ import com.massivecraft.factions.zcore.Lang;
 import java.util.List;
 
 /**
- * Admin reconciliation for mailbox deliveries interrupted between the
- * idempotency claim and the payout credit.
+ * Admin reconciliation for mailbox deliveries and refunds interrupted between
+ * the idempotency claim and the actual credit.
  *
  * @author MarcDoesntExists
  */
@@ -38,20 +38,15 @@ public class CmdMailReconcile extends FCommand {
         }
         String claimId = this.argAsString(0, "");
         if (claimId.isBlank()) {
-            List<FactionMailbox.Claim> unknown = Main.main.mailbox.unknownClaims();
-            if (unknown.isEmpty()) {
-                msg(Lang.mailboxNoUnknown);
-                return;
-            }
-            msg(Lang.mailboxUnknownHeader, unknown.size());
-            for (FactionMailbox.Claim claim : unknown) {
-                msg(Lang.mailboxLine, claim.id(), BankService.get().format(claim.amount()),
-                        claim.reason().isBlank() ? claim.source() : claim.reason());
-            }
+            showUnknown();
             return;
         }
-
         String outcome = this.argAsString(1, "");
+        FactionMailbox.Claim claim = Main.main.mailbox.get(claimId);
+        if (claim != null && claim.state() == FactionMailbox.State.REFUND_UNKNOWN) {
+            resolveRefund(claimId, outcome);
+            return;
+        }
         boolean paid = "paid".equalsIgnoreCase(outcome) || "delivered".equalsIgnoreCase(outcome);
         boolean retry = "retry".equalsIgnoreCase(outcome) || "pending".equalsIgnoreCase(outcome);
         if (!paid && !retry) {
@@ -63,5 +58,44 @@ public class CmdMailReconcile extends FCommand {
             return;
         }
         msg(paid ? Lang.mailboxReconciledPaid : Lang.mailboxReconciledRetry, claimId);
+    }
+
+    private void resolveRefund(String claimId, String outcome) {
+        boolean completed = "refunded".equalsIgnoreCase(outcome);
+        boolean retry = "retry-refund".equalsIgnoreCase(outcome);
+        if (!completed && !retry) {
+            msg(Lang.mailboxRefundReconcileUsage);
+            return;
+        }
+        if (!Main.main.mailbox.resolveRefundUnknown(claimId, completed)) {
+            msg(Lang.mailboxReconcileNotFound);
+            return;
+        }
+        msg(completed ? Lang.mailboxReconciledRefunded : Lang.mailboxReconciledRefundRetry,
+                claimId);
+    }
+
+    private void showUnknown() {
+        List<FactionMailbox.Claim> deliveries = Main.main.mailbox.unknownClaims();
+        List<FactionMailbox.Claim> refunds = Main.main.mailbox.unknownRefunds();
+        if (deliveries.isEmpty() && refunds.isEmpty()) {
+            msg(Lang.mailboxNoUnknown);
+            return;
+        }
+        if (!deliveries.isEmpty()) {
+            msg(Lang.mailboxUnknownHeader, deliveries.size());
+            print(deliveries);
+        }
+        if (!refunds.isEmpty()) {
+            msg(Lang.mailboxRefundUnknownHeader, refunds.size());
+            print(refunds);
+        }
+    }
+
+    private void print(List<FactionMailbox.Claim> claims) {
+        for (FactionMailbox.Claim claim : claims) {
+            msg(Lang.mailboxLine, claim.id(), BankService.get().format(claim.amount()),
+                    claim.reason().isBlank() ? claim.source() : claim.reason());
+        }
     }
 }

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -21,18 +20,20 @@ import java.util.logging.Logger;
  * <p>Delivery is <b>at-most-once</b>. The idempotency key is claimed before the
  * delivery sink runs. If the process dies after the key claim but before the
  * sink, the payment status is unknowable: recovery marks the claim
- * {@link State#DELIVERY_UNKNOWN} instead of pretending it was paid. An operator
- * must then run {@code /f mail reconcile <id> paid|retry} (or
- * {@link #resolveUnknown(String, boolean)}) after checking the economy. This
- * deliberately forbids an automatic second payment; it does not promise
- * exactly-once delivery.
+ * {@link State#DELIVERY_UNKNOWN} instead of pretending it was paid. Refunds
+ * work the same way: a refund key claimed by a crash leaves the claim
+ * {@link State#REFUND_UNKNOWN}. An operator must run
+ * {@code /f mail reconcile <id> ...} (or {@link #resolveUnknown} /
+ * {@link #resolveRefundUnknown}) after checking the economy. This deliberately
+ * forbids automatic second payments and automatic refund retries; it does not
+ * promise exactly-once delivery.
  *
  * @author MarcDoesntExists
  */
 public final class FactionMailbox {
 
     public enum State {
-        PENDING, DELIVERY_UNKNOWN, DELIVERED, EXPIRED
+        PENDING, DELIVERY_UNKNOWN, DELIVERED, EXPIRED, REFUND_UNKNOWN
     }
 
     public enum Result {
@@ -61,6 +62,8 @@ public final class FactionMailbox {
     private final Clock clock;
     private final int maxPerPlayer;
     private final long ttlMillis;
+    private final MailboxRecovery recovery;
+    private final MailboxExpiry expiry;
     private final Map<String, Claim> claims = new LinkedHashMap<>();
 
     public FactionMailbox(Path file, IdempotencyStore idempotency, Clock clock, int maxPerPlayer,
@@ -71,8 +74,12 @@ public final class FactionMailbox {
         this.maxPerPlayer = Math.max(1, maxPerPlayer);
         this.ttlMillis = Math.max(1L, ttlMillis);
         this.logger = logger;
+        this.recovery = new MailboxRecovery(idempotency, logger);
+        this.expiry = new MailboxExpiry(idempotency, clock, logger, this::save);
         this.claims.putAll(this.store.load());
-        recoverDeliveries();
+        if (this.recovery.recover(this.claims)) {
+            save();
+        }
     }
 
     /**
@@ -137,7 +144,7 @@ public final class FactionMailbox {
             if (claim.state() == State.DELIVERED) {
                 return Result.ALREADY_CLAIMED;
             }
-            if (claim.state() == State.EXPIRED) {
+            if (claim.state() == State.EXPIRED || claim.state() == State.REFUND_UNKNOWN) {
                 return Result.EXPIRED;
             }
             if (claim.state() == State.DELIVERY_UNKNOWN) {
@@ -145,7 +152,7 @@ public final class FactionMailbox {
             }
             long now = this.clock.millis();
             if (claim.expiresAt() <= now) {
-                expireOne(claim, refund);
+                this.expiry.expireOne(this.claims, claim, refund);
                 return Result.EXPIRED;
             }
 
@@ -161,8 +168,8 @@ public final class FactionMailbox {
             try {
                 delivered = delivery.deliver(claim);
             } catch (RuntimeException exception) {
-                this.logger.log(Level.SEVERE, "Mailbox delivery status is unknown for " + claim.id(),
-                        exception);
+                this.logger.log(java.util.logging.Level.SEVERE,
+                        "Mailbox delivery status is unknown for " + claim.id(), exception);
                 return markUnknown(claim);
             }
             if (!delivered) {
@@ -177,26 +184,10 @@ public final class FactionMailbox {
 
     /**
      * Expires stale claims and retries refunds that did not complete. Unknown
-     * deliveries are left untouched for the operator.
+     * deliveries and refunds are left untouched for the operator.
      */
     public synchronized int expireStale(Refund refund) {
-        long now = this.clock.millis();
-        int expired = 0;
-        for (Claim claim : new ArrayList<>(this.claims.values())) {
-            if (claim.state() == State.PENDING && claim.expiresAt() <= now) {
-                Claim updated = withState(claim, State.EXPIRED);
-                this.claims.put(claim.id(), updated);
-                save();
-                expireOne(updated, refund);
-                expired++;
-            }
-        }
-        for (Claim claim : new ArrayList<>(this.claims.values())) {
-            if (claim.state() == State.EXPIRED && !claim.refunded()) {
-                refundOne(claim, refund);
-            }
-        }
-        return expired;
+        return this.expiry.expireStale(this.claims, refund);
     }
 
     public synchronized List<Claim> pendingFor(String playerId) {
@@ -233,6 +224,17 @@ public final class FactionMailbox {
         return unknown;
     }
 
+    public synchronized List<Claim> unknownRefunds() {
+        List<Claim> unknown = new ArrayList<>();
+        for (Claim claim : this.claims.values()) {
+            if (claim.state() == State.REFUND_UNKNOWN) {
+                unknown.add(claim);
+            }
+        }
+        unknown.sort(Comparator.comparingLong(Claim::createdAt).thenComparing(Claim::id));
+        return unknown;
+    }
+
     /**
      * Resolves an ambiguous delivery after checking the economy.
      *
@@ -252,6 +254,16 @@ public final class FactionMailbox {
         return save();
     }
 
+    /**
+     * Resolves an ambiguous refund after checking the source account.
+     *
+     * @param refunded true when the source was credited; false releases the key
+     *                 so the next expiry run retries the refund
+     */
+    public synchronized boolean resolveRefundUnknown(String claimId, boolean refunded) {
+        return this.expiry.resolveUnknown(this.claims, claimId, refunded);
+    }
+
     public synchronized Claim get(String claimId) {
         return this.claims.get(claimId);
     }
@@ -262,7 +274,7 @@ public final class FactionMailbox {
 
     /**
      * Idempotency keys that retention must not delete: pending or ambiguous
-     * deliveries, and refunds that have not completed yet.
+     * deliveries, and refunds that are ambiguous or have not completed yet.
      */
     public synchronized Set<String> protectedKeys() {
         Set<String> keys = new HashSet<>();
@@ -270,7 +282,8 @@ public final class FactionMailbox {
             if (claim.state() == State.PENDING || claim.state() == State.DELIVERY_UNKNOWN) {
                 keys.add(deliveryKey(claim.id()));
             }
-            if (claim.state() == State.EXPIRED && !claim.refunded()) {
+            if (claim.state() == State.REFUND_UNKNOWN
+                    || claim.state() == State.EXPIRED && !claim.refunded()) {
                 keys.add(refundKey(claim.id()));
             }
         }
@@ -289,87 +302,6 @@ public final class FactionMailbox {
         return Result.DELIVERY_UNKNOWN;
     }
 
-    private void expireOne(Claim claim, Refund refund) {
-        Claim latest = this.claims.getOrDefault(claim.id(), claim);
-        if (latest.state() != State.EXPIRED) {
-            latest = withState(latest, State.EXPIRED);
-            this.claims.put(latest.id(), latest);
-            save();
-        }
-        if (!latest.refunded()) {
-            refundOne(latest, refund);
-        }
-    }
-
-    private void refundOne(Claim claim, Refund refund) {
-        if (claim.refunded()) {
-            return;
-        }
-        if (claim.sourceAccount().isBlank()) {
-            markRefunded(claim);
-            return;
-        }
-        if (refund == null) {
-            this.logger.warning("No refund sink available for expired mailbox claim " + claim.id());
-            return;
-        }
-        String key = refundKey(claim.id());
-        if (this.idempotency.isClaimed(key)) {
-            markRefunded(claim);
-            return;
-        }
-        if (!this.idempotency.claim(key)) {
-            return;
-        }
-        boolean refunded;
-        try {
-            refunded = refund.refund(claim);
-        } catch (RuntimeException exception) {
-            this.logger.log(Level.SEVERE, "Mailbox refund failed for " + claim.id(), exception);
-            refunded = false;
-        }
-        if (!refunded) {
-            this.idempotency.release(key);
-            return;
-        }
-        markRefunded(claim);
-    }
-
-    private void markRefunded(Claim claim) {
-        Claim latest = this.claims.getOrDefault(claim.id(), claim);
-        this.claims.put(latest.id(), new Claim(latest.id(), latest.playerId(), latest.amount(),
-                latest.sourceAccount(), latest.source(), latest.reason(), latest.createdAt(),
-                latest.expiresAt(), latest.state(), true, latest.completedAt()));
-        save();
-    }
-
-    /**
-     * Repairs the crash window where a key was claimed but no completed record
-     * was saved. Unknown records are never retried automatically, even if the
-     * idempotency key is missing; an operator must reconcile them explicitly.
-     */
-    private void recoverDeliveries() {
-        boolean changed = false;
-        boolean unknown = false;
-        for (Claim claim : new ArrayList<>(this.claims.values())) {
-            String key = deliveryKey(claim.id());
-            if (claim.state() == State.PENDING && this.idempotency.isClaimed(key)) {
-                this.claims.put(claim.id(), withState(claim, State.DELIVERY_UNKNOWN));
-                changed = true;
-                unknown = true;
-            }
-            if (claim.state() == State.DELIVERY_UNKNOWN) {
-                unknown = true;
-            }
-        }
-        if (changed) {
-            save();
-        }
-        if (unknown) {
-            this.logger.warning("Mailbox recovery found unknown deliveries; reconcile them manually.");
-        }
-    }
-
     private boolean save() {
         return this.store.save(this.claims.values());
     }
@@ -386,11 +318,11 @@ public final class FactionMailbox {
                 claim.refunded(), completedAt);
     }
 
-    private static String deliveryKey(String claimId) {
+    static String deliveryKey(String claimId) {
         return "mailbox:" + claimId;
     }
 
-    private static String refundKey(String claimId) {
+    static String refundKey(String claimId) {
         return "mailbox-refund:" + claimId;
     }
 
