@@ -10,6 +10,7 @@ import java.util.*;
  * API additions that are specific to FactionsOne.
  *
  * @author Daniel Saukel
+ * @author MarcDoesntExists
  */
 public class SkyAPI {
 

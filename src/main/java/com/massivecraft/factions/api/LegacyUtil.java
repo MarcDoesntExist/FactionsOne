@@ -28,6 +28,7 @@ import java.util.Set;
  * Workarounds to support API versions 1.7.10 - 1.13 and hopefully higher. For internal usage.
  *
  * @author Daniel Saukel
+ * @author MarcDoesntExists
  */
 public class LegacyUtil {
 

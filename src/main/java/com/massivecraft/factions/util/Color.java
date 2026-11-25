@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  * constant names match the old enum, so existing {@code conf.json} values keep
  * working unchanged.</p>
  *
- * @author MarcDoesntExist
+ * @author MarcDoesntExists
  */
 public enum Color {
     BLACK('0'),

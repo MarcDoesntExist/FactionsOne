@@ -20,7 +20,7 @@ import java.util.logging.Level;
  * <p>Callers serialize their data on the calling thread (a consistent snapshot)
  * and only the disk I/O runs asynchronously.</p>
  *
- * @author MarcDoesntExist
+ * @author MarcDoesntExists
  */
 public final class SaveQueue {
 

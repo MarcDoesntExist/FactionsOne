@@ -66,6 +66,7 @@ import java.util.concurrent.TimeUnit;
  * @author Olof Cayorion Larsson
  * @author Brett Flannigan
  * @author Daniel Saukel
+ * @author MarcDoesntExists
  */
 public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     private static final long MAP_AUTO_UPDATE_TICKS = 20L;

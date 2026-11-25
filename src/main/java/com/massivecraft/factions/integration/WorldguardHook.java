@@ -22,7 +22,7 @@ import java.util.Map;
  * Loaded reflectively by {@link Worldguard} only when WorldGuard is present.
  * Keep every WorldGuard class reference in this class.
  *
- * @author MarcDoesntExist
+ * @author MarcDoesntExists
  */
 final class WorldguardHook implements Worldguard.Hook {
     private final WorldGuardPlugin wg = WorldGuardPlugin.inst();
