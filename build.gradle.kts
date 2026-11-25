@@ -278,6 +278,30 @@ tasks.register<Jar>("probeJar") {
     })
 }
 
+tasks.register<JavaCompile>("refundProbeClasses") {
+    group = "verification"
+    description = "Compiles the local mailbox refund crash probe used by the live refund test."
+    val probeSource = project.file("test-server/refundprobe/src")
+    onlyIf { probeSource.isDirectory }
+    source(probeSource)
+    classpath = probeCompile
+    destinationDirectory.set(project.layout.buildDirectory.dir("refundprobe/classes"))
+    options.encoding = "UTF-8"
+    options.release.set(25)
+}
+
+tasks.register<Jar>("refundProbeJar") {
+    group = "verification"
+    description = "Packages the local mailbox refund crash probe used by the live refund test."
+    dependsOn("refundProbeClasses")
+    onlyIf { project.file("test-server/refundprobe/src").isDirectory }
+    archiveBaseName.set("RefundProbe")
+    archiveVersion.set("1.0.0")
+    destinationDirectory.set(project.layout.buildDirectory.dir("refundprobe"))
+    from(project.layout.buildDirectory.dir("refundprobe/classes"))
+    from(project.file("test-server/refundprobe/plugin.yml"))
+}
+
 tasks.register("probeClasspath") {
     group = "verification"
     description = "Prints the classpath used to compile the local Vault stand-in."
