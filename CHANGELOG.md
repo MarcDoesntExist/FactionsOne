@@ -8,6 +8,10 @@ the project uses semantic versioning.
 
 ### Added
 
+- Symmetric shield rules: protected factions cannot attack or overclaim, and
+  protected territory cannot be overclaimed.
+- Warp use can charge a configurable cost before warmup, with automatic refund
+  when the warmup is cancelled or the teleport fails.
 - Public API accessors for factions, players, claims, bank balances and warps,
   plus cancellable bank, warp, upgrade, shield, role and mission events.
 - Shop offers can be perks: temporary faction power, faction bank money,

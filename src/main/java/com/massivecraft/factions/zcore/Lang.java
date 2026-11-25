@@ -28,7 +28,9 @@ public class Lang {
     public static final String featureCancelled = "<b>That action was cancelled.";
     public static final String bankTransactionCancelled = "<b>That bank transaction was cancelled.";
     public static final String warpTeleportCancelled = "<b>The warp teleport was cancelled.";
+    public static final String warpCostFailed = "<b>You cannot pay for this warp right now.";
     public static final String shieldChangeCancelled = "<b>That shield change was cancelled.";
+    public static final String shieldCannotAttack = "<b>A shielded faction cannot attack or overclaim.";
     public static final String roleChangeCancelled = "<b>That role change was cancelled.";
     public static final String upgradeHeader = "<gold>Faction upgrades <gray>(points: <white>%s<gray>)";
     public static final String upgradeLine = "<aqua>%s <gray>level %s/%s, cost %s";

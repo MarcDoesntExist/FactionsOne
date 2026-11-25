@@ -141,7 +141,7 @@ public class FactionsEntityListener implements Listener {
         }
         for (FLocation loc : explosionLocs) {
             Faction faction = Board.getFactionAt(loc);
-            if (this.main.shieldService != null && this.main.shieldService.isProtected(faction)) {
+            if (this.main.shieldService != null) {
                 Entity source = event.getEntity() instanceof TNTPrimed
                         ? ((TNTPrimed) event.getEntity()).getSource()
                         : null;
@@ -149,8 +149,7 @@ public class FactionsEntityListener implements Listener {
                 boolean bypass = igniter != null && (igniter.hasAdminMode()
                         || Conf.playersWhoBypassAllProtection.contains(igniter.getName())
                         || Conf.playersWhoBypassAllProtection.contains(igniter.getId()));
-                if (!bypass && (!(source instanceof Player)
-                        || !this.main.shieldService.canAct(faction, igniter))) {
+                if (!bypass && !this.main.shieldService.canAttack(faction, igniter)) {
                     event.setCancelled(true);
                     return;
                 }
@@ -306,7 +305,7 @@ public class FactionsEntityListener implements Listener {
                 .contains(uuid))
             return true;
 
-        if (this.main.shieldService != null && !this.main.shieldService.canAct(defLocFaction, attacker)) {
+        if (this.main.shieldService != null && !this.main.shieldService.canAttack(defLocFaction, attacker)) {
             if (notify) {
                 attacker.msg(Lang.shieldProtected, defLocFaction.describeTo(attacker));
             }

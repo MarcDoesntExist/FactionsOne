@@ -234,6 +234,7 @@ public class Conf {
     public static boolean warpMustBeInTerritory = true;
     public static int warpWarmupSeconds = 3;
     public static int warpCooldownSeconds = 10;
+    public static double warpCost = 0.0;
     public static boolean tntBankEnabled = true;
     public static int tntBankMax = 512;
     public static int factionLogLimit = 100;

@@ -51,6 +51,12 @@ public abstract class FRelationCommand extends FCommand {
             return;
         }
 
+        if (targetRelation == Rel.ENEMY && Main.main.shieldService != null
+                && Main.main.shieldService.isProtected(myFaction)) {
+            msg(Lang.shieldCannotAttack);
+            return;
+        }
+
         if (myFaction.getRelationWish(them) == targetRelation) {
             msg("<b>You already have that relation wish set with %s.", them.getTagPlain());
             return;

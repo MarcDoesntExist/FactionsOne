@@ -58,6 +58,28 @@ public final class ShieldService {
         return territory.getRelationTo(actorFaction).isAtLeast(Rel.ALLY);
     }
 
+    /**
+     * Attack/overclaim gate: a shielded faction cannot attack an unprotected
+     * target, and an unprotected actor cannot attack a shielded target.
+     */
+    public boolean canAttack(Faction territory, FPlayer actor) {
+        if (actor == null) {
+            return !this.isProtected(territory);
+        }
+        Faction actorFaction = actor.getFaction();
+        if (actorFaction == null) {
+            return !this.isProtected(territory);
+        }
+        if (actorFaction == territory) {
+            return true;
+        }
+        if (this.isProtected(actorFaction)) {
+            return false;
+        }
+        return !this.isProtected(territory)
+                || territory.getRelationTo(actorFaction).isAtLeast(Rel.ALLY);
+    }
+
     public long remainingMinutes(Faction faction) {
         if (faction == null) {
             return 0;

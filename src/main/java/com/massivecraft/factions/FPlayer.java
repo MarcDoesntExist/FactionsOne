@@ -664,6 +664,16 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
         FLocation flocation = new FLocation(location);
         Faction currentFaction = Board.getFactionAt(flocation);
 
+        if (currentFaction.isNormal() && currentFaction != forFaction
+                && Main.main.shieldService != null
+                && (Main.main.shieldService.isProtected(currentFaction)
+                || Main.main.shieldService.isProtected(forFaction))) {
+            if (notifyFailure) {
+                msg(Lang.shieldCannotAttack);
+            }
+            return false;
+        }
+
         int ownedLand = forFaction.getLandRounded();
 
         if (!this.canClaimForFactionAtLocation(forFaction, location, notifyFailure))

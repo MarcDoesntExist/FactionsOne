@@ -1,6 +1,7 @@
 package com.massivecraft.factions;
 
 import com.massivecraft.factions.event.WarpTeleportEvent;
+import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.util.LazyLocation;
 import com.massivecraft.factions.zcore.Lang;
@@ -123,28 +124,50 @@ public final class WarpService {
                 return false;
             }
         }
+        double cost = Math.max(0.0, Conf.warpCost);
+        if (cost > 0.0 && !Econ.modifyMoney(fplayer, -cost, "to use a warp",
+                "for using a warp")) {
+            fplayer.msg(Lang.warpCostFailed);
+            return false;
+        }
         if (seconds > 0) {
             fplayer.msg("<i>Warping in <h>%s<i> seconds. Do not move.", seconds);
         }
-        this.warmup.start(player, seconds, () -> this.finish(fplayer, faction, warp, destination));
+        this.warmup.start(player, seconds,
+                () -> this.finish(fplayer, faction, warp, destination, cost),
+                () -> this.refund(fplayer, cost));
         return true;
     }
 
-    private boolean finish(FPlayer fplayer, Faction faction, FactionWarp warp, Location destination) {
+    private boolean finish(FPlayer fplayer, Faction faction, FactionWarp warp, Location destination,
+                           double cost) {
         Player player = fplayer.getPlayer();
         if (player == null) {
-            return false;
+            return this.refund(fplayer, cost);
         }
         if (fplayer.getFaction() != faction || !FPerm.WARP.has(fplayer, faction, false)) {
-            return false;
+            return this.refund(fplayer, cost);
         }
-        player.teleport(destination);
+        try {
+            player.teleport(destination);
+        } catch (RuntimeException exception) {
+            this.plugin.getLogger().warning("Warp teleport failed for " + player.getName() + ": "
+                    + exception.getMessage());
+            return this.refund(fplayer, cost);
+        }
         player.setFallDistance(0);
         this.cooldowns.put(player.getUniqueId(),
                 System.currentTimeMillis() + Math.max(0, Conf.warpCooldownSeconds) * 1000L);
         faction.addLog(fplayer.getName(), "WARP_USE", warp.getName());
         fplayer.msg("<g>Warped to <h>%s<g>.", warp.getName());
         return true;
+    }
+
+    private boolean refund(FPlayer fplayer, double cost) {
+        if (cost > 0.0) {
+            Econ.modifyMoney(fplayer, cost, null, "warp refund");
+        }
+        return false;
     }
 
     private static String normalize(String name) {

@@ -23,7 +23,10 @@ import java.util.UUID;
 public final class TeleportWarmupService implements Listener {
 
     private final Main plugin;
-    private final Map<UUID, Integer> pending = new HashMap<>();
+    private final Map<UUID, Pending> pending = new HashMap<>();
+
+    private record Pending(int taskId, Runnable onCancel) {
+    }
 
     public TeleportWarmupService(Main plugin) {
         this.plugin = plugin;
@@ -34,24 +37,37 @@ public final class TeleportWarmupService implements Listener {
     }
 
     public void start(Player player, int seconds, Runnable action) {
+        this.start(player, seconds, action, null);
+    }
+
+    public void start(Player player, int seconds, Runnable action, Runnable onCancel) {
         this.cancel(player.getUniqueId());
         if (seconds <= 0) {
             action.run();
             return;
         }
+        UUID playerId = player.getUniqueId();
         int taskId = this.plugin.getServer().getScheduler().runTaskLater(this.plugin, () -> {
-            this.pending.remove(player.getUniqueId());
+            Pending current = this.pending.remove(playerId);
+            if (current == null) {
+                return;
+            }
             if (player.isOnline()) {
                 action.run();
+            } else if (current.onCancel() != null) {
+                current.onCancel().run();
             }
         }, seconds * 20L).getTaskId();
-        this.pending.put(player.getUniqueId(), taskId);
+        this.pending.put(playerId, new Pending(taskId, onCancel));
     }
 
     public void cancel(UUID playerId) {
-        Integer taskId = this.pending.remove(playerId);
-        if (taskId != null) {
-            this.plugin.getServer().getScheduler().cancelTask(taskId);
+        Pending pending = this.pending.remove(playerId);
+        if (pending != null) {
+            this.plugin.getServer().getScheduler().cancelTask(pending.taskId());
+            if (pending.onCancel() != null) {
+                pending.onCancel().run();
+            }
         }
     }
 
