@@ -1,0 +1,17 @@
+# Faction shop paid with faction points.
+# material, amount and cost are required; name/lore are optional display text.
+offers:
+  bread:
+    material: BREAD
+    amount: 4
+    cost: 2
+    name: "Bread bundle"
+    lore:
+      - "Four bread for two faction points."
+  iron:
+    material: IRON_INGOT
+    amount: 8
+    cost: 5
+    name: "Iron bundle"
+    lore:
+      - "Eight iron ingots for five faction points."

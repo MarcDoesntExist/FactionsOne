@@ -1,0 +1,15 @@
+# Faction missions are shared by all members and rewarded with faction points.
+# type: CLAIM or TNT_DEPOSIT
+missions:
+  first-claim:
+    name: "First claim"
+    description: "Claim one chunk for the faction."
+    type: CLAIM
+    target: 1
+    reward-points: 10
+  tnt-deposit:
+    name: "TNT reserve"
+    description: "Deposit four TNT into the faction bank."
+    type: TNT_DEPOSIT
+    target: 4
+    reward-points: 10

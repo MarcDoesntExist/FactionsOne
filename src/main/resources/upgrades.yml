@@ -1,0 +1,18 @@
+# Faction upgrades bought with faction points.
+# effect: WARP_LIMIT or TNT_LIMIT
+# The cost is base-cost * (cost-multiplier ^ current-level), rounded up.
+upgrades:
+  warps:
+    name: "Warp slots"
+    max-level: 3
+    base-cost: 5
+    cost-multiplier: 2.0
+    effect: WARP_LIMIT
+    amount-per-level: 1
+  tnt:
+    name: "TNT bank capacity"
+    max-level: 3
+    base-cost: 5
+    cost-multiplier: 2.0
+    effect: TNT_LIMIT
+    amount-per-level: 64
