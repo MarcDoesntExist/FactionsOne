@@ -84,6 +84,8 @@ public class CmdPerm extends FCommand {
 
         // Do the change
         faction.setRelationPermitted(perm, rel, val);
+        faction.addLog(this.senderIsConsole ? "console" : fme.getName(), "PERM",
+                perm.name() + " " + rel.name() + "=" + val);
 
         // The following is to make sure the leader always has the right to change perms if that is our goal.
         if (perm == FPerm.PERMS && FPerm.PERMS.getDefault().contains(Rel.LEADER)) {

@@ -36,6 +36,14 @@ public class CmdJoin extends FCommand {
             return;
 
         FPlayer fplayer = this.argAsBestFPlayerMatch(1, fme, false);
+        if (faction.isBanned(fplayer)) {
+            if (fplayer == fme) {
+                msg("<b>You are banned from %s.", faction.getTag(fme));
+            } else {
+                msg("<b>%s is banned from %s.", fplayer.describeTo(fme, true), faction.getTag(fme));
+            }
+            return;
+        }
         boolean samePlayer = fplayer == fme;
 
         if (!samePlayer && !Permission.JOIN_OTHERS.has(sender, false)) {

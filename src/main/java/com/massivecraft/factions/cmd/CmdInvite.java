@@ -45,11 +45,17 @@ public class CmdInvite extends FCommand {
         if (fme != null && !FPerm.INVITE.has(fme, myFaction))
             return;
 
+        if (myFaction.isBanned(you)) {
+            msg("<b>%s is banned from your faction.", you.describeTo(fme, true));
+            return;
+        }
+
         // if economy is enabled, they're not on the bypass list, and this command has a cost set, make 'em pay
         if (!payForCommand(Conf.econCostInvite, "to invite someone", "for inviting someone"))
             return;
 
         myFaction.invite(you);
+        myFaction.addLog(fme == null ? "console" : fme.getName(), "INVITE", you.getName());
 
         you.msg("%s<i> invited you to %s", fme.describeTo(you, true), myFaction.describeTo(you));
         myFaction.msg("%s<i> invited %s<i> to your faction.", fme.describeTo(myFaction, true),

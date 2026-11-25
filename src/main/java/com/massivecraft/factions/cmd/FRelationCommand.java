@@ -61,6 +61,7 @@ public abstract class FRelationCommand extends FCommand {
         // try to set the new relation
         Rel oldRelation = myFaction.getRelationTo(them, true);
         myFaction.setRelationWish(them, targetRelation);
+        myFaction.addLog(fme.getName(), "RELATION", them.getTagPlain() + " " + targetRelation);
         Rel currentRelation = myFaction.getRelationTo(them, true);
 
         // if the relation change was successful

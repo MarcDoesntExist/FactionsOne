@@ -60,6 +60,8 @@ public class CmdUnclaim extends FCommand {
         }
 
         Board.removeAt(flocation);
+        otherFaction.addLog(senderIsConsole ? "console" : fme.getName(), "UNCLAIM",
+                flocation.getCoordString());
         myFaction.msg("%s<i> unclaimed some land.", fme.describeTo(myFaction, true));
 
         if (Conf.logLandUnclaims)

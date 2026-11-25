@@ -84,6 +84,7 @@ public class CmdKick extends FCommand {
                 "for kicking someone from the faction"))
             return;
 
+        yourFaction.addLog(senderIsConsole ? "console" : fme.getName(), "KICK", you.getName());
         yourFaction
                 .msg("%s<i> kicked %s<i> from the faction! :O", fme.describeTo(yourFaction, true),
                         you.describeTo(yourFaction, true));
