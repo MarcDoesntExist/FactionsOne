@@ -3,10 +3,13 @@ package com.massivecraft.factions.cmd;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.integration.Econ;
+import com.massivecraft.factions.shield.ShieldService;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
+import com.massivecraft.factions.zcore.Lang;
 import net.kyori.adventure.text.Component;
 import com.massivecraft.factions.zcore.util.TextUtil;
 
@@ -75,6 +78,22 @@ public class CmdShow extends FCommand {
         msg("<a>Joining: <i>" + (faction.getOpen() ?
                 "no invitation is needed" :
                 "invitation is required"));
+
+        if (faction.isNormal()) {
+            ShieldService shields = Main.main.shieldService;
+            String shield;
+            if (shields == null || !shields.isProtected(faction)) {
+                shield = Lang.shieldInactive;
+            } else {
+                shield = String.format(Lang.shieldState,
+                        shields.isGrace(faction) ? Lang.shieldGrace : Lang.shieldActive,
+                        shields.remainingMinutes(faction));
+            }
+            String raid = faction.hasLandInflation() ? Lang.showRaidable : Lang.showSafe;
+            String war = faction.getRelationTo(fme) == Rel.ENEMY
+                    ? Lang.showAtWar : Lang.showNotAtWar;
+            msg(Lang.showState, shield, raid, war);
+        }
 
         double powerBoost = faction.getPowerBoost();
         String boost = (powerBoost == 0.0) ?

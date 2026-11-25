@@ -2,6 +2,8 @@ package com.massivecraft.factions.cmd;
 
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.zcore.Lang;
 import com.massivecraft.factions.struct.Permission;
 
 /**
@@ -50,6 +52,16 @@ public class CmdPower extends FCommand {
                 (powerBoost > 0.0 ? " (bonus: " : " (penalty: ") + powerBoost + ")";
         msg("%s<a> - Power / Maxpower: <i>%d / %d %s", target.describeTo(fme, true),
                 target.getPowerRounded(), target.getPowerMaxRounded(), boost);
+
+        Faction faction = target.getFaction();
+        if (faction != null && faction.isNormal()) {
+            double factionBoost = faction.getPowerBoost();
+            String factionBonus = factionBoost == 0.0 ? "0"
+                    : (factionBoost > 0.0 ? "+" : "") + factionBoost;
+            msg(Lang.powerFactionBreakdown, faction.getPowerRounded(),
+                    faction.getPowerMaxRounded(), faction.getFPlayers().size(),
+                    faction.getLandRounded(), factionBonus);
+        }
     }
 
 }

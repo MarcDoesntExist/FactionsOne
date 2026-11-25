@@ -157,6 +157,12 @@ public class Lang {
     public static final String topLine = "<h>#%d <i>%s<gray>: <white>%s";
     public static final String topEmpty = "<i>No factions to rank yet.";
     public static final String topInvalidMetric = "<b>Unknown metric. Use power, land, members, bank or points.";
+    public static final String powerFactionBreakdown = "<i>Faction: <h>%d/%d <i>power from <h>%d<i> member(s) on <h>%d<i> claim(s); bonus/malus <h>%s<i>.";
+    public static final String showState = "<a>Status: <i>%s <a>| <i>%s <a>| <i>%s";
+    public static final String showRaidable = "raidable (claims exceed power)";
+    public static final String showSafe = "not raidable";
+    public static final String showAtWar = "at war with you";
+    public static final String showNotAtWar = "not at war with you";
     public static final String statusHeader = "<i>Faction status: <h>%s";
     public static final String statusRole = "<i>Your role: <h>%s";
     public static final String statusPower = "<i>Power: <h>%d/%d";

@@ -8,6 +8,10 @@ the project uses semantic versioning.
 
 ### Added
 
+- `/f power` now shows the faction power breakdown: member sum, claim count and
+  the combined bonus/malus.
+- `/f show` now displays a public status line with shield/grace, raidability and
+  whether the faction is at war with the viewer.
 - TNT bank `fill` and `siphon` commands that move only the amount the
   dispenser inventories actually accepted or released, with FINE verification
   logs.
