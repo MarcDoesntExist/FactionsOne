@@ -109,6 +109,9 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
             oldFaction.removeFPlayer(this);
         faction.addFPlayer(this);
         this.factionId = faction.getId();
+        if (Main.main != null && Main.main.rankingService != null) {
+            Main.main.rankingService.invalidate();
+        }
     }
 
     public String getFactionId() {
@@ -670,6 +673,10 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
         }
 
         Board.setFactionAt(forFaction, flocation);
+        forFaction.addLog(this.getName(), "CLAIM", flocation.getCoordString());
+        if (Main.main.featureService != null) {
+            Main.main.featureService.progress(forFaction, FeatureConfig.MissionType.CLAIM, 1);
+        }
 
         if (Conf.logLandClaims)
             Main.main.log(this.getName() + " claimed land at (" + flocation.getCoordString()

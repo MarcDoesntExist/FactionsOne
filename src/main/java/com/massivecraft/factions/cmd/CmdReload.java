@@ -4,6 +4,7 @@ import com.massivecraft.factions.Board;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayers;
 import com.massivecraft.factions.Factions;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.zcore.util.DiscUtil;
 
@@ -73,6 +74,8 @@ public class CmdReload extends FCommand {
         }
 
         Conf.migrateColeaderPermissions();
+        Conf.migrateExtendedPermissions();
+        Main.main.startFactionTaxTask(true);
         msg("<i>Reloaded <h>%s <i>from disk, took <h>%dms<i>.", fileName, timeReload);
     }
 

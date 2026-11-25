@@ -485,6 +485,13 @@ public abstract class FCommand extends MCommand<Main> {
         return false;
     }
 
+    /**
+     * Name of the acting player, or "console" for server senders.
+     */
+    protected String actorName() {
+        return this.fme == null ? "console" : this.fme.getName();
+    }
+
     // if economy is enabled and they're not on the bypass list, make 'em pay; returns true unless person can't afford the cost
     public boolean payForCommand(double cost, String toDoThis, String forDoingThis) {
         if (!Econ.shouldBeUsed() || this.fme == null || cost == 0.0 || fme.hasAdminMode())

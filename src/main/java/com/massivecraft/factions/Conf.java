@@ -41,6 +41,7 @@ public class Conf {
     public static Map<FFlag, Boolean> factionFlagIsChangeable;
     public static Map<FPerm, Set<Rel>> factionPermDefaults;
     public static boolean coleaderPermsMigrated = false;
+    public static boolean extendedPermsMigrated = false;
     public static Rel factionRankDefault = Rel.RECRUIT;
     // Power
     public static double powerPlayerMax = 10.0;
@@ -192,8 +193,36 @@ public class Conf {
     public static double econCostEnemy = 0.0;
     public static int econLandRewardTaskRunsEveryXMinutes = 20;
     public static double econLandReward = 0.00;
+    // Periodic faction tax (tax + upkeep). Disabled by default.
+    public static boolean taxEnabled = false;
+    public static int taxIntervalMinutes = 1440;
+    public static double taxBase = 0.0;
+    public static double taxPerMember = 0.0;
+    public static double taxPerChunk = 0.0;
+    public static double taxCap = 0.0;
+    public static int taxGracePeriods = 3;
+    public static String taxInsolvencyAction = "NONE";
+    public static boolean taxNotifyOfficers = true;
+    // Grace and shield windows for faction territory. Disabled by default.
+    public static boolean shieldEnabled = false;
+    public static int shieldGraceHours = 24;
+    public static int shieldMaxHours = 168;
+    // Ranking and exploration helpers
+    public static int rankingCacheSeconds = 30;
+    public static int nearDefaultRadiusChunks = 50;
+    public static int nearMaxRadiusChunks = 200;
+    public static int stuckWarmupSeconds = 3;
     //Faction banks, to pay for land claiming and other costs instead of individuals paying for them
     public static boolean bankEnabled = true;
+    public static boolean warpsEnabled = true;
+    public static int warpMax = 5;
+    public static boolean warpMustBeInTerritory = true;
+    public static int warpWarmupSeconds = 3;
+    public static int warpCooldownSeconds = 10;
+    public static boolean tntBankEnabled = true;
+    public static int tntBankMax = 512;
+    public static int factionLogLimit = 100;
+    public static String chatAllyFormat = "<pink>[Ally] <white>%s: %s";
     //public static boolean bankMembersCanWithdraw = false; //Have to be at least moderator to withdraw or pay money to another faction
     public static boolean bankFactionPaysCosts = true;
     //The faction pays for land claiming costs.
@@ -288,6 +317,17 @@ public class Conf {
 
     public static void load() {
         Main.main.persist.loadOrSaveDefault(i, Conf.class, "conf");
+        if (factionPermDefaults != null) {
+            factionPermDefaults.keySet().removeIf(Objects::isNull);
+            factionPermDefaults.values().removeIf(Objects::isNull);
+        }
+        if (factionFlagDefaults != null) {
+            factionFlagDefaults.keySet().removeIf(Objects::isNull);
+            factionFlagDefaults.values().removeIf(Objects::isNull);
+            for (FFlag flag : FFlag.values()) {
+                factionFlagDefaults.putIfAbsent(flag, flag.defaultDefaultValue);
+            }
+        }
     }
 
     /**
@@ -318,6 +358,28 @@ public class Conf {
             faction.migrateColeaderPermissions();
         }
         coleaderPermsMigrated = true;
+    }
+
+    /**
+     * Adds defaults for permissions introduced after the current config was written.
+     * Existing configured values are preserved.
+     */
+    public static void migrateExtendedPermissions() {
+        if (extendedPermsMigrated) {
+            return;
+        }
+
+        if (factionPermDefaults == null) {
+            factionPermDefaults = new LinkedHashMap<FPerm, Set<Rel>>();
+        }
+        for (FPerm perm : FPerm.values()) {
+            if (factionPermDefaults.get(perm) == null) {
+                Set<Rel> defaults = new HashSet<Rel>();
+                defaults.addAll(perm.defaultDefaultValue);
+                factionPermDefaults.put(perm, defaults);
+            }
+        }
+        extendedPermsMigrated = true;
     }
 
     public static void save() {

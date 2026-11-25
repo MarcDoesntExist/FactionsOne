@@ -6,11 +6,20 @@ import com.massivecraft.factions.adapters.FPermTypeAdapter;
 import com.massivecraft.factions.adapters.LocationTypeAdapter;
 import com.massivecraft.factions.adapters.RelTypeAdapter;
 import com.massivecraft.factions.cmd.CmdAutoHelp;
+import com.massivecraft.factions.bank.BankService;
 import com.massivecraft.factions.cmd.FCmdRoot;
+import com.massivecraft.factions.economy.FactionTaxService;
+import com.massivecraft.factions.economy.FactionTaxTask;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.integration.Essentials;
+import com.massivecraft.factions.gui.GuiConfig;
+import com.massivecraft.factions.gui.MenuManager;
 import com.massivecraft.factions.integration.Worldguard;
 import com.massivecraft.factions.listeners.*;
+import com.massivecraft.factions.rank.FactionRankingService;
+import com.massivecraft.factions.shield.ShieldService;
+import com.massivecraft.factions.util.StuckService;
+import com.massivecraft.factions.util.TeleportWarmupService;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
@@ -34,6 +43,7 @@ import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 
 import java.lang.reflect.Modifier;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -64,10 +74,25 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     // Commands
     public FCmdRoot cmdBase;
     public CmdAutoHelp cmdAutoHelp;
+    // GUI
+    public GuiConfig guiConfig;
+    public MenuManager menuManager;
+    // Faction features
+    public FeatureConfig featureConfig;
+    public FeatureService featureService;
+    public WarpService warpService;
+    public FlyService flyService;
+    public ShieldService shieldService;
+    public FactionRankingService rankingService;
+    public TeleportWarmupService teleportWarmupService;
+    public StuckService stuckService;
+    public TntBankService tntBankService;
+    public FactionTaxService factionTaxService;
     // Persistance related
     private boolean locked = false;
     private Integer AutoLeaveTask = null;
     private Integer econLandRewardTaskID = null;
+    private Integer factionTaxTaskID = null;
     private Integer mapAutoUpdateTask = null;
 
     public Main() {
@@ -107,7 +132,21 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         FPlayers.i.loadFromDisc();
         Factions.i.loadFromDisc();
         Conf.migrateColeaderPermissions();
+        Conf.migrateExtendedPermissions();
         Board.load();
+
+        this.guiConfig = new GuiConfig(this);
+        this.menuManager = new MenuManager(this, this.guiConfig);
+        this.featureConfig = new FeatureConfig(this);
+        this.featureService = new FeatureService(this, this.featureConfig);
+        this.teleportWarmupService = new TeleportWarmupService(this);
+        this.warpService = new WarpService(this, this.featureService, this.teleportWarmupService);
+        this.flyService = new FlyService();
+        this.shieldService = new ShieldService(Clock.systemUTC());
+        this.rankingService = new FactionRankingService(Clock.systemUTC(), Conf.rankingCacheSeconds,
+                FactionRankingService::collectLive);
+        this.stuckService = new StuckService(this, this.teleportWarmupService);
+        this.tntBankService = new TntBankService(this.featureService);
 
         // Add Base Commands
         this.cmdAutoHelp = new CmdAutoHelp();
@@ -123,6 +162,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
 
         Essentials.setup();
         Econ.setup();
+        this.factionTaxService = new FactionTaxService(BankService.get(), Clock.systemUTC());
 
         if (Conf.worldGuardChecking) {
             Worldguard.init(this);
@@ -134,6 +174,9 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         // start up task which runs the econLandRewardRoutine
         startEconLandRewardTask(false);
 
+        // start up task which charges the periodic faction tax
+        startFactionTaxTask(false);
+
         // Register Event Handlers
         getServer().getPluginManager().registerEvents(this.playerListener, this);
         getServer().getPluginManager().registerEvents(this.chatListener, this);
@@ -141,6 +184,9 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         getServer().getPluginManager().registerEvents(this.exploitListener, this);
         getServer().getPluginManager().registerEvents(this.blockListener, this);
         getServer().getPluginManager().registerEvents(this.serverListener, this);
+        getServer().getPluginManager().registerEvents(this.menuManager, this);
+        getServer().getPluginManager().registerEvents(this.teleportWarmupService, this);
+        getServer().getPluginManager().registerEvents(this.flyService, this);
 
         startMapAutoUpdateTask();
 
@@ -174,6 +220,10 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
             this.getServer().getScheduler().cancelTask(mapAutoUpdateTask);
             mapAutoUpdateTask = null;
         }
+        if (factionTaxTaskID != null) {
+            this.getServer().getScheduler().cancelTask(factionTaxTaskID);
+            factionTaxTaskID = null;
+        }
         super.onDisable();
     }
 
@@ -203,6 +253,21 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
             long ticks = 20L * 60 * Conf.econLandRewardTaskRunsEveryXMinutes;
             econLandRewardTaskID = getServer().getScheduler()
                     .scheduleSyncRepeatingTask(this, new EconLandRewardTask(), ticks, ticks);
+        }
+    }
+
+    public void startFactionTaxTask(boolean restartIfRunning) {
+        if (factionTaxTaskID != null) {
+            if (!restartIfRunning)
+                return;
+            this.getServer().getScheduler().cancelTask(factionTaxTaskID);
+            factionTaxTaskID = null;
+        }
+
+        if (Conf.taxEnabled && Conf.taxIntervalMinutes > 0) {
+            long ticks = Math.min(Integer.MAX_VALUE, 20L * 60L * Conf.taxIntervalMinutes);
+            factionTaxTaskID = getServer().getScheduler()
+                    .scheduleSyncRepeatingTask(this, new FactionTaxTask(), ticks, ticks);
         }
     }
 

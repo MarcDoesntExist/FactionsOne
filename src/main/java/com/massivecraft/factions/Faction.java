@@ -36,6 +36,8 @@ public class Faction extends Entity implements EconomyParticipator {
     // FIELD: invites
     // Where string is a lowercase player name
     private final Set<String> invites;
+    // FIELD: banned player ids
+    private final FactionBanList bannedPlayers;
     // FIELDS: Flag management
     // TODO: This will save... defaults if they where changed to...
     private final Map<FFlag, Boolean> flagOverrides;
@@ -44,6 +46,19 @@ public class Faction extends Entity implements EconomyParticipator {
     // FIELD: account (fake field)
     // Bank functions
     public double money;
+    private Map<String, FactionWarp> warps;
+    private int tntBank;
+    private int factionPoints;
+    private Map<String, Integer> upgradeLevels;
+    private Map<String, Integer> missionProgress;
+    private Set<String> completedMissions;
+    private List<FactionLogEntry> logs;
+    private int taxArrears;
+    private boolean taxInsolvent;
+    private long lastTaxAt;
+    private long createdAt;
+    private long graceUntil;
+    private long shieldUntil;
     // FIELD: open
     private boolean open;
     // FIELD: tag
@@ -61,10 +76,18 @@ public class Faction extends Entity implements EconomyParticipator {
     public Faction() {
         this.relationWish = new HashMap<>();
         this.invites = new HashSet<String>();
+        this.bannedPlayers = new FactionBanList();
         this.open = Conf.newFactionsDefaultOpen;
         this.tag = "???";
         this.description = "Default faction description :(";
         this.money = 0.0;
+        this.warps = new LinkedHashMap<String, FactionWarp>();
+        this.tntBank = 0;
+        this.factionPoints = 0;
+        this.upgradeLevels = new LinkedHashMap<String, Integer>();
+        this.missionProgress = new LinkedHashMap<String, Integer>();
+        this.completedMissions = new HashSet<String>();
+        this.logs = new ArrayList<FactionLogEntry>();
         this.powerBoost = 0.0;
         this.flagOverrides = new LinkedHashMap<FFlag, Boolean>();
         this.permOverrides = new LinkedHashMap<FPerm, Set<Rel>>();
@@ -84,6 +107,42 @@ public class Faction extends Entity implements EconomyParticipator {
 
     public boolean isInvited(FPlayer fplayer) {
         return this.invites.contains(fplayer.getId());
+    }
+
+    public boolean isBanned(String playerId) {
+        return this.bannedPlayers.isBanned(playerId);
+    }
+
+    public boolean isBanned(FPlayer fplayer) {
+        return fplayer != null && this.isBanned(fplayer.getId());
+    }
+
+    public void ban(FPlayer fplayer) {
+        if (fplayer != null) {
+            this.ban(fplayer.getId());
+        }
+    }
+
+    public void ban(String playerId) {
+        this.bannedPlayers.ban(playerId);
+    }
+
+    public void unban(FPlayer fplayer) {
+        if (fplayer != null) {
+            this.unban(fplayer.getId());
+        }
+    }
+
+    public void unban(String playerId) {
+        this.bannedPlayers.unban(playerId);
+    }
+
+    public Set<String> getBannedPlayerIds() {
+        return this.bannedPlayers.getIds();
+    }
+
+    public void sanitizeBannedPlayers() {
+        this.bannedPlayers.sanitize();
     }
 
     public boolean getOpen() {
@@ -156,13 +215,9 @@ public class Faction extends Entity implements EconomyParticipator {
     }
 
     public String getAccountId() {
-        String aid = "faction-" + this.getId();
-
-        // We need to override the default money given to players.
-        if (Econ.shouldBeUsed() && !Econ.hasAccount(aid))
-            Econ.setBalance(aid, 0);
-
-        return aid;
+        // Account creation is the bank gateway's job; reading this id must stay free
+        // of economy calls so it can be used as a lock key.
+        return "faction-" + this.getId();
     }
     // Contains the modifications to the default values
 
@@ -175,6 +230,9 @@ public class Faction extends Entity implements EconomyParticipator {
     }
 
     public boolean getFlag(FFlag flag) {
+        if (flag == FFlag.OPEN) {
+            return this.open;
+        }
         Boolean ret = this.flagOverrides.get(flag);
         if (ret == null)
             ret = flag.getDefault();
@@ -183,11 +241,28 @@ public class Faction extends Entity implements EconomyParticipator {
     // Contains the modifications to the default values
 
     public void setFlag(FFlag flag, boolean value) {
-        if (Conf.factionFlagDefaults.get(flag).equals(value)) {
+        if (flag == FFlag.OPEN) {
+            this.open = value;
+            return;
+        }
+        Boolean defaultValue = Conf.factionFlagDefaults.get(flag);
+        if (defaultValue != null && defaultValue.equals(value)) {
             this.flagOverrides.remove(flag);
             return;
         }
         this.flagOverrides.put(flag, value);
+    }
+
+    /**
+     * Removes unknown flag keys and null values left by older or newer data.
+     */
+    public void sanitizeFlagOverrides() {
+        if (this.flagOverrides == null) {
+            return;
+        }
+        this.flagOverrides.keySet().removeIf(Objects::isNull);
+        this.flagOverrides.values().removeIf(Objects::isNull);
+        this.flagOverrides.remove(FFlag.OPEN);
     }
 	
 	/*
@@ -212,6 +287,34 @@ public class Faction extends Entity implements EconomyParticipator {
         if (ret == null)
             ret = perm.getDefault();
         return ret;
+    }
+
+    /**
+     * Removes unknown permission keys and null values left by older or newer data.
+     */
+    public void sanitizePermOverrides() {
+        if (this.permOverrides == null) {
+            return;
+        }
+        this.permOverrides.keySet().removeIf(Objects::isNull);
+        this.permOverrides.values().removeIf(Objects::isNull);
+        for (Set<Rel> rels : this.permOverrides.values()) {
+            rels.removeIf(Objects::isNull);
+        }
+    }
+
+    /**
+     * Copies legacy WITHDRAW overrides to BANK_WITHDRAW when the new key is absent.
+     * Keeps custom faction permissions working after the bank permission split.
+     */
+    public void migrateLegacyWithdrawPermission() {
+        if (this.permOverrides == null || this.permOverrides.containsKey(FPerm.BANK_WITHDRAW)) {
+            return;
+        }
+        Set<Rel> legacy = this.permOverrides.get(FPerm.WITHDRAW);
+        if (legacy != null) {
+            this.permOverrides.put(FPerm.BANK_WITHDRAW, new HashSet<Rel>(legacy));
+        }
     }
 
     /**
@@ -621,6 +724,204 @@ public class Faction extends Entity implements EconomyParticipator {
     @Deprecated
     public boolean isSafeZone() {
         return !this.getFlag(FFlag.EXPLOSIONS);
+    }
+
+    //----------------------------------------------//
+    // Warps
+    //----------------------------------------------//
+
+    public Map<String, FactionWarp> getWarps() {
+        return Collections.unmodifiableMap(new LinkedHashMap<String, FactionWarp>(this.warps));
+    }
+
+    public FactionWarp getWarp(String name) {
+        return name == null ? null : this.warps.get(name.toLowerCase(Locale.ROOT));
+    }
+
+    public void putWarp(String name, FactionWarp warp) {
+        if (name != null && warp != null) {
+            this.warps.put(name.toLowerCase(Locale.ROOT), warp);
+        }
+    }
+
+    public void removeWarp(String name) {
+        if (name != null) {
+            this.warps.remove(name.toLowerCase(Locale.ROOT));
+        }
+    }
+
+    //----------------------------------------------//
+    // TNT bank, points, upgrades and missions
+    //----------------------------------------------//
+
+    public int getTntBank() {
+        return this.tntBank;
+    }
+
+    public void setTntBank(int value) {
+        this.tntBank = Math.max(0, value);
+    }
+
+    public int getFactionPoints() {
+        return this.factionPoints;
+    }
+
+    public int getTaxArrears() {
+        return this.taxArrears;
+    }
+
+    public void setTaxArrears(int value) {
+        this.taxArrears = Math.max(0, value);
+        if (this.taxArrears == 0) {
+            this.taxInsolvent = false;
+        }
+    }
+
+    public boolean isTaxInsolvent() {
+        return this.taxInsolvent;
+    }
+
+    public void setTaxInsolvent(boolean value) {
+        this.taxInsolvent = value;
+    }
+
+    public long getLastTaxAt() {
+        return this.lastTaxAt;
+    }
+
+    public void setLastTaxAt(long value) {
+        this.lastTaxAt = Math.max(0, value);
+    }
+
+    public long getCreatedAt() {
+        return this.createdAt;
+    }
+
+    public void setCreatedAt(long value) {
+        this.createdAt = Math.max(0, value);
+    }
+
+    public long getGraceUntil() {
+        return this.graceUntil;
+    }
+
+    public void setGraceUntil(long value) {
+        this.graceUntil = Math.max(0, value);
+    }
+
+    public long getShieldUntil() {
+        return this.shieldUntil;
+    }
+
+    public void setShieldUntil(long value) {
+        this.shieldUntil = Math.max(0, value);
+    }
+
+    public int addFactionPoints(int delta) {
+        long value = (long) this.factionPoints + delta;
+        this.factionPoints = (int) Math.max(0, Math.min(Integer.MAX_VALUE, value));
+        if (Main.main != null && Main.main.rankingService != null) {
+            Main.main.rankingService.invalidate();
+        }
+        return this.factionPoints;
+    }
+
+    public int getUpgradeLevel(String id) {
+        if (id == null) {
+            return 0;
+        }
+        Integer level = this.upgradeLevels.get(id.toLowerCase(Locale.ROOT));
+        return level == null ? 0 : level;
+    }
+
+    public void setUpgradeLevel(String id, int level) {
+        if (id != null) {
+            this.upgradeLevels.put(id.toLowerCase(Locale.ROOT), Math.max(0, level));
+        }
+    }
+
+    public int getMissionProgress(String id) {
+        if (id == null) {
+            return 0;
+        }
+        Integer progress = this.missionProgress.get(id.toLowerCase(Locale.ROOT));
+        return progress == null ? 0 : progress;
+    }
+
+    public void setMissionProgress(String id, int progress) {
+        if (id != null) {
+            this.missionProgress.put(id.toLowerCase(Locale.ROOT), Math.max(0, progress));
+        }
+    }
+
+    public boolean isMissionCompleted(String id) {
+        return id != null && this.completedMissions.contains(id.toLowerCase(Locale.ROOT));
+    }
+
+    public void markMissionCompleted(String id) {
+        if (id != null) {
+            this.completedMissions.add(id.toLowerCase(Locale.ROOT));
+        }
+    }
+
+    //----------------------------------------------//
+    // Audit log
+    //----------------------------------------------//
+
+    public void addLog(String actor, String action, String detail) {
+        this.logs.add(new FactionLogEntry(System.currentTimeMillis(), actor, action, detail));
+        int limit = Math.max(1, Conf.factionLogLimit);
+        while (this.logs.size() > limit) {
+            this.logs.remove(0);
+        }
+    }
+
+    public List<FactionLogEntry> getLogs() {
+        return Collections.unmodifiableList(new ArrayList<FactionLogEntry>(this.logs));
+    }
+
+    /**
+     * Repairs fields missing from older factions.json files and removes invalid entries.
+     */
+    public void sanitizeExtendedData() {
+        if (this.warps == null) {
+            this.warps = new LinkedHashMap<String, FactionWarp>();
+        }
+        this.warps.entrySet().removeIf(entry -> entry.getKey() == null || entry.getValue() == null
+                || entry.getValue().getLocation() == null);
+
+        if (this.upgradeLevels == null) {
+            this.upgradeLevels = new LinkedHashMap<String, Integer>();
+        }
+        this.upgradeLevels.entrySet().removeIf(entry -> entry.getKey() == null || entry.getValue() == null);
+
+        if (this.missionProgress == null) {
+            this.missionProgress = new LinkedHashMap<String, Integer>();
+        }
+        this.missionProgress.entrySet().removeIf(entry -> entry.getKey() == null || entry.getValue() == null);
+
+        if (this.completedMissions == null) {
+            this.completedMissions = new HashSet<String>();
+        }
+        this.completedMissions.removeIf(Objects::isNull);
+
+        if (this.logs == null) {
+            this.logs = new ArrayList<FactionLogEntry>();
+        }
+        this.logs.removeIf(Objects::isNull);
+        while (this.logs.size() > Math.max(1, Conf.factionLogLimit)) {
+            this.logs.remove(0);
+        }
+        this.tntBank = Math.max(0, this.tntBank);
+        this.factionPoints = Math.max(0, this.factionPoints);
+        this.taxArrears = Math.max(0, this.taxArrears);
+        this.lastTaxAt = Math.max(0, this.lastTaxAt);
+        if (this.taxArrears == 0) {
+            this.taxInsolvent = false;
+        }
+        this.createdAt = Math.max(0, this.createdAt);
+        this.graceUntil = Math.max(0, this.graceUntil);
+        this.shieldUntil = Math.max(0, this.shieldUntil);
     }
 
     //----------------------------------------------//

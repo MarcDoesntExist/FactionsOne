@@ -66,6 +66,7 @@ public class Board {
         }
 
         flocationIds.put(flocation, new TerritoryAccess(id));
+        invalidateRanking();
     }
 
     public static void setFactionAt(Faction faction, FLocation flocation) {
@@ -74,6 +75,13 @@ public class Board {
 
     public static void removeAt(FLocation flocation) {
         flocationIds.remove(flocation);
+        invalidateRanking();
+    }
+
+    private static void invalidateRanking() {
+        if (Main.main != null && Main.main.rankingService != null) {
+            Main.main.rankingService.invalidate();
+        }
     }
 
     public static void unclaimAll(String factionId) {
@@ -84,6 +92,7 @@ public class Board {
                 iter.remove();
             }
         }
+        invalidateRanking();
     }
 
     // Is this coord NOT completely surrounded by coords claimed by the same faction?

@@ -2,6 +2,7 @@ package com.massivecraft.factions;
 
 import com.google.gson.reflect.TypeToken;
 import com.massivecraft.factions.integration.Econ;
+import com.massivecraft.factions.shield.ShieldPolicy;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
@@ -65,6 +66,19 @@ public class Factions extends EntityCollection<Faction> {
     }
 
     @Override
+    public synchronized Faction create(String id) {
+        Faction faction = super.create(id);
+        if (faction != null) {
+            long now = System.currentTimeMillis();
+            faction.setCreatedAt(now);
+            if (Conf.shieldEnabled) {
+                faction.setGraceUntil(ShieldPolicy.addHours(now, Conf.shieldGraceHours));
+            }
+        }
+        return faction;
+    }
+
+    @Override
     public Type getMapType() {
         return new TypeToken<Map<String, Faction>>() {
         }.getType();
@@ -119,8 +133,13 @@ public class Factions extends EntityCollection<Faction> {
         if (warZone != null && !warZone.getFlag(FFlag.PERMANENT))
             setFlagsForWarZone(warZone);
 
-        // populate all faction player lists
+        // populate all faction player lists and discard unknown permission/flag keys
         for (Faction faction : i.get()) {
+            faction.sanitizePermOverrides();
+            faction.sanitizeFlagOverrides();
+            faction.sanitizeBannedPlayers();
+            faction.sanitizeExtendedData();
+            faction.migrateLegacyWithdrawPermission();
             faction.refreshFPlayers();
         }
 
@@ -144,6 +163,10 @@ public class Factions extends EntityCollection<Faction> {
         faction.setFlag(FFlag.FIRESPREAD, true);
         //faction.setFlag(FFlag.LIGHTNING, true);
         faction.setFlag(FFlag.ENDERGRIEF, true);
+        faction.setFlag(FFlag.SPAWNERS, true);
+        faction.setFlag(FFlag.TNT, true);
+        faction.setFlag(FFlag.ANIMALS, true);
+        faction.setFlag(FFlag.FIRE_FRIENDLY, true);
 
         faction.setPermittedRelations(FPerm.BUILD, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
                 Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
@@ -172,6 +195,10 @@ public class Factions extends EntityCollection<Faction> {
         faction.setFlag(FFlag.FIRESPREAD, false);
         //faction.setFlag(FFlag.LIGHTNING, false);
         faction.setFlag(FFlag.ENDERGRIEF, false);
+        faction.setFlag(FFlag.SPAWNERS, false);
+        faction.setFlag(FFlag.TNT, false);
+        faction.setFlag(FFlag.ANIMALS, false);
+        faction.setFlag(FFlag.FIRE_FRIENDLY, false);
 
         faction.setPermittedRelations(FPerm.DOOR, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
                 Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
@@ -204,6 +231,10 @@ public class Factions extends EntityCollection<Faction> {
         faction.setFlag(FFlag.FIRESPREAD, true);
         //faction.setFlag(FFlag.LIGHTNING, true);
         faction.setFlag(FFlag.ENDERGRIEF, true);
+        faction.setFlag(FFlag.SPAWNERS, true);
+        faction.setFlag(FFlag.TNT, true);
+        faction.setFlag(FFlag.ANIMALS, true);
+        faction.setFlag(FFlag.FIRE_FRIENDLY, true);
 
         faction.setPermittedRelations(FPerm.DOOR, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
                 Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
