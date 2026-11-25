@@ -19,7 +19,14 @@ import java.util.concurrent.TimeUnit;
  */
 public final class StorageRetention {
 
+    private static volatile long lastCompactedAt;
+
     private StorageRetention() {
+    }
+
+    /** Millisecond timestamp of the last compaction since startup, or zero. */
+    public static long lastCompactedAt() {
+        return lastCompactedAt;
     }
 
     public static int compact(Main main) {
@@ -37,6 +44,7 @@ public final class StorageRetention {
         int entries = main.bankJournal == null ? 0 : main.bankJournal.retain(now,
                 TimeUnit.DAYS.toMillis(Math.max(1, Conf.bankJournalRetentionDays)));
         int removed = keys + claims + entries;
+        lastCompactedAt = System.currentTimeMillis();
         if (removed > 0) {
             main.log("Storage retention removed " + keys + " idempotency key(s), "
                     + claims + " mailbox claim(s) and " + entries + " journal entry(ies).");

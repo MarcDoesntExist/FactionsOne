@@ -27,7 +27,12 @@ public class Lang {
     public static final String featureSuccess = "<g>Done.";
     public static final String bankInvalidAmount = "<b>Enter an amount greater than zero.";
     public static final String bankReconcileResult = "<i>Bank reconciliation: <h>%d<i> compensation(s) retried, <h>%d<i> still pending.";
-    public static final String bankReconcileUsage = "<i>Usage: <h>/f admin bank reconcile";
+    public static final String bankReconcileUsage = "<i>Usage: <h>/f admin bank reconcile|status";
+    public static final String bankStatusJournal = "<i>Bank journal: <h>%d<i> pending movement(s), <h>%d<i> pending compensation(s).";
+    public static final String bankStatusMailbox = "<i>Mailbox: <h>%d<i> pending payout(s), <h>%d<i> unknown delivery(ies), <h>%d<i> unknown refund(s).";
+    public static final String bankStatusRetention = "<i>Retention: journal <h>%d<i>d, idempotency <h>%d<i>d, mailbox <h>%d<i>d.";
+    public static final String bankStatusCompacted = "<i>Last storage compaction: <h>%s<i>.";
+    public static final String bankStatusNeverCompacted = "<i>No storage compaction has run since startup.";
     public static final String mailboxDisabled = "<b>The faction mailbox is disabled on this server.";
     public static final String mailboxEmpty = "<i>Your mailbox has no pending payouts.";
     public static final String mailboxHeader = "<i>Mailbox: <h>%d<i> pending payout(s).";
