@@ -239,7 +239,9 @@ public class Conf {
     public static int factionLogLimit = 100;
     // how often expired daily/weekly missions are checked; 0 disables the task
     public static int missionResetCheckMinutes = 60;
+    public static String chatFactionFormat = "<green>[Faction] <white>%s: %s";
     public static String chatAllyFormat = "<pink>[Ally] <white>%s: %s";
+    public static String chatSpyFormat = "<gray>[Spy] [%s] <white>%s: %s";
     //public static boolean bankMembersCanWithdraw = false; //Have to be at least moderator to withdraw or pay money to another faction
     public static boolean bankFactionPaysCosts = true;
     //The faction pays for land claiming costs.

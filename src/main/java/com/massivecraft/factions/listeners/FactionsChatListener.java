@@ -1,9 +1,12 @@
 package com.massivecraft.factions.listeners;
 
+import com.massivecraft.factions.ChatChannel;
+import com.massivecraft.factions.ChatChannelResolver;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.FPlayers;
 import com.massivecraft.factions.Main;
+import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
 import io.papermc.paper.chat.ChatRenderer;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -11,6 +14,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
+import com.massivecraft.factions.Faction;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -40,6 +44,40 @@ public class FactionsChatListener implements Listener {
 
     public FactionsChatListener(Main main) {
         this.main = main;
+    }
+
+    /**
+     * Sends the private channel copy to spies that were not normal recipients.
+     * This is the listener's only role in the channel feature; channel delivery
+     * itself is done by {@link com.massivecraft.factions.ChatChannelService}.
+     */
+    public static int spy(FPlayer sender, ChatChannel channel, String message) {
+        if (sender == null || channel == null || channel == ChatChannel.PUBLIC) {
+            return 0;
+        }
+        Faction faction = sender.getFaction();
+        if (faction == null) {
+            return 0;
+        }
+        int spies = 0;
+        for (FPlayer other : FPlayers.i.getOnline()) {
+            Player player = other.getPlayer();
+            if (player == null || !Permission.CHAT_SPY.has(player, false)) {
+                continue;
+            }
+            Faction otherFaction = other.getFaction();
+            String relation = otherFaction == null
+                    ? null
+                    : faction.getRelationTo(otherFaction).name();
+            if (ChatChannelResolver.accepts(channel, faction.getId(),
+                    otherFaction == null ? null : otherFaction.getId(), relation)) {
+                continue;
+            }
+            other.msg(Conf.chatSpyFormat, channel.name().toLowerCase(java.util.Locale.ROOT),
+                    sender.getName(), message);
+            spies++;
+        }
+        return spies;
     }
 
     // This is for handling insertion of the player's faction tag, set at highest priority to give

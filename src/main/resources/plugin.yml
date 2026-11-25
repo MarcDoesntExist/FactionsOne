@@ -8,6 +8,12 @@ commands:
   factions:
     description: The Factions base command
     aliases: [ f ]
+  fc:
+    description: Send a message to your faction
+    aliases: [ fchat ]
+  ac:
+    description: Send a message to your faction and its allies
+    aliases: [ achat ]
 api-version: '${apiVersion}'
 permissions:
   # -------------------------------------------- #
@@ -28,6 +34,7 @@ permissions:
   factions.claim.radius: { description: claim land in a large radius }
   factions.coords: { description: show the current chunk and its owner }
   factions.chat: { description: use faction chat channels }
+  factions.chat.spy: { description: see faction and ally chat as a spy }
   factions.config: { description: change a conf.json setting }
   factions.create: { description: create a new faction }
   factions.deinvite: { description: remove a pending invitation }
@@ -144,6 +151,7 @@ permissions:
     children:
       factions.kit.fullplayer: true
       factions.adminmode: true
+      factions.chat.spy: true
   factions.kit.fullplayer:
     description: Can also create new factions.
     children:

@@ -290,6 +290,18 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
                 .colorIfAbsent(this.getColorTo(fplayer).toTextColor());
     }
 
+    // Active chat channel is intentionally transient: it is a runtime preference and
+    // must not survive a restart unless another subsystem persists it explicitly.
+    public transient ChatChannel chatChannel = ChatChannel.PUBLIC;
+
+    public ChatChannel getChatChannel() {
+        return this.chatChannel == null ? ChatChannel.PUBLIC : this.chatChannel;
+    }
+
+    public void setChatChannel(ChatChannel chatChannel) {
+        this.chatChannel = chatChannel == null ? ChatChannel.PUBLIC : chatChannel;
+    }
+
     // Chat Tag:
     // These are injected into the format of global chat messages.
 

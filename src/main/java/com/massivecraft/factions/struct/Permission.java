@@ -22,7 +22,7 @@ public enum Permission {
             "leader.any"), LEAVE("leave"), LIST("list"), LOCK("lock"), MAIL("mail"), MAIL_SEND("mail.send"), MAP("map"), MONEY_BALANCE(
             "money.balance"), MONEY_BALANCE_ANY("money.balance.any"), MONEY_DEPOSIT(
             "money.deposit"), MONEY_F2F("money.f2f"), MONEY_F2P("money.f2p"), MONEY_P2F(
-            "money.p2f"),     MONEY_WITHDRAW(    "money.withdraw"), MENU("menu"), CHAT("chat"), FLY("fly"), LOGS("logs"), MISSIONS("missions"), OFFICER("officer"), OFFICER_ANY(
+            "money.p2f"),     MONEY_WITHDRAW(    "money.withdraw"), MENU("menu"), CHAT("chat"), CHAT_SPY("chat.spy"), FLY("fly"), LOGS("logs"), MISSIONS("missions"), OFFICER("officer"), OFFICER_ANY(
             "officer.any"), OPEN("open"), PERM("perm"), NEAR("near"), POWER("power"), POWER_ANY(
             "power.any"), POWERBOOST("powerboost"), PROMOTE("promote"), RELATION("relation"), RELOAD(
             "reload"), SAVE("save"), SEE_CHUNK("seechunk"), SETHOME("sethome"), SETWARP("setwarp"), SHIELD("shield"), SHIELD_SET("shield.set"), SHOW("show"), SHOP("shop"), TAG(

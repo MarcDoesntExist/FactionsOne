@@ -39,8 +39,9 @@ public class Lang {
     public static final String allyLimit = "<b>Your faction has reached its ally limit of %d.";
     public static final String claimLimit = "<b>Limit reached. You can't claim more land!";
     public static final String tntUsage = "<i>Use /f tnt deposit|withdraw|balance <amount>.";
-    public static final String chatUsage = "<i>Use /f chat ally <message> to talk with your allies.";
+    public static final String chatUsage = "<i>Use /f chat <public|faction|ally> [message], /fc <message> or /ac <message>.";
     public static final String chatNoAllies = "<i>No allies are online.";
+    public static final String chatChannelSet = "<i>Chat channel set to <h>%s<i>.";
     public static final String logsHeader = "<gold>Faction logs <gray>(page %s/%s)";
     public static final String logsHeaderBank = "<gold>Faction logs <gray>(bank, page %s/%s)";
     public static final String logsUsage = "<i>Usage: <h>/f logs [all|bank] [page]";

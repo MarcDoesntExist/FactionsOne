@@ -186,6 +186,13 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
             command.setExecutor(this);
             command.setTabCompleter(this);
         }
+        for (String chatCommand : new String[]{"fc", "ac"}) {
+            PluginCommand root = this.getCommand(chatCommand);
+            if (root != null) {
+                root.setExecutor(this);
+                root.setTabCompleter(this);
+            }
+        }
 
         Essentials.setup();
         Econ.setup();
@@ -404,6 +411,16 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(@NonNull CommandSender sender, Command command, String label, String[] split) {
+        if ("fc".equalsIgnoreCase(command.getName())) {
+            this.cmdBase.cmdChat.cmdChatFaction.execute(sender,
+                    new ArrayList<String>(Arrays.asList(split)));
+            return true;
+        }
+        if ("ac".equalsIgnoreCase(command.getName())) {
+            this.cmdBase.cmdChat.cmdChatAlly.execute(sender,
+                    new ArrayList<String>(Arrays.asList(split)));
+            return true;
+        }
         this.cmdBase.execute(sender, new ArrayList<String>(Arrays.asList(split)));
         return true;
     }
@@ -416,6 +433,12 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         // A trailing space must stay meaningful: it asks for the next argument.
         if (args.length > 0 && args[args.length - 1].isEmpty()) {
             tokens.add("");
+        }
+        if ("fc".equalsIgnoreCase(command.getName())) {
+            return this.cmdBase.cmdChat.cmdChatFaction.tabComplete(sender, tokens);
+        }
+        if ("ac".equalsIgnoreCase(command.getName())) {
+            return this.cmdBase.cmdChat.cmdChatAlly.tabComplete(sender, tokens);
         }
         return this.cmdBase.tabComplete(sender, tokens);
     }
