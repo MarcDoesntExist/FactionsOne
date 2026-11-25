@@ -28,3 +28,6 @@
 /test-server/
 /docs/
 
+
+# Runtime files
+/server.pid
