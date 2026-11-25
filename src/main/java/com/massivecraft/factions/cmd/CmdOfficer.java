@@ -44,8 +44,8 @@ public class CmdOfficer extends FCommand {
             return;
         }
 
-        if (fme != null && fme.getRole() != Rel.LEADER && !permAny) {
-            msg("<b>You are not the faction leader.");
+        if (fme != null && fme.getRole().isLessThan(Rel.COLEADER) && !permAny) {
+            msg("<b>You must be a co-leader or the faction leader.");
             return;
         }
 
@@ -56,6 +56,18 @@ public class CmdOfficer extends FCommand {
 
         if (you.getRole() == Rel.LEADER) {
             msg("<b>The target player is a faction leader. Demote them first.");
+            return;
+        }
+
+        if (you.getRole() == Rel.COLEADER) {
+            if (fme != null && fme.getRole() != Rel.LEADER && !permAny) {
+                msg("<b>Only the leader can change a co-leader's role.");
+                return;
+            }
+            you.setRole(Rel.OFFICER);
+            targetFaction.msg("%s<i> is no longer co-leader in your faction.",
+                    you.describeTo(targetFaction, true));
+            msg("<i>You have demoted %s<i> to officer.", you.describeTo(fme, true));
             return;
         }
 

@@ -17,6 +17,7 @@ class RelTest {
     @Test
     void fullNamesParseToTheirRole() {
         assertEquals(Rel.LEADER, Rel.parse("leader"));
+        assertEquals(Rel.COLEADER, Rel.parse("coleader"));
         assertEquals(Rel.OFFICER, Rel.parse("officer"));
         assertEquals(Rel.MEMBER, Rel.parse("member"));
         assertEquals(Rel.RECRUIT, Rel.parse("recruit"));
@@ -36,6 +37,7 @@ class RelTest {
     @Test
     void firstCharacterIsEnoughForShortInput() {
         assertEquals(Rel.LEADER, Rel.parse("l"));
+        assertEquals(Rel.COLEADER, Rel.parse("c"));
         assertEquals(Rel.OFFICER, Rel.parse("o"));
         assertEquals(Rel.MEMBER, Rel.parse("m"));
         assertEquals(Rel.RECRUIT, Rel.parse("r"));
@@ -62,7 +64,12 @@ class RelTest {
 
     @Test
     void rolesAreOrderedFromLeaderToEnemy() {
-        assertTrue(Rel.LEADER.isMoreThan(Rel.OFFICER));
+        assertTrue(Rel.LEADER.isMoreThan(Rel.COLEADER));
+        assertTrue(Rel.COLEADER.isMoreThan(Rel.OFFICER));
+        assertTrue(Rel.LEADER.isAtLeast(Rel.COLEADER));
+        assertTrue(Rel.COLEADER.isAtLeast(Rel.OFFICER));
+        assertTrue(Rel.COLEADER.isAtMost(Rel.LEADER));
+        assertTrue(Rel.OFFICER.isLessThan(Rel.COLEADER));
         assertTrue(Rel.OFFICER.isMoreThan(Rel.MEMBER));
         assertTrue(Rel.MEMBER.isMoreThan(Rel.RECRUIT));
         assertTrue(Rel.RECRUIT.isMoreThan(Rel.ALLY));
@@ -80,6 +87,8 @@ class RelTest {
     @Test
     void descriptionsAreAvailableForEntityAndFactionForms() {
         assertEquals("your faction leader", Rel.LEADER.getDescPlayerOne());
+        assertEquals("a co-leader in your faction", Rel.COLEADER.getDescPlayerOne());
+        assertEquals("co-leaders in your faction", Rel.COLEADER.getDescPlayerMany());
         assertEquals("enemies", Rel.ENEMY.getDescPlayerMany());
         assertEquals("a neutral faction", Rel.NEUTRAL.getDescFactionOne());
         assertEquals("allied factions", Rel.ALLY.getDescFactionMany());

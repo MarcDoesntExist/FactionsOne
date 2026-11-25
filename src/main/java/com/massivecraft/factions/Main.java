@@ -106,6 +106,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         Conf.load();
         FPlayers.i.loadFromDisc();
         Factions.i.loadFromDisc();
+        Conf.migrateColeaderPermissions();
         Board.load();
 
         // Add Base Commands

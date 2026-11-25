@@ -40,6 +40,7 @@ public class Conf {
     public static Map<FFlag, Boolean> factionFlagDefaults;
     public static Map<FFlag, Boolean> factionFlagIsChangeable;
     public static Map<FPerm, Set<Rel>> factionPermDefaults;
+    public static boolean coleaderPermsMigrated = false;
     public static Rel factionRankDefault = Rel.RECRUIT;
     // Power
     public static double powerPlayerMax = 10.0;
@@ -61,6 +62,7 @@ public class Conf {
     // players will no longer lose power from being offline once their power drops to this amount or less
     public static double powerFactionMax = 0.0;
     public static String prefixLeader = "**";
+    public static String prefixColeader = "***";
     public static String prefixOfficer = "*";
     public static String prefixMember = "+";
     public static String prefixRecruit = "-";
@@ -286,6 +288,36 @@ public class Conf {
 
     public static void load() {
         Main.main.persist.loadOrSaveDefault(i, Conf.class, "conf");
+    }
+
+    /**
+     * Adds the co-leader role to existing configurations and faction overrides once.
+     * The marker keeps later administrative removals from being reverted on restart.
+     */
+    public static void migrateColeaderPermissions() {
+        if (coleaderPermsMigrated) {
+            return;
+        }
+
+        if (factionPermDefaults == null) {
+            factionPermDefaults = new LinkedHashMap<FPerm, Set<Rel>>();
+        }
+        for (FPerm perm : FPerm.values()) {
+            Set<Rel> configured = factionPermDefaults.get(perm);
+            if (configured == null) {
+                configured = new HashSet<Rel>();
+                configured.addAll(perm.defaultDefaultValue);
+                factionPermDefaults.put(perm, configured);
+            }
+            if (perm.defaultDefaultValue.contains(Rel.COLEADER)) {
+                configured.add(Rel.COLEADER);
+            }
+        }
+
+        for (Faction faction : Factions.i.get()) {
+            faction.migrateColeaderPermissions();
+        }
+        coleaderPermsMigrated = true;
     }
 
     public static void save() {

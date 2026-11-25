@@ -11,7 +11,9 @@ import com.massivecraft.factions.util.Color;
  * @author Daniel Saukel
  */
 public enum Rel {
-    LEADER(70, "your faction leader", "your faction leader", "", ""), OFFICER(60,
+    LEADER(70, "your faction leader", "your faction leader", "", ""),
+    COLEADER(65, "a co-leader in your faction", "co-leaders in your faction", "", ""),
+    OFFICER(60,
             "an officer in your faction", "officers in your faction", "", ""), MEMBER(50,
             "a member in your faction", "members in your faction", "your faction",
             "your factions"), RECRUIT(45, "a recruit in your faction", "recruits in your faction",
@@ -60,6 +62,8 @@ public enum Rel {
         char c = str.charAt(0);
         if (c == 'l')
             return LEADER;
+        if (c == 'c')
+            return COLEADER;
         if (c == 'o')
             return OFFICER;
         if (c == 'm')
@@ -125,6 +129,10 @@ public enum Rel {
     public String getPrefix() {
         if (this == LEADER) {
             return Conf.prefixLeader;
+        }
+
+        if (this == COLEADER) {
+            return Conf.prefixColeader;
         }
 
         if (this == OFFICER) {

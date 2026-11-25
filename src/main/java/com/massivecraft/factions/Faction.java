@@ -214,6 +214,21 @@ public class Faction extends Entity implements EconomyParticipator {
         return ret;
     }
 
+    /**
+     * Adds the co-leader role to stored overrides for permissions where it is now
+     * part of the default matrix. Called once during configuration migration.
+     */
+    public void migrateColeaderPermissions() {
+        if (this.permOverrides == null) {
+            return;
+        }
+        for (Map.Entry<FPerm, Set<Rel>> entry : this.permOverrides.entrySet()) {
+            if (entry.getKey().defaultDefaultValue.contains(Rel.COLEADER) && entry.getValue() != null) {
+                entry.getValue().add(Rel.COLEADER);
+            }
+        }
+    }
+
     public void setRelationPermitted(FPerm perm, Rel rel, boolean permitted) {
         Set<Rel> newPermittedRelations = EnumSet.noneOf(Rel.class);
         newPermittedRelations.addAll(this.getPermittedRelations(perm));
@@ -474,9 +489,11 @@ public class Faction extends Entity implements EconomyParticipator {
 
         FPlayer oldLeader = this.getFPlayerLeader();
 
-        // get list of officers, or list of normal members if there are no officers
-        ArrayList<FPlayer> replacements = this.getFPlayersWhereRole(Rel.OFFICER);
-        if (replacements == null || replacements.isEmpty())
+        // Prefer a co-leader, then an officer, then a normal member.
+        ArrayList<FPlayer> replacements = this.getFPlayersWhereRole(Rel.COLEADER);
+        if (replacements.isEmpty())
+            replacements = this.getFPlayersWhereRole(Rel.OFFICER);
+        if (replacements.isEmpty())
             replacements = this.getFPlayersWhereRole(Rel.MEMBER);
 
         if (replacements == null || replacements

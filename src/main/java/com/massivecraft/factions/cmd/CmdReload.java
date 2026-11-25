@@ -72,6 +72,7 @@ public class CmdReload extends FCommand {
             return;
         }
 
+        Conf.migrateColeaderPermissions();
         msg("<i>Reloaded <h>%s <i>from disk, took <h>%dms<i>.", fileName, timeReload);
     }
 

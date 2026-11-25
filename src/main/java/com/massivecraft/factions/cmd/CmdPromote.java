@@ -24,7 +24,8 @@ public class CmdPromote extends FCommand {
         this.disableOnLock = true;
 
         //To promote someone from recruit -> member you must be an officer.
-        //To promote someone from member -> officer you must be a leader.
+        //To promote someone from member -> officer you must be a co-leader or leader.
+        //To promote someone from officer -> co-leader you must be the leader.
         //We'll handle this internally
         senderMustBePlayer = true;
         senderMustBeMember = false;
@@ -57,13 +58,20 @@ public class CmdPromote extends FCommand {
             myFaction.msg("%s<i> was promoted to being a member of your faction.",
                     you.describeTo(myFaction, true));
         } else if (you.getRole() == Rel.MEMBER) {
-            if (!fme.getRole().isAtLeast(Rel.LEADER)) {
-                msg("<b>You must be the leader to promote someone to officer.");
+            if (!fme.getRole().isAtLeast(Rel.COLEADER)) {
+                msg("<b>You must be a co-leader or the leader to promote someone to officer.");
                 return;
             }
-            // Give
             you.setRole(Rel.OFFICER);
-            myFaction.msg("%s<i> was promoted to being a officer in your faction.",
+            myFaction.msg("%s<i> was promoted to being an officer in your faction.",
+                    you.describeTo(myFaction, true));
+        } else if (you.getRole() == Rel.OFFICER) {
+            if (!fme.getRole().isAtLeast(Rel.LEADER)) {
+                msg("<b>You must be the leader to promote someone to co-leader.");
+                return;
+            }
+            you.setRole(Rel.COLEADER);
+            myFaction.msg("%s<i> was promoted to being a co-leader in your faction.",
                     you.describeTo(myFaction, true));
         }
     }

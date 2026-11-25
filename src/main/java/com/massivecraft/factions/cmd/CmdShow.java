@@ -54,6 +54,7 @@ public class CmdShow extends FCommand {
             return;
 
         Collection<FPlayer> admins = faction.getFPlayersWhereRole(Rel.LEADER);
+        Collection<FPlayer> coleaders = faction.getFPlayersWhereRole(Rel.COLEADER);
         Collection<FPlayer> mods = faction.getFPlayersWhereRole(Rel.OFFICER);
         Collection<FPlayer> normals = faction.getFPlayersWhereRole(Rel.MEMBER);
         Collection<FPlayer> recruits = faction.getFPlayersWhereRole(Rel.RECRUIT);
@@ -122,6 +123,14 @@ public class CmdShow extends FCommand {
         List<Component> memberOfflineNames = new ArrayList<Component>();
 
         for (FPlayer follower : admins) {
+            if (follower.isOnlineAndVisibleTo(me)) {
+                memberOnlineNames.add(follower.getNameAndTitle(fme));
+            } else {
+                memberOfflineNames.add(follower.getNameAndTitle(fme));
+            }
+        }
+
+        for (FPlayer follower : coleaders) {
             if (follower.isOnlineAndVisibleTo(me)) {
                 memberOnlineNames.add(follower.getNameAndTitle(fme));
             } else {

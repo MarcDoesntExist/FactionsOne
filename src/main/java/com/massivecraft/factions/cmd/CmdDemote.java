@@ -24,7 +24,8 @@ public class CmdDemote extends FCommand {
         this.disableOnLock = true;
 
         //To demote someone from member -> recruit you must be an officer.
-        //To demote someone from officer -> member you must be a leader.
+        //To demote someone from officer -> member you must be a co-leader or leader.
+        //To demote someone from co-leader -> officer you must be the leader.
         //We'll handle this internally
         senderMustBePlayer = true;
         senderMustBeMember = false;
@@ -57,12 +58,20 @@ public class CmdDemote extends FCommand {
             myFaction.msg("%s<i> was demoted to being a recruit in your faction.",
                     you.describeTo(myFaction, true));
         } else if (you.getRole() == Rel.OFFICER) {
-            if (!fme.getRole().isAtLeast(Rel.LEADER)) {
-                msg("<b>You must be the leader to demote an officer to member.");
+            if (!fme.getRole().isAtLeast(Rel.COLEADER)) {
+                msg("<b>You must be a co-leader or the leader to demote an officer to member.");
                 return;
             }
             you.setRole(Rel.MEMBER);
             myFaction.msg("%s<i> was demoted to being a member in your faction.",
+                    you.describeTo(myFaction, true));
+        } else if (you.getRole() == Rel.COLEADER) {
+            if (!fme.getRole().isAtLeast(Rel.LEADER)) {
+                msg("<b>You must be the leader to demote a co-leader to officer.");
+                return;
+            }
+            you.setRole(Rel.OFFICER);
+            myFaction.msg("%s<i> was demoted to being an officer in your faction.",
                     you.describeTo(myFaction, true));
         }
     }

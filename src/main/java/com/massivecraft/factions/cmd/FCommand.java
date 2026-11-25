@@ -470,8 +470,8 @@ public abstract class FCommand extends MCommand<Main> {
             return true;
         }
 
-        if (you.getRole().equals(Rel.LEADER)) {
-            i.sendMessage(p.txt.parse("<b>Only the faction admin can do that."));
+        if (you.getRole().isAtLeast(Rel.COLEADER)) {
+            i.sendMessage(p.txt.parse("<b>Only the faction leader can do that."));
         } else if (i.getRole().equals(Rel.OFFICER)) {
             if (i == you) {
                 return true; //Moderators can control themselves

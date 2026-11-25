@@ -52,6 +52,12 @@ public class CmdKick extends FCommand {
             return;
         }
 
+        if (you.getRole() == Rel.COLEADER && fme != null && fme.getRole() != Rel.LEADER
+                && !(this.senderIsConsole || fme.hasAdminMode())) {
+            msg("<b>Only the faction leader can kick a co-leader.");
+            return;
+        }
+
         if (!Conf.canLeaveWithNegativePower && you.getPower() < 0) {
             msg("<b>You cannot kick that member until their power is positive.");
             return;

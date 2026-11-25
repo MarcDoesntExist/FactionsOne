@@ -90,7 +90,7 @@ public class CmdLeader extends FCommand {
 
         // Perform the switching
         if (targetFactionCurrentLeader != null) {
-            targetFactionCurrentLeader.setRole(Rel.OFFICER);
+            targetFactionCurrentLeader.setRole(Rel.COLEADER);
         }
         newLeader.setFaction(targetFaction);
         newLeader.setRole(Rel.LEADER);
