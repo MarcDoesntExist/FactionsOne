@@ -6,6 +6,7 @@ import com.massivecraft.factions.event.PowerLossEvent;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.util.MiscUtil;
+import com.massivecraft.factions.zcore.Lang;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -89,6 +90,24 @@ public class FactionsEntityListener implements Listener {
         if (event.isCancelled())
             return;
 
+        if (event.getEntity() instanceof Animals) {
+            Faction animalFaction = Board.getFactionAt(new FLocation(event.getEntity().getLocation()));
+            if (!animalFaction.getFlag(FFlag.ANIMALS)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+
+        if (event.getEntity() instanceof Player && event.getCause() != null
+                && (event.getCause() == EntityDamageEvent.DamageCause.FIRE
+                || event.getCause() == EntityDamageEvent.DamageCause.FIRE_TICK)) {
+            Faction fireFaction = Board.getFactionAt(new FLocation(event.getEntity().getLocation()));
+            if (!fireFaction.getFlag(FFlag.FIRE_FRIENDLY)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+
         if (event instanceof EntityDamageByEntityEvent) {
             EntityDamageByEntityEvent sub = (EntityDamageByEntityEvent) event;
             if (!this.canDamagerHurtDamagee(sub, true)) {
@@ -114,9 +133,24 @@ public class FactionsEntityListener implements Listener {
         }
         for (FLocation loc : explosionLocs) {
             Faction faction = Board.getFactionAt(loc);
-            if (faction.getFlag(FFlag.EXPLOSIONS) == false || faction
+            if (this.main.shieldService != null && this.main.shieldService.isProtected(faction)) {
+                Entity source = event.getEntity() instanceof TNTPrimed
+                        ? ((TNTPrimed) event.getEntity()).getSource()
+                        : null;
+                FPlayer igniter = source instanceof Player ? FPlayers.i.get((Player) source) : null;
+                boolean bypass = igniter != null && (igniter.hasAdminMode()
+                        || Conf.playersWhoBypassAllProtection.contains(igniter.getName())
+                        || Conf.playersWhoBypassAllProtection.contains(igniter.getId()));
+                if (!bypass && (!(source instanceof Player)
+                        || !this.main.shieldService.canAct(faction, igniter))) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+            FFlag explosionFlag = event.getEntity() instanceof TNTPrimed ? FFlag.TNT : FFlag.EXPLOSIONS;
+            if (faction.getFlag(explosionFlag) == false || faction
                     .hasOfflineExplosionProtection()) {
-                // faction has explosions disabled
+                // faction has this explosion type disabled
                 event.setCancelled(true);
                 return;
             }
@@ -140,6 +174,17 @@ public class FactionsEntityListener implements Listener {
                 if (LegacyUtil.MATERIALS_WITH_HIGH_BLAST_RESISTANCE.contains(target.getType()))
                     target.breakNaturally();
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onSpawnerSpawn(SpawnerSpawnEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
+        Faction faction = Board.getFactionAt(new FLocation(event.getSpawner().getLocation()));
+        if (!faction.getFlag(FFlag.SPAWNERS)) {
+            event.setCancelled(true);
         }
     }
 
@@ -252,6 +297,13 @@ public class FactionsEntityListener implements Listener {
         if (Conf.playersWhoBypassAllProtection.contains(name) || Conf.playersWhoBypassAllProtection
                 .contains(uuid))
             return true;
+
+        if (this.main.shieldService != null && !this.main.shieldService.canAct(defLocFaction, attacker)) {
+            if (notify) {
+                attacker.msg(Lang.shieldProtected, defLocFaction.describeTo(attacker));
+            }
+            return false;
+        }
 
         if (attacker.hasLoginPvpDisabled()) {
             if (notify)

@@ -1,8 +1,10 @@
 package com.massivecraft.factions.listeners;
 
 import com.massivecraft.factions.*;
+import com.massivecraft.factions.shield.ShieldService;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
+import com.massivecraft.factions.zcore.Lang;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -46,6 +48,14 @@ public class FactionsBlockListener implements Listener {
 
         FLocation loc = new FLocation(location);
         Faction factionHere = Board.getFactionAt(loc);
+
+        ShieldService shields = Main.main.shieldService;
+        if (shields != null && !shields.canAct(factionHere, me)) {
+            if (!justCheck) {
+                me.msg(Lang.shieldProtected, factionHere.describeTo(me));
+            }
+            return false;
+        }
 
         if (!FPerm.BUILD.has(me, location) && FPerm.PAINBUILD.has(me, location)) {
             if (!justCheck) {
