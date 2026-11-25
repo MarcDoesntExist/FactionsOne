@@ -72,6 +72,11 @@ public class Lang {
     public static final String taxInsolventState = "insolvent (<h>%s<i>)";
     public static final String taxRunResult = "<i>Tax period processed: <h>%d<i> faction(s) charged.";
     public static final String taxRunSkipped = "<i>No faction is due yet; use <h>/f tax run force<i> to force a period.";
+    public static final String taxFactionNotFound = "<b>No faction matches that id or tag.";
+    public static final String taxRetryCharged = "<g>Retried the unknown tax period for <h>%s<i>.";
+    public static final String taxRetryNone = "<b>No unknown tax period for that faction.";
+    public static final String taxRetryNoEconomy = "<b>The economy is unavailable; the period stays unknown.";
+    public static final String taxRetryFailed = "<b>The retry charge failed; the period stays unknown.";
     public static final String taxArrearsNotice = "<b>Your faction missed a tax payment. Arrears: <h>%d<i>.";
     public static final String taxInsolventNotice = "<b>%s is insolvent after <h>%d<i> missed tax periods; action: <h>%s<i>.";
 

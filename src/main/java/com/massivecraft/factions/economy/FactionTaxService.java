@@ -26,29 +26,48 @@ import java.util.Set;
  * Charges the periodic faction tax through {@link BankService}, applies the
  * arrears policy and runs the configured insolvency action.
  *
+ * <p>Every period is journaled before its idempotency key is claimed. A crash
+ * between the claim and the debit leaves the period
+ * {@link TaxPeriodJournal.State#TAX_UNKNOWN}; it is never charged again
+ * automatically and only {@link #retryUnknown(Faction)} can resolve it.
+ *
  * @author MarcDoesntExists
  */
 public final class FactionTaxService {
 
+    public enum RetryResult {
+        CHARGED, NONE, NO_ECONOMY, FAILED
+    }
+
     private final BankService bank;
     private final Clock clock;
     private final IdempotencyStore idempotency;
+    private final TaxPeriodJournal journal;
     private boolean warnedNoEconomy;
 
     public FactionTaxService(BankService bank, Clock clock) {
-        this(bank, clock, null);
+        this(bank, clock, null, null);
     }
 
     public FactionTaxService(BankService bank, Clock clock, IdempotencyStore idempotency) {
+        this(bank, clock, idempotency, null);
+    }
+
+    public FactionTaxService(BankService bank, Clock clock, IdempotencyStore idempotency,
+                             TaxPeriodJournal journal) {
         this.bank = bank;
         this.clock = clock;
         this.idempotency = idempotency;
+        this.journal = journal;
+        if (journal != null) {
+            journal.recover(idempotency);
+        }
     }
 
     /**
      * Processes every eligible faction and returns how many were charged.
      *
-     * @param force when true the interval check is skipped
+     * @param force when true the interval check and the journal are bypassed
      */
     public int run(boolean force) {
         if (!Conf.taxEnabled) {
@@ -82,19 +101,50 @@ public final class FactionTaxService {
                 continue;
             }
 
+            String key = "tax:" + faction.getId() + ":" + (now / interval);
             String claim = null;
-            if (!force && this.idempotency != null) {
-                claim = "tax:" + faction.getId() + ":" + (now / interval);
-                if (this.idempotency.isClaimed(claim)) {
+            if (!force) {
+                claim = key;
+                TaxPeriodJournal.Entry existing = this.journal == null
+                        ? null : this.journal.entry(claim);
+                if (isResolved(existing)) {
                     faction.setLastTaxAt(now);
                     continue;
                 }
-                if (!this.idempotency.claim(claim)) {
+                if (existing == null && this.journal != null
+                        && !this.journal.begin(claim, faction.getId(), due, now)) {
+                    continue;
+                }
+                if (this.idempotency != null) {
+                    if (this.idempotency.isClaimed(claim)) {
+                        if (this.journal != null) {
+                            this.journal.unknown(claim, "claimed without a settled record");
+                        }
+                        faction.setLastTaxAt(now);
+                        continue;
+                    }
+                    if (!this.idempotency.claim(claim)) {
+                        continue;
+                    }
+                }
+            } else if (this.journal != null) {
+                // Force may repeat a settled period, but an ambiguous charge is
+                // resolved only by the explicit retry, never by a blanket run.
+                TaxPeriodJournal.Entry existing = this.journal.entry(key);
+                if (existing != null
+                        && existing.state() == TaxPeriodJournal.State.TAX_UNKNOWN) {
+                    if (Main.main != null) {
+                        Main.main.getLogger().warning("Skipping unknown tax period " + key
+                                + "; use /f tax run " + faction.getId() + " retry.");
+                    }
                     continue;
                 }
             }
 
             if (this.bank.modifyMoney(faction, -due, "to pay the faction tax", "for the faction tax")) {
+                if (claim != null && this.journal != null) {
+                    this.journal.settled(claim, "paid " + due);
+                }
                 faction.setTaxArrears(0);
                 faction.setTaxInsolvent(false);
                 faction.setLastTaxAt(now);
@@ -103,12 +153,48 @@ public final class FactionTaxService {
                 charged++;
             } else {
                 if (claim != null) {
-                    this.idempotency.release(claim);
+                    if (this.idempotency != null) {
+                        this.idempotency.release(claim);
+                    }
+                    if (this.journal != null) {
+                        this.journal.abort(claim, "NO_FUNDS");
+                    }
                 }
                 this.handleShortfall(faction, due, now);
             }
         }
         return charged;
+    }
+
+    /**
+     * Retries the newest period left {@link TaxPeriodJournal.State#TAX_UNKNOWN}
+     * for the faction. The idempotency key stays claimed: this is the only path
+     * that may charge an ambiguous period, and it must be requested manually.
+     */
+    public RetryResult retryUnknown(Faction faction) {
+        if (faction == null || this.journal == null) {
+            return RetryResult.NONE;
+        }
+        TaxPeriodJournal.Entry entry = this.journal.latestUnknown(faction.getId());
+        if (entry == null) {
+            return RetryResult.NONE;
+        }
+        if (!this.bank.available()) {
+            return RetryResult.NO_ECONOMY;
+        }
+        if (entry.amount() > 0.0 && !this.bank.modifyMoney(faction, -entry.amount(),
+                "to pay the faction tax", "manual retry of " + entry.key())) {
+            return RetryResult.FAILED;
+        }
+        long now = this.clock.millis();
+        this.journal.settled(entry.key(), "manual retry");
+        faction.setTaxArrears(0);
+        faction.setTaxInsolvent(false);
+        faction.setLastTaxAt(now);
+        faction.addLog("tax", "TAX_PAID", this.bank.format(entry.amount()) + " retry");
+        this.fire(new FactionTaxCollectedEvent(faction.getId(), faction.getTagPlain(),
+                entry.amount(), now));
+        return RetryResult.CHARGED;
     }
 
     /** Current amount one period would cost the faction. */
@@ -117,6 +203,15 @@ public final class FactionTaxService {
             return 0.0;
         }
         return TaxCalculator.due(faction.getFPlayers().size(), faction.getLandRounded(), this.settings());
+    }
+
+    /**
+     * A resolved period (paid or ambiguous) must never be charged by the
+     * periodic run again. Aborted periods moved no money and may be retried.
+     */
+    static boolean isResolved(TaxPeriodJournal.Entry entry) {
+        return entry != null && (entry.state() == TaxPeriodJournal.State.SETTLED
+                || entry.state() == TaxPeriodJournal.State.TAX_UNKNOWN);
     }
 
     /** Configured interval in minutes, at least one. */

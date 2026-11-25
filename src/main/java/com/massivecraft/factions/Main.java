@@ -15,6 +15,7 @@ import com.massivecraft.factions.mailbox.FactionMailbox;
 import com.massivecraft.factions.mailbox.MailboxExpiryTask;
 import com.massivecraft.factions.cmd.FCmdRoot;
 import com.massivecraft.factions.economy.FactionTaxService;
+import com.massivecraft.factions.economy.TaxPeriodJournal;
 import com.massivecraft.factions.economy.FactionTaxTask;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.integration.Essentials;
@@ -96,6 +97,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     public StuckService stuckService;
     public TntBankService tntBankService;
     public FactionTaxService factionTaxService;
+    public TaxPeriodJournal taxPeriodJournal;
     public BankJournal bankJournal;
     public IdempotencyStore idempotencyStore;
     public FactionMailbox mailbox;
@@ -163,6 +165,8 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         Path storage = getDataFolder().toPath();
         this.bankJournal = new BankJournal(storage.resolve("bank-journal.jsonl"), getLogger());
         this.idempotencyStore = new IdempotencyStore(storage.resolve("idempotency.json"), getLogger());
+        this.taxPeriodJournal = new TaxPeriodJournal(storage.resolve("tax-journal.jsonl"),
+                getLogger());
         this.mailbox = new FactionMailbox(storage.resolve("mailbox.json"), this.idempotencyStore,
                 Clock.systemUTC(), Conf.mailboxMaxPerPlayer,
                 TimeUnit.DAYS.toMillis(Math.max(1, Conf.mailboxTtlDays)), getLogger());
@@ -183,7 +187,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         Essentials.setup();
         Econ.setup();
         this.factionTaxService = new FactionTaxService(BankService.get(), Clock.systemUTC(),
-                this.idempotencyStore);
+                this.idempotencyStore, this.taxPeriodJournal);
         BankService.get().retryPendingCompensations();
 
         if (Conf.worldGuardChecking) {

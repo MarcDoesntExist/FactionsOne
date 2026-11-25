@@ -36,6 +36,12 @@ the project uses semantic versioning.
 - Bank journal retention (`bankJournalRetentionDays`, default 30): terminal
   entries are compacted atomically with rotated backups at enable and from the
   compensation task. Pending movements and pending compensations are kept.
+- Periodic tax periods are journaled (`tax-journal.jsonl`). A crash between
+  the idempotency claim and the debit leaves the period `TAX_UNKNOWN`: the
+  periodic run never charges it again and `/f tax run <faction> retry` is the
+  only way to resolve it after checking the bank. Settled periods are never
+  recharged by the periodic run; `force` may repeat one, but it also skips
+  `TAX_UNKNOWN` periods.
 - `./gradlew liveTest`: runs the local Paper crash harnesses (`live-journal.js`,
   `live-refund.js`) and skips with an explicit reason when `node`, the Paper jar
   or the local probe sources are missing.
