@@ -8,6 +8,10 @@ the project uses semantic versioning.
 
 ### Added
 
+- Faction audit log: `/f logs [all|bank] [page]` filters bank and tax
+  movements, the GUI lists the newest entry first, and role changes are
+  recorded. Faction creation/disband and home/description changes are not
+  audit events.
 - Durable data files are versioned. `mailbox.json` and `idempotency.json`
   carry a root `version` field; `bank-journal.jsonl` starts with a
   `{"version":2}` header. Legacy files are migrated after a rotated

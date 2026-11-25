@@ -4,8 +4,10 @@ import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.FPlayers;
 import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.FactionLogEntry;
+import com.massivecraft.factions.FactionLogView;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.FPerm;
+import com.massivecraft.factions.zcore.Lang;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -32,7 +34,7 @@ public final class LogsMenu extends PagedMenu {
     }
 
     private LogsMenu(Player player, GuiConfig config, Faction faction) {
-        super(player, config, config.title("menu.logs.title", "<gray>Faction logs"),
+        super(player, config, config.title("menu.logs.title", Lang.logsMenuTitle),
                 config.rows("menu.logs.rows", 6),
                 clicker -> {
                     FPlayer fplayer = FPlayers.i.get(clicker);
@@ -50,22 +52,21 @@ public final class LogsMenu extends PagedMenu {
 
     private void build() {
         List<MenuItem> entries = new ArrayList<MenuItem>();
-        List<FactionLogEntry> logs = this.faction.getLogs();
-        for (int i = logs.size() - 1; i >= 0; i--) {
-            FactionLogEntry entry = logs.get(i);
+        List<FactionLogEntry> logs = FactionLogView.newestFirst(this.faction.getLogs(), false);
+        for (FactionLogEntry entry : logs) {
             ItemStack icon = this.config.item("main.logs", this.getPlayer());
             if (icon.getType() == Material.AIR) {
                 icon = new ItemStack(Material.BOOK);
             }
             ItemMeta meta = icon.getItemMeta();
             if (meta != null) {
-                meta.displayName(Main.main.txt.parse("<white>%s <gray>%s", entry.getActor(),
+                meta.displayName(Main.main.txt.parse(Lang.logsMenuEntry, entry.getActor(),
                         entry.getAction()));
                 List<Component> lore = new ArrayList<Component>();
-                lore.add(Main.main.txt.parse("<gray>%s", this.format.format(
+                lore.add(Main.main.txt.parse(Lang.logsMenuTime, this.format.format(
                         new Date(entry.getTimestamp()))));
                 if (entry.getDetail() != null) {
-                    lore.add(Main.main.txt.parse("<gray>%s", entry.getDetail()));
+                    lore.add(Main.main.txt.parse(Lang.logsMenuDetail, entry.getDetail()));
                 }
                 meta.lore(lore);
                 icon.setItemMeta(meta);

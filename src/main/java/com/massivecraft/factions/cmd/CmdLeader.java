@@ -94,6 +94,7 @@ public class CmdLeader extends FCommand {
         }
         newLeader.setFaction(targetFaction);
         newLeader.setRole(Rel.LEADER);
+        targetFaction.addLog(actorName(), "ROLE", newLeader.getName() + " -> " + Rel.LEADER);
         msg("<i>You have promoted %s<i> to the position of faction leader.",
                 newLeader.describeTo(fme, true));
 

@@ -55,6 +55,7 @@ public class CmdPromote extends FCommand {
                 return;
             }
             you.setRole(Rel.MEMBER);
+            myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.MEMBER);
             myFaction.msg("%s<i> was promoted to being a member of your faction.",
                     you.describeTo(myFaction, true));
         } else if (you.getRole() == Rel.MEMBER) {
@@ -63,6 +64,7 @@ public class CmdPromote extends FCommand {
                 return;
             }
             you.setRole(Rel.OFFICER);
+            myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.OFFICER);
             myFaction.msg("%s<i> was promoted to being an officer in your faction.",
                     you.describeTo(myFaction, true));
         } else if (you.getRole() == Rel.OFFICER) {
@@ -71,6 +73,7 @@ public class CmdPromote extends FCommand {
                 return;
             }
             you.setRole(Rel.COLEADER);
+            myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.COLEADER);
             myFaction.msg("%s<i> was promoted to being a co-leader in your faction.",
                     you.describeTo(myFaction, true));
         }

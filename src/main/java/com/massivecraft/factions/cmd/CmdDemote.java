@@ -55,6 +55,7 @@ public class CmdDemote extends FCommand {
                 return;
             }
             you.setRole(Rel.RECRUIT);
+            myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.RECRUIT);
             myFaction.msg("%s<i> was demoted to being a recruit in your faction.",
                     you.describeTo(myFaction, true));
         } else if (you.getRole() == Rel.OFFICER) {
@@ -63,6 +64,7 @@ public class CmdDemote extends FCommand {
                 return;
             }
             you.setRole(Rel.MEMBER);
+            myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.MEMBER);
             myFaction.msg("%s<i> was demoted to being a member in your faction.",
                     you.describeTo(myFaction, true));
         } else if (you.getRole() == Rel.COLEADER) {
@@ -71,6 +73,7 @@ public class CmdDemote extends FCommand {
                 return;
             }
             you.setRole(Rel.OFFICER);
+            myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.OFFICER);
             myFaction.msg("%s<i> was demoted to being an officer in your faction.",
                     you.describeTo(myFaction, true));
         }

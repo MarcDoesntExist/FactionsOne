@@ -869,11 +869,9 @@ public class Faction extends Entity implements EconomyParticipator {
     //----------------------------------------------//
 
     public void addLog(String actor, String action, String detail) {
-        this.logs.add(new FactionLogEntry(System.currentTimeMillis(), actor, action, detail));
-        int limit = Math.max(1, Conf.factionLogLimit);
-        while (this.logs.size() > limit) {
-            this.logs.remove(0);
-        }
+        FactionLogView.addRotated(this.logs,
+                new FactionLogEntry(System.currentTimeMillis(), actor, action, detail),
+                Conf.factionLogLimit);
     }
 
     public List<FactionLogEntry> getLogs() {
@@ -909,9 +907,7 @@ public class Faction extends Entity implements EconomyParticipator {
             this.logs = new ArrayList<FactionLogEntry>();
         }
         this.logs.removeIf(Objects::isNull);
-        while (this.logs.size() > Math.max(1, Conf.factionLogLimit)) {
-            this.logs.remove(0);
-        }
+        FactionLogView.trim(this.logs, Conf.factionLogLimit);
         this.tntBank = Math.max(0, this.tntBank);
         this.factionPoints = Math.max(0, this.factionPoints);
         this.taxArrears = Math.max(0, this.taxArrears);
