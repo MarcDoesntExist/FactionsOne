@@ -36,6 +36,10 @@ the project uses semantic versioning.
 - Bank journal retention (`bankJournalRetentionDays`, default 30): terminal
   entries are compacted atomically with rotated backups at enable and from the
   compensation task. Pending movements and pending compensations are kept.
+- `/f admin bank status` (also from the console) prints a read-only snapshot:
+  pending journal movements, pending compensations, pending mailbox payouts, the
+  `DELIVERY_UNKNOWN` and `REFUND_UNKNOWN` counters, the retention windows and
+  the last compaction time. `BankStatus` is pure and never writes.
 - `BankService` now journals credits, debits, transfers, balance sets and
   universe movements; account locking was extracted to `AccountLocks`.
 - Headless coverage for journal replay, compensation retry, idempotent claims,
