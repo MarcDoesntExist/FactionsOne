@@ -209,8 +209,9 @@ public class Conf {
     public static int mailboxTtlDays = 30;
     public static int mailboxMaxPerPlayer = 20;
     public static int mailboxExpiryCheckMinutes = 60;
-    // Old idempotency keys and terminal mailbox claims are compacted after
-    // these windows. Keep the idempotency window longer than the mailbox window.
+    // Terminal journal entries, old idempotency keys and terminal mailbox claims
+    // are compacted after these windows. Keep idempotency longer than mailbox.
+    public static int bankJournalRetentionDays = 30;
     public static int idempotencyRetentionDays = 180;
     public static int mailboxRetentionDays = 30;
     // Grace and shield windows for faction territory. Disabled by default.

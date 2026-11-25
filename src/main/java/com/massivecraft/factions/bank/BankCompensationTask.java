@@ -12,8 +12,12 @@ public final class BankCompensationTask implements Runnable {
     @Override
     public void run() {
         int repaired = BankService.get().retryPendingCompensations();
-        if (repaired > 0 && Main.main != null) {
+        if (Main.main == null) {
+            return;
+        }
+        if (repaired > 0) {
             Main.main.log("Bank compensation retry credited " + repaired + " account(s).");
         }
+        Main.main.compactStorage();
     }
 }

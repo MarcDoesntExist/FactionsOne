@@ -10,6 +10,7 @@ import com.massivecraft.factions.bank.BankCompensationTask;
 import com.massivecraft.factions.bank.BankJournal;
 import com.massivecraft.factions.bank.BankService;
 import com.massivecraft.factions.bank.IdempotencyStore;
+import com.massivecraft.factions.bank.StorageRetention;
 import com.massivecraft.factions.mailbox.FactionMailbox;
 import com.massivecraft.factions.mailbox.MailboxExpiryTask;
 import com.massivecraft.factions.cmd.FCmdRoot;
@@ -344,17 +345,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
      * expiry task; it never removes pending or ambiguous work.
      */
     public void compactStorage() {
-        long now = System.currentTimeMillis();
-        Set<String> protectedKeys = this.mailbox == null ? Set.of() : this.mailbox.protectedKeys();
-        int keys = this.idempotencyStore == null ? 0 : this.idempotencyStore.retain(now,
-                TimeUnit.DAYS.toMillis(Math.max(1, Conf.idempotencyRetentionDays)),
-                protectedKeys::contains);
-        int claims = this.mailbox == null ? 0 : this.mailbox.retain(now,
-                TimeUnit.DAYS.toMillis(Math.max(1, Conf.mailboxRetentionDays)));
-        if (keys + claims > 0) {
-            log("Storage retention removed " + keys + " idempotency key(s) and "
-                    + claims + " mailbox claim(s).");
-        }
+        StorageRetention.compact(this);
     }
 
     private void startMapAutoUpdateTask() {

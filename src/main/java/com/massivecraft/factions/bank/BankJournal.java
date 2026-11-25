@@ -2,12 +2,16 @@ package com.massivecraft.factions.bank;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.massivecraft.factions.zcore.util.BackupService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -45,12 +49,18 @@ public final class BankJournal {
 
     private final Path file;
     private final Logger logger;
+    private final Clock clock;
     private final Gson gson = new GsonBuilder().create();
     private final Map<String, Entry> latest = new LinkedHashMap<>();
 
     public BankJournal(Path file, Logger logger) {
+        this(file, logger, Clock.systemUTC());
+    }
+
+    public BankJournal(Path file, Logger logger, Clock clock) {
         this.file = file;
         this.logger = logger;
+        this.clock = clock;
         load();
     }
 
@@ -58,7 +68,7 @@ public final class BankJournal {
                                      String actor, String compensationAccount,
                                      double compensationAmount, String detail) {
         String id = UUID.randomUUID().toString();
-        Entry entry = new Entry(id, System.currentTimeMillis(), State.PENDING, operation, from, to,
+        Entry entry = new Entry(id, this.clock.millis(), State.PENDING, operation, from, to,
                 amount, actor, compensationAccount, compensationAmount, detail);
         return append(entry) ? id : null;
     }
@@ -105,8 +115,75 @@ public final class BankJournal {
         return pendingCompensations().size();
     }
 
+    /**
+     * Drops terminal entries whose last record is older than the window.
+     * Pending movements and pending compensations are never removed. The file
+     * is rewritten atomically after a rotated backup is taken.
+     *
+     * @return number of entries removed
+     */
+    public synchronized int retain(long now, long retentionMillis) {
+        long cutoff = now - Math.max(0L, retentionMillis);
+        Map<String, Entry> kept = new LinkedHashMap<>();
+        int removed = 0;
+        for (Entry entry : this.latest.values()) {
+            if (isTerminal(entry.state()) && entry.at() <= cutoff) {
+                removed++;
+            } else {
+                kept.put(entry.id(), entry);
+            }
+        }
+        if (removed == 0 || !rewrite(kept)) {
+            return 0;
+        }
+        this.latest.clear();
+        this.latest.putAll(kept);
+        return removed;
+    }
+
     public Path file() {
         return this.file;
+    }
+
+    private static boolean isTerminal(State state) {
+        return state == State.COMMITTED || state == State.ABORTED
+                || state == State.COMPENSATED;
+    }
+
+    private boolean rewrite(Map<String, Entry> entries) {
+        if (Files.exists(this.file)) {
+            BackupService.backupBeforeWrite(this.file);
+        }
+        Path temporary = this.file.resolveSibling(
+                this.file.getFileName() + "." + UUID.randomUUID() + ".tmp");
+        try {
+            Path parent = this.file.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+            StringBuilder text = new StringBuilder();
+            for (Entry entry : entries.values()) {
+                text.append(this.gson.toJson(Stored.from(entry))).append('\n');
+            }
+            Files.writeString(temporary, text.toString(), StandardCharsets.UTF_8);
+            try {
+                Files.move(temporary, this.file, StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException fallback) {
+                Files.move(temporary, this.file, StandardCopyOption.REPLACE_EXISTING);
+            }
+            return true;
+        } catch (IOException exception) {
+            this.logger.log(Level.SEVERE, "Could not compact bank journal " + this.file,
+                    exception);
+            return false;
+        } finally {
+            try {
+                Files.deleteIfExists(temporary);
+            } catch (IOException ignored) {
+                // A fresh temporary name is used on the next rewrite.
+            }
+        }
     }
 
     private boolean transition(String id, State state, String detail) {
@@ -114,7 +191,7 @@ public final class BankJournal {
         if (current == null) {
             return false;
         }
-        return append(new Entry(current.id(), System.currentTimeMillis(), state, current.operation(),
+        return append(new Entry(current.id(), this.clock.millis(), state, current.operation(),
                 current.from(), current.to(), current.amount(), current.actor(),
                 current.compensationAccount(), current.compensationAmount(), detail));
     }
