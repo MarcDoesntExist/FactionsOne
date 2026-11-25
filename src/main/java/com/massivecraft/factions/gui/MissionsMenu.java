@@ -7,6 +7,7 @@ import com.massivecraft.factions.FeatureConfig;
 import com.massivecraft.factions.FeatureService;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.FPerm;
+import com.massivecraft.factions.zcore.Lang;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -30,7 +31,7 @@ public final class MissionsMenu extends PagedMenu {
     }
 
     private MissionsMenu(Player player, GuiConfig config, Faction faction) {
-        super(player, config, config.title("menu.missions.title", "<aqua>Missions"),
+        super(player, config, config.title("menu.missions.title", Lang.missionTitle),
                 config.rows("menu.missions.rows", 6),
                 clicker -> {
                     FPlayer fplayer = FPlayers.i.get(clicker);
@@ -58,16 +59,16 @@ public final class MissionsMenu extends PagedMenu {
             int progress = this.faction.getMissionProgress(mission.id());
             ItemMeta meta = icon.getItemMeta();
             if (meta != null) {
-                meta.displayName(Main.main.txt.parse("<aqua>%s", mission.name()));
+                meta.displayName(Main.main.txt.parse(Lang.missionItemName, mission.name()));
                 List<Component> lore = new ArrayList<Component>();
-                lore.add(Main.main.txt.parse("<gray>%s", mission.description()));
-                lore.add(Main.main.txt.parse("<gray>Progress: <white>%s/%s", progress,
+                lore.add(Main.main.txt.parse(Lang.missionLoreDescription, mission.description()));
+                lore.add(Main.main.txt.parse(Lang.missionLoreProgress, progress,
                         mission.target()));
-                lore.add(Main.main.txt.parse("<gray>Reward: <white>%s points",
+                lore.add(Main.main.txt.parse(Lang.missionLoreReward,
                         mission.rewardPoints()));
-                lore.add(Main.main.txt.parse(done ? "<g>Completed"
-                        : progress >= mission.target() ? "<yellow>Click to claim"
-                        : "<gray>Not ready"));
+                lore.add(Main.main.txt.parse(done ? Lang.missionCompleted
+                        : progress >= mission.target() ? Lang.missionClick
+                        : Lang.missionNotReady));
                 meta.lore(lore);
                 icon.setItemMeta(meta);
             }
@@ -76,7 +77,7 @@ public final class MissionsMenu extends PagedMenu {
                 FeatureService.Result result = service.claimMission(fplayer, this.faction,
                         mission.id());
                 if (result == FeatureService.Result.SUCCESS) {
-                    clicker.sendMessage(Main.main.txt.parse("<g>Mission reward claimed."));
+                    clicker.sendMessage(Main.main.txt.parse(Lang.missionClaimed));
                     new MissionsMenu(clicker, this.config).open();
                 } else {
                     clicker.sendMessage(Main.main.txt.parse(FeatureService.message(result)));

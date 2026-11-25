@@ -7,6 +7,7 @@ import com.massivecraft.factions.FeatureConfig;
 import com.massivecraft.factions.FeatureService;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.FPerm;
+import com.massivecraft.factions.zcore.Lang;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -30,7 +31,7 @@ public final class ShopMenu extends PagedMenu {
     }
 
     private ShopMenu(Player player, GuiConfig config, Faction faction) {
-        super(player, config, config.title("menu.shop.title", "<gold>Shop"),
+        super(player, config, config.title("menu.shop.title", Lang.shopTitle),
                 config.rows("menu.shop.rows", 6),
                 clicker -> {
                     FPlayer fplayer = FPlayers.i.get(clicker);
@@ -55,14 +56,14 @@ public final class ShopMenu extends PagedMenu {
                     ? Material.CHEST : material);
             ItemMeta meta = icon.getItemMeta();
             if (meta != null) {
-                meta.displayName(Main.main.txt.parse("<gold>%s", offer.name()));
+                meta.displayName(Main.main.txt.parse(Lang.shopItemName, offer.name()));
                 List<Component> lore = new ArrayList<Component>();
-                lore.add(Main.main.txt.parse("<gray>Amount: <white>%s", offer.amount()));
-                lore.add(Main.main.txt.parse("<gray>Cost: <white>%s points", offer.cost()));
+                lore.add(Main.main.txt.parse(Lang.shopLoreAmount, offer.amount()));
+                lore.add(Main.main.txt.parse(Lang.shopLoreCost, offer.cost()));
                 for (String line : offer.lore()) {
                     lore.add(Main.main.txt.parse(line));
                 }
-                lore.add(Main.main.txt.parse("<yellow>Click to buy"));
+                lore.add(Main.main.txt.parse(Lang.shopLoreClick));
                 meta.lore(lore);
                 icon.setItemMeta(meta);
             }
@@ -71,7 +72,7 @@ public final class ShopMenu extends PagedMenu {
                 FeatureService.Result result = service.buyShopOffer(fplayer, this.faction,
                         offer.id());
                 if (result == FeatureService.Result.SUCCESS) {
-                    clicker.sendMessage(Main.main.txt.parse("<g>Purchase complete."));
+                    clicker.sendMessage(Main.main.txt.parse(Lang.shopPurchase));
                 } else {
                     clicker.sendMessage(Main.main.txt.parse(FeatureService.message(result)));
                 }

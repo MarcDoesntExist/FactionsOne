@@ -1,6 +1,7 @@
 package com.massivecraft.factions.cmd;
 
 import com.massivecraft.factions.struct.Permission;
+import com.massivecraft.factions.zcore.Lang;
 
 /**
  * Parent for faction TNT bank commands.
@@ -27,6 +28,6 @@ public final class CmdTnt extends FCommand {
 
     @Override
     public void perform() {
-        msg("<i>Use /f tnt deposit|withdraw|balance <amount>.");
+        msg(Lang.tntUsage);
     }
 }

@@ -5,6 +5,7 @@ import com.massivecraft.factions.FeatureService;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
+import com.massivecraft.factions.zcore.Lang;
 
 /**
  * Lists and buys faction upgrades with faction points.
@@ -31,24 +32,22 @@ public final class CmdUpgrade extends FCommand {
             return;
         }
         if (!this.argIsSet(0)) {
-            msg("<gold>Faction upgrades <gray>(points: <white>%s<gray>)",
-                    this.myFaction.getFactionPoints());
+            msg(Lang.upgradeHeader, this.myFaction.getFactionPoints());
             for (FeatureConfig.UpgradeDefinition definition : service.getConfig().upgrades()) {
                 int level = this.myFaction.getUpgradeLevel(definition.id());
-                msg("<aqua>%s <gray>level %s/%s, cost %s",
-                        definition.name(), level, definition.maxLevel(),
+                msg(Lang.upgradeLine, definition.name(), level, definition.maxLevel(),
                         service.upgradeCost(this.myFaction, definition));
             }
             return;
         }
         FeatureConfig.UpgradeDefinition definition = service.getConfig().upgrade(this.argAsString(0));
         if (definition == null) {
-            msg("<b>That upgrade does not exist.");
+            msg(Lang.upgradeNotFound);
             return;
         }
         FeatureService.Result result = service.buyUpgrade(this.fme, this.myFaction, definition.id());
         if (result == FeatureService.Result.SUCCESS) {
-            msg("<g>Bought upgrade <h>%s<g>.", definition.name());
+            msg(Lang.upgradeBought, definition.name());
         } else {
             msg(FeatureService.message(result));
         }

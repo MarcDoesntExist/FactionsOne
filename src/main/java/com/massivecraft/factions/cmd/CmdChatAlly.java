@@ -7,6 +7,7 @@ import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
+import com.massivecraft.factions.zcore.Lang;
 
 /**
  * Sends a message to the sender's faction and its allies.
@@ -51,7 +52,7 @@ public final class CmdChatAlly extends FCommand {
         }
         faction.addLog(this.fme.getName(), "ALLY_CHAT", message);
         if (recipients == 0) {
-            msg("<i>No allies are online.");
+            msg(Lang.chatNoAllies);
         }
     }
 }

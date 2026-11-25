@@ -3,6 +3,7 @@ package com.massivecraft.factions.cmd;
 import com.massivecraft.factions.FactionLogEntry;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
+import com.massivecraft.factions.zcore.Lang;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -39,16 +40,16 @@ public final class CmdLogs extends FCommand {
         page = Math.min(page, pages);
         int start = Math.max(0, entries.size() - page * PAGE_SIZE);
         int end = Math.min(entries.size(), start + PAGE_SIZE);
-        msg("<gold>Faction logs <gray>(page %s/%s)", page, pages);
+        msg(Lang.logsHeader, page, pages);
         SimpleDateFormat format = new SimpleDateFormat("MM-dd HH:mm");
         for (int i = start; i < end; i++) {
             FactionLogEntry entry = entries.get(i);
-            msg("<gray>%s <white>%s <aqua>%s <gray>%s",
+            msg(Lang.logsLine,
                     format.format(new Date(entry.getTimestamp())),
                     entry.getActor(), entry.getAction(), entry.getDetail());
         }
         if (entries.isEmpty()) {
-            msg("<i>No activity logged yet.");
+            msg(Lang.logsEmpty);
         }
     }
 }

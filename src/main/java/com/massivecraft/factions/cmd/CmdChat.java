@@ -1,5 +1,7 @@
 package com.massivecraft.factions.cmd;
 
+import com.massivecraft.factions.zcore.Lang;
+
 /**
  * Parent for faction chat channels.
  *
@@ -20,6 +22,6 @@ public final class CmdChat extends FCommand {
 
     @Override
     public void perform() {
-        msg("<i>Use /f chat ally <message> to talk with your allies.");
+        msg(Lang.chatUsage);
     }
 }
