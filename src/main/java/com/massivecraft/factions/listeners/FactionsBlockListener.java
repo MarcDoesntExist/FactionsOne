@@ -8,6 +8,7 @@ import com.massivecraft.factions.zcore.Lang;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -88,6 +89,20 @@ public class FactionsBlockListener implements Listener {
         Faction faction = Board.getFactionAt(event.getBlock());
         if (faction.getFlag(FFlag.FIRESPREAD) == false) {
             event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onSpongeAbsorb(SpongeAbsorbEvent event) {
+        if (event.isCancelled())
+            return;
+
+        Faction spongeFaction = Board.getFactionAt(new FLocation(event.getBlock()));
+        for (BlockState absorbed : event.getBlocks()) {
+            if (Board.getFactionAt(new FLocation(absorbed.getLocation())) != spongeFaction) {
+                event.setCancelled(true);
+                return;
+            }
         }
     }
 

@@ -258,7 +258,7 @@ public class FactionsPlayerListener implements Listener {
         if (event.isCancelled())
             return;
 
-        Block block = event.getBlockClicked();
+        Block block = event.getBlock();
         Player player = event.getPlayer();
 
         if (!playerCanUseItemHere(player, block.getLocation(), event.getBucket(), false)) {
@@ -272,7 +272,7 @@ public class FactionsPlayerListener implements Listener {
         if (event.isCancelled())
             return;
 
-        Block block = event.getBlockClicked();
+        Block block = event.getBlock();
         Player player = event.getPlayer();
 
         if (!playerCanUseItemHere(player, block.getLocation(), event.getBucket(), false)) {

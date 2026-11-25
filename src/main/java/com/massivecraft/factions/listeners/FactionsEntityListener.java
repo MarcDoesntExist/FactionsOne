@@ -135,29 +135,15 @@ public class FactionsEntityListener implements Listener {
         if (event.isCancelled())
             return;
 
+        FPlayer igniter = explosionIgniter(event.getEntity());
         Set<FLocation> explosionLocs = new HashSet<FLocation>();
         for (Block block : event.blockList()) {
             explosionLocs.add(new FLocation(block));
         }
         for (FLocation loc : explosionLocs) {
             Faction faction = Board.getFactionAt(loc);
-            if (this.main.shieldService != null) {
-                Entity source = event.getEntity() instanceof TNTPrimed
-                        ? ((TNTPrimed) event.getEntity()).getSource()
-                        : null;
-                FPlayer igniter = source instanceof Player ? FPlayers.i.get((Player) source) : null;
-                boolean bypass = igniter != null && (igniter.hasAdminMode()
-                        || Conf.playersWhoBypassAllProtection.contains(igniter.getName())
-                        || Conf.playersWhoBypassAllProtection.contains(igniter.getId()));
-                if (!bypass && !this.main.shieldService.canAttack(faction, igniter)) {
-                    event.setCancelled(true);
-                    return;
-                }
-            }
-            FFlag explosionFlag = event.getEntity() instanceof TNTPrimed ? FFlag.TNT : FFlag.EXPLOSIONS;
-            if (faction.getFlag(explosionFlag) == false || faction
-                    .hasOfflineExplosionProtection()) {
-                // faction has this explosion type disabled
+            if (!canExplodeAt(faction, igniter, event.getEntity())) {
+                // faction has this explosion type disabled or is shielded
                 event.setCancelled(true);
                 return;
             }
@@ -178,10 +164,34 @@ public class FactionsEntityListener implements Listener {
             targets.add(center.getRelative(1, 0, 0));
             targets.add(center.getRelative(-1, 0, 0));
             for (Block target : targets) {
-                if (LegacyUtil.MATERIALS_WITH_HIGH_BLAST_RESISTANCE.contains(target.getType()))
+                if (!LegacyUtil.MATERIALS_WITH_HIGH_BLAST_RESISTANCE.contains(target.getType()))
+                    continue;
+                Faction targetFaction = Board.getFactionAt(new FLocation(target));
+                if (canExplodeAt(targetFaction, igniter, event.getEntity()))
                     target.breakNaturally();
             }
         }
+    }
+
+    private FPlayer explosionIgniter(Entity entity) {
+        if (!(entity instanceof TNTPrimed))
+            return null;
+        Entity source = ((TNTPrimed) entity).getSource();
+        return source instanceof Player ? FPlayers.i.get((Player) source) : null;
+    }
+
+    private boolean canExplodeAt(Faction faction, FPlayer igniter, Entity entity) {
+        if (faction == null)
+            return true;
+        if (this.main.shieldService != null) {
+            boolean bypass = igniter != null && (igniter.hasAdminMode()
+                    || Conf.playersWhoBypassAllProtection.contains(igniter.getName())
+                    || Conf.playersWhoBypassAllProtection.contains(igniter.getId()));
+            if (!bypass && !this.main.shieldService.canAttack(faction, igniter))
+                return false;
+        }
+        FFlag explosionFlag = entity instanceof TNTPrimed ? FFlag.TNT : FFlag.EXPLOSIONS;
+        return faction.getFlag(explosionFlag) && !faction.hasOfflineExplosionProtection();
     }
 
     @EventHandler(priority = EventPriority.NORMAL)

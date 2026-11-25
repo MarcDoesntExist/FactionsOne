@@ -6,6 +6,15 @@ the project uses semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Waterlogged TNT no longer bypasses the target faction's TNT flag, offline
+  protection or shield when it breaks the six high-blast-resistance blocks.
+- Bucket empty/fill now checks the block actually changed, not only the block
+  clicked, so placing liquid across a claim boundary is rejected.
+- Sponge absorption is cancelled when it would change water in a different
+  faction's territory, preventing cross-claim drainage.
+
 ### Added
 
 - Optional BlueMap claim overlay (`mapEnabled`, default `false`): claimed
