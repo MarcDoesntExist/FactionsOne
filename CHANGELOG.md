@@ -73,6 +73,11 @@ the project uses semantic versioning.
 
 ### Fixed
 
+- An interrupted mailbox refund is no longer treated as completed. When the
+  refund key was claimed but the source credit is unconfirmed, the claim becomes
+  `REFUND_UNKNOWN` instead of `refunded`; the periodic expiry run leaves it
+  alone until an operator checks the source account and runs
+  `/f mail reconcile <id> refunded|retry-refund`.
 - Negative amounts no longer reverse a bank transfer: `/f money deposit -100`
   used to become a withdrawal for callers holding bank withdraw rights.
 - A balance check followed by a withdrawal can no longer overdraw an account;
