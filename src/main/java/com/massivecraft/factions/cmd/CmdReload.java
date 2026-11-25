@@ -76,6 +76,8 @@ public class CmdReload extends FCommand {
         Conf.migrateColeaderPermissions();
         Conf.migrateExtendedPermissions();
         Main.main.startFactionTaxTask(true);
+        Main.main.startBankCompensationTask(true);
+        Main.main.startMailboxExpiryTask(true);
         msg("<i>Reloaded <h>%s <i>from disk, took <h>%dms<i>.", fileName, timeReload);
     }
 

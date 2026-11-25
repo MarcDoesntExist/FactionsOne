@@ -6,7 +6,12 @@ import com.massivecraft.factions.adapters.FPermTypeAdapter;
 import com.massivecraft.factions.adapters.LocationTypeAdapter;
 import com.massivecraft.factions.adapters.RelTypeAdapter;
 import com.massivecraft.factions.cmd.CmdAutoHelp;
+import com.massivecraft.factions.bank.BankCompensationTask;
+import com.massivecraft.factions.bank.BankJournal;
 import com.massivecraft.factions.bank.BankService;
+import com.massivecraft.factions.bank.IdempotencyStore;
+import com.massivecraft.factions.mailbox.FactionMailbox;
+import com.massivecraft.factions.mailbox.MailboxExpiryTask;
 import com.massivecraft.factions.cmd.FCmdRoot;
 import com.massivecraft.factions.economy.FactionTaxService;
 import com.massivecraft.factions.economy.FactionTaxTask;
@@ -43,12 +48,14 @@ import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 
 import java.lang.reflect.Modifier;
+import java.nio.file.Path;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -88,11 +95,16 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     public StuckService stuckService;
     public TntBankService tntBankService;
     public FactionTaxService factionTaxService;
+    public BankJournal bankJournal;
+    public IdempotencyStore idempotencyStore;
+    public FactionMailbox mailbox;
     // Persistance related
     private boolean locked = false;
     private Integer AutoLeaveTask = null;
     private Integer econLandRewardTaskID = null;
     private Integer factionTaxTaskID = null;
+    private Integer bankCompensationTaskID = null;
+    private Integer mailboxExpiryTaskID = null;
     private Integer mapAutoUpdateTask = null;
 
     public Main() {
@@ -147,6 +159,13 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
                 FactionRankingService::collectLive);
         this.stuckService = new StuckService(this, this.teleportWarmupService);
         this.tntBankService = new TntBankService(this.featureService);
+        Path storage = getDataFolder().toPath();
+        this.bankJournal = new BankJournal(storage.resolve("bank-journal.jsonl"), getLogger());
+        this.idempotencyStore = new IdempotencyStore(storage.resolve("idempotency.json"), getLogger());
+        this.mailbox = new FactionMailbox(storage.resolve("mailbox.json"), this.idempotencyStore,
+                Clock.systemUTC(), Conf.mailboxMaxPerPlayer,
+                TimeUnit.DAYS.toMillis(Math.max(1, Conf.mailboxTtlDays)), getLogger());
+        compactStorage();
 
         // Add Base Commands
         this.cmdAutoHelp = new CmdAutoHelp();
@@ -162,7 +181,9 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
 
         Essentials.setup();
         Econ.setup();
-        this.factionTaxService = new FactionTaxService(BankService.get(), Clock.systemUTC());
+        this.factionTaxService = new FactionTaxService(BankService.get(), Clock.systemUTC(),
+                this.idempotencyStore);
+        BankService.get().retryPendingCompensations();
 
         if (Conf.worldGuardChecking) {
             Worldguard.init(this);
@@ -176,6 +197,8 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
 
         // start up task which charges the periodic faction tax
         startFactionTaxTask(false);
+        startBankCompensationTask(false);
+        startMailboxExpiryTask(false);
 
         // Register Event Handlers
         getServer().getPluginManager().registerEvents(this.playerListener, this);
@@ -224,6 +247,14 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
             this.getServer().getScheduler().cancelTask(factionTaxTaskID);
             factionTaxTaskID = null;
         }
+        if (bankCompensationTaskID != null) {
+            this.getServer().getScheduler().cancelTask(bankCompensationTaskID);
+            bankCompensationTaskID = null;
+        }
+        if (mailboxExpiryTaskID != null) {
+            this.getServer().getScheduler().cancelTask(mailboxExpiryTaskID);
+            mailboxExpiryTaskID = null;
+        }
         super.onDisable();
     }
 
@@ -268,6 +299,61 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
             long ticks = Math.min(Integer.MAX_VALUE, 20L * 60L * Conf.taxIntervalMinutes);
             factionTaxTaskID = getServer().getScheduler()
                     .scheduleSyncRepeatingTask(this, new FactionTaxTask(), ticks, ticks);
+        }
+    }
+
+    public void startBankCompensationTask(boolean restartIfRunning) {
+        if (bankCompensationTaskID != null) {
+            if (!restartIfRunning) {
+                return;
+            }
+            this.getServer().getScheduler().cancelTask(bankCompensationTaskID);
+            bankCompensationTaskID = null;
+        }
+        if (Conf.bankCompensationIntervalMinutes <= 0) {
+            return;
+        }
+        long ticks = Math.min(Integer.MAX_VALUE, 20L * 60L * Conf.bankCompensationIntervalMinutes);
+        bankCompensationTaskID = this.getServer().getScheduler()
+                .scheduleSyncRepeatingTask(this, new BankCompensationTask(), ticks, ticks);
+    }
+
+    public void startMailboxExpiryTask(boolean restartIfRunning) {
+        if (mailboxExpiryTaskID != null) {
+            if (!restartIfRunning) {
+                return;
+            }
+            this.getServer().getScheduler().cancelTask(mailboxExpiryTaskID);
+            mailboxExpiryTaskID = null;
+        }
+        if (Conf.mailboxExpiryCheckMinutes <= 0) {
+            return;
+        }
+        long ticks = Math.min(Integer.MAX_VALUE, 20L * 60L * Conf.mailboxExpiryCheckMinutes);
+        mailboxExpiryTaskID = this.getServer().getScheduler()
+                .scheduleSyncRepeatingTask(this, new MailboxExpiryTask(), ticks, ticks);
+    }
+
+    public boolean refundMailboxClaim(FactionMailbox.Claim claim) {
+        return claim != null && claim.sourceAccount() != null && !claim.sourceAccount().isBlank()
+                && BankService.get().creditAccount(claim.sourceAccount(), claim.amount());
+    }
+
+    /**
+     * Compacts the durable bank/mailbox state. Called at enable and by the
+     * expiry task; it never removes pending or ambiguous work.
+     */
+    public void compactStorage() {
+        long now = System.currentTimeMillis();
+        Set<String> protectedKeys = this.mailbox == null ? Set.of() : this.mailbox.protectedKeys();
+        int keys = this.idempotencyStore == null ? 0 : this.idempotencyStore.retain(now,
+                TimeUnit.DAYS.toMillis(Math.max(1, Conf.idempotencyRetentionDays)),
+                protectedKeys::contains);
+        int claims = this.mailbox == null ? 0 : this.mailbox.retain(now,
+                TimeUnit.DAYS.toMillis(Math.max(1, Conf.mailboxRetentionDays)));
+        if (keys + claims > 0) {
+            log("Storage retention removed " + keys + " idempotency key(s) and "
+                    + claims + " mailbox claim(s).");
         }
     }
 

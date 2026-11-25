@@ -203,6 +203,16 @@ public class Conf {
     public static int taxGracePeriods = 3;
     public static String taxInsolvencyAction = "NONE";
     public static boolean taxNotifyOfficers = true;
+    // Durable bank retries and the offline payout mailbox.
+    public static int bankCompensationIntervalMinutes = 5;
+    public static boolean mailboxEnabled = true;
+    public static int mailboxTtlDays = 30;
+    public static int mailboxMaxPerPlayer = 20;
+    public static int mailboxExpiryCheckMinutes = 60;
+    // Old idempotency keys and terminal mailbox claims are compacted after
+    // these windows. Keep the idempotency window longer than the mailbox window.
+    public static int idempotencyRetentionDays = 180;
+    public static int mailboxRetentionDays = 30;
     // Grace and shield windows for faction territory. Disabled by default.
     public static boolean shieldEnabled = false;
     public static int shieldGraceHours = 24;

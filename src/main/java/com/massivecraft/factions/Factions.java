@@ -2,6 +2,7 @@ package com.massivecraft.factions;
 
 import com.google.gson.reflect.TypeToken;
 import com.massivecraft.factions.integration.Econ;
+import com.massivecraft.factions.mailbox.FactionMailbox;
 import com.massivecraft.factions.shield.ShieldPolicy;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
@@ -306,11 +307,23 @@ public class Factions extends EntityCollection<Faction> {
             if (!faction.getFlag(FFlag.PEACEFUL) && landCount > 0) {
                 Set<FPlayer> players = faction.getFPlayers();
                 int playerCount = players.size();
+                if (playerCount <= 0) {
+                    continue;
+                }
                 double reward = Conf.econLandReward * landCount / playerCount;
+                String reason = "for faction owning " + landCount + " land divided among "
+                        + playerCount + " member(s)";
                 for (FPlayer player : players) {
-                    Econ.modifyMoney(player, reward, "to own faction land",
-                            "for faction owning " + landCount + " land divided among " + playerCount
-                                    + " member(s)");
+                    if (player.isOnline() || !Conf.mailboxEnabled || Main.main.mailbox == null) {
+                        Econ.modifyMoney(player, reward, "to own faction land", reason);
+                        continue;
+                    }
+                    FactionMailbox.Claim claim = Main.main.mailbox.enqueue(player.getId(), reward,
+                            "", "land-reward", reason);
+                    if (claim == null) {
+                        Main.main.log("Mailbox full; could not queue the land reward for "
+                                + player.getName() + ".");
+                    }
                 }
             }
         }

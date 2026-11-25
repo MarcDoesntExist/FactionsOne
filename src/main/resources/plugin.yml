@@ -49,6 +49,8 @@ permissions:
   factions.leave: { description: leave your faction }
   factions.list: { description: see a list of the factions }
   factions.lock: { description: lock all write stuff }
+  factions.mail: { description: view and claim mailbox payouts }
+  factions.mail.send: { description: queue a mailbox payout for a player }
   factions.logs: { description: view the faction audit log }
   factions.map: { description: show the territory map, and set optional auto update }
   factions.money.balance: { description: show your factions current money balance }
@@ -119,6 +121,7 @@ permissions:
       factions.kit.mod: true
       factions.config: true
       factions.lock: true
+      factions.mail.send: true
       factions.reload: true
       factions.save: true
   factions.*:
@@ -175,6 +178,7 @@ permissions:
       factions.leave: true
       factions.list: true
       factions.logs: true
+      factions.mail: true
       factions.map: true
       factions.money.*: true
       factions.menu: true

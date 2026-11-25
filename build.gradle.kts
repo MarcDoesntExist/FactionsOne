@@ -148,7 +148,7 @@ tasks.register("smokeTest") {
             "", "access", "admin", "autoclaim", "ban", "banlist", "chat", "claim", "config",
             "create", "deinvite", "delwarp", "demote", "desc", "disband", "flag", "fly",
             "help", "home", "invite", "join", "kick", "leader", "leave", "list", "lock",
-            "logs", "map", "menu", "missions", "money", "officer", "open", "perm", "power",
+            "logs", "mail", "map", "menu", "missions", "money", "officer", "open", "perm", "power",
             "powerboost", "promote", "ally", "enemy", "neutral", "truce", "reload", "saveall",
             "sc", "setwarp", "sethome", "shield", "shop", "show", "status", "stuck", "coords", "near", "top", "tag", "tax", "title", "tnt", "unban",
             "unclaim", "unclaimall", "upgrade", "version", "warp", "warps"

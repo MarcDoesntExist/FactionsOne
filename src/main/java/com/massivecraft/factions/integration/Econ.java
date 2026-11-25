@@ -48,7 +48,7 @@ public class Econ {
 
         // Every movement goes through the atomic bank service from here on.
         BankService.install(new VaultBankGateway(econ), Econ::shouldBeUsed,
-                Econ::modifyUniverseMoney);
+                Econ::modifyUniverseMoney, Main.main.bankJournal);
 
         Main.main.log("Economy integration through Vault plugin successful.");
 

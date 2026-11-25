@@ -11,6 +11,8 @@ import com.massivecraft.factions.struct.Permission;
  * @author Daniel Saukel
  */
 public class CmdAdmin extends FCommand {
+    public final CmdAdminBank cmdBank = new CmdAdminBank();
+
     public CmdAdmin() {
         super();
         this.aliases.add("admin");
@@ -25,6 +27,8 @@ public class CmdAdmin extends FCommand {
         senderMustBeMember = false;
         senderMustBeOfficer = false;
         senderMustBeLeader = false;
+
+        this.addSubCommand(this.cmdBank);
     }
 
     @Override

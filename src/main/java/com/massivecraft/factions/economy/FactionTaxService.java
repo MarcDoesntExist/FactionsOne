@@ -9,6 +9,7 @@ import com.massivecraft.factions.Factions;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.api.SkyAPI;
 import com.massivecraft.factions.bank.BankService;
+import com.massivecraft.factions.bank.IdempotencyStore;
 import com.massivecraft.factions.event.FactionTaxCollectedEvent;
 import com.massivecraft.factions.event.FactionTaxFailedEvent;
 import com.massivecraft.factions.struct.FFlag;
@@ -31,11 +32,17 @@ public final class FactionTaxService {
 
     private final BankService bank;
     private final Clock clock;
+    private final IdempotencyStore idempotency;
     private boolean warnedNoEconomy;
 
     public FactionTaxService(BankService bank, Clock clock) {
+        this(bank, clock, null);
+    }
+
+    public FactionTaxService(BankService bank, Clock clock, IdempotencyStore idempotency) {
         this.bank = bank;
         this.clock = clock;
+        this.idempotency = idempotency;
     }
 
     /**
@@ -75,6 +82,18 @@ public final class FactionTaxService {
                 continue;
             }
 
+            String claim = null;
+            if (!force && this.idempotency != null) {
+                claim = "tax:" + faction.getId() + ":" + (now / interval);
+                if (this.idempotency.isClaimed(claim)) {
+                    faction.setLastTaxAt(now);
+                    continue;
+                }
+                if (!this.idempotency.claim(claim)) {
+                    continue;
+                }
+            }
+
             if (this.bank.modifyMoney(faction, -due, "to pay the faction tax", "for the faction tax")) {
                 faction.setTaxArrears(0);
                 faction.setTaxInsolvent(false);
@@ -83,6 +102,9 @@ public final class FactionTaxService {
                 this.fire(new FactionTaxCollectedEvent(faction.getId(), faction.getTagPlain(), due, now));
                 charged++;
             } else {
+                if (claim != null) {
+                    this.idempotency.release(claim);
+                }
                 this.handleShortfall(faction, due, now);
             }
         }

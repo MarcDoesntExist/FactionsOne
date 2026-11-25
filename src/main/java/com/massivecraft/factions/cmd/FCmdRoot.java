@@ -34,6 +34,7 @@ public class FCmdRoot extends FCommand {
     public CmdLeave cmdLeave = new CmdLeave();
     public CmdList cmdList = new CmdList();
     public CmdLock cmdLock = new CmdLock();
+    public CmdMail cmdMail = new CmdMail();
     public CmdMap cmdMap = new CmdMap();
     public CmdOfficer cmdOfficer = new CmdOfficer();
     public CmdMoney cmdMoney = new CmdMoney();
@@ -120,6 +121,7 @@ public class FCmdRoot extends FCommand {
         this.addSubCommand(this.cmdDeinvite);
         this.addSubCommand(this.cmdOpen);
         this.addSubCommand(this.cmdMoney);
+        this.addSubCommand(this.cmdMail);
         this.addSubCommand(this.cmdMenu);
         this.addSubCommand(this.cmdWarp);
         this.addSubCommand(this.cmdSetWarp);
