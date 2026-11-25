@@ -302,6 +302,67 @@ tasks.register<Jar>("refundProbeJar") {
     from(project.file("test-server/refundprobe/plugin.yml"))
 }
 
+tasks.register("liveTest") {
+    group = "verification"
+    description = "Runs the local Paper crash harnesses for journal compensation and mailbox refunds."
+    dependsOn(tasks.jar, "probeJar", "refundProbeJar")
+
+    doLast {
+        val paperJar = resolvePaperServerJarOrNull(project)
+        val node = resolveNodeExecutable()
+        val harnesses = listOf("live-journal.js", "live-refund.js")
+        val missing = mutableListOf<String>()
+        if (paperJar == null) {
+            missing.add("Paper server jar (test-server/paper-26.3-259.jar, -PpaperServerJar or PAPER_SERVER_JAR)")
+        }
+        if (node == null) {
+            missing.add("node executable on PATH")
+        }
+        for (harness in harnesses) {
+            if (!project.file("test-server/$harness").isFile) {
+                missing.add("test-server/$harness")
+            }
+        }
+        for (probe in listOf("econprobe", "refundprobe")) {
+            if (!project.file("test-server/$probe/src").isDirectory) {
+                missing.add("test-server/$probe")
+            }
+        }
+        if (missing.isNotEmpty()) {
+            project.logger.lifecycle("liveTest: SKIPPED — missing " + missing.joinToString(", "))
+            return@doLast
+        }
+        val executable = node ?: return@doLast
+        val logDir = project.layout.buildDirectory.dir("live-test").get().asFile.apply { mkdirs() }
+        for (harness in harnesses) {
+            val logFile = File(logDir, harness.removeSuffix(".js") + ".log")
+            val process = ProcessBuilder(executable,
+                project.file("test-server/$harness").absolutePath)
+                .directory(project.projectDir)
+                .redirectErrorStream(true)
+                .redirectOutput(logFile)
+                .start()
+            val finished = process.waitFor(10, TimeUnit.MINUTES)
+            if (!finished) {
+                process.destroyForcibly()
+                throw GradleException(
+                    "liveTest: $harness timed out after 10 minutes; see ${logFile.absolutePath}"
+                )
+            }
+            if (process.exitValue() != 0) {
+                val tail = logFile.readLines().takeLast(20).joinToString("\n")
+                throw GradleException(
+                    "liveTest: $harness failed with exit ${process.exitValue()}; " +
+                        "see ${logFile.absolutePath}\n$tail"
+                )
+            }
+            project.logger.lifecycle(
+                "liveTest: PASSED — $harness (log ${logFile.absolutePath})"
+            )
+        }
+    }
+}
+
 tasks.register("probeClasspath") {
     group = "verification"
     description = "Prints the classpath used to compile the local Vault stand-in."
@@ -310,16 +371,41 @@ tasks.register("probeClasspath") {
     }
 }
 
-fun resolvePaperServerJar(project: Project): File {
+fun resolvePaperServerJarOrNull(project: Project): File? {
     val candidates = mutableListOf<File>()
     (project.findProperty("paperServerJar") as String?)?.let { candidates.add(project.file(it)) }
     System.getenv("PAPER_SERVER_JAR")?.let { candidates.add(project.file(it)) }
     candidates.add(project.file("test-server/paper-26.3-259.jar"))
     return candidates.firstOrNull { it.isFile }
-        ?: throw GradleException(
-            "smokeTest: no Paper server jar found. Pass -PpaperServerJar=<path>, set PAPER_SERVER_JAR, " +
-                "or place the 26.3 jar at test-server/paper-26.3-259.jar."
-        )
+}
+
+fun resolvePaperServerJar(project: Project): File = resolvePaperServerJarOrNull(project)
+    ?: throw GradleException(
+        "smokeTest: no Paper server jar found. Pass -PpaperServerJar=<path>, set PAPER_SERVER_JAR, " +
+            "or place the 26.3 jar at test-server/paper-26.3-259.jar."
+    )
+
+fun resolveNodeExecutable(): String? {
+    val names = if (System.getProperty("os.name").lowercase().contains("win"))
+        listOf("node.exe", "node") else listOf("node")
+    for (name in names) {
+        try {
+            val process = ProcessBuilder(name, "--version")
+                .redirectErrorStream(true)
+                .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+                .start()
+            val finished = process.waitFor(5, TimeUnit.SECONDS)
+            if (finished && process.exitValue() == 0) {
+                return name
+            }
+            if (!finished) {
+                process.destroyForcibly()
+            }
+        } catch (ignored: Exception) {
+            // Try the next executable name.
+        }
+    }
+    return null
 }
 
 fun smokeServerProperties(): String = """
