@@ -25,6 +25,11 @@ public class Lang {
     public static final String featureNoSpace = "<b>Your inventory does not have enough space.";
     public static final String featureNotReady = "<b>This mission is not ready to be claimed.";
     public static final String featureSuccess = "<g>Done.";
+    public static final String featureCancelled = "<b>That action was cancelled.";
+    public static final String bankTransactionCancelled = "<b>That bank transaction was cancelled.";
+    public static final String warpTeleportCancelled = "<b>The warp teleport was cancelled.";
+    public static final String shieldChangeCancelled = "<b>That shield change was cancelled.";
+    public static final String roleChangeCancelled = "<b>That role change was cancelled.";
     public static final String upgradeHeader = "<gold>Faction upgrades <gray>(points: <white>%s<gray>)";
     public static final String upgradeLine = "<aqua>%s <gray>level %s/%s, cost %s";
     public static final String upgradeNotFound = "<b>That upgrade does not exist.";

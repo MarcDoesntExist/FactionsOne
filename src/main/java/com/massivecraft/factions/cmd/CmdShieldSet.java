@@ -70,6 +70,10 @@ public class CmdShieldSet extends FCommand {
         }
 
         int applied = shields.setShield(faction, hours);
+        if (applied <= 0) {
+            msg(Lang.shieldChangeCancelled);
+            return;
+        }
         faction.addLog(actorName(), "SHIELD_SET", applied + "h");
         msg(Lang.shieldSet, faction.getTagPlain(), applied);
     }

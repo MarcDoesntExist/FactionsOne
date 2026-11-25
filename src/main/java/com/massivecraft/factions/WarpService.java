@@ -1,5 +1,6 @@
 package com.massivecraft.factions;
 
+import com.massivecraft.factions.event.WarpTeleportEvent;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.util.LazyLocation;
 import com.massivecraft.factions.zcore.Lang;
@@ -114,6 +115,14 @@ public final class WarpService {
 
         Location destination = warp.getLocation().getLocation();
         int seconds = Math.max(0, Conf.warpWarmupSeconds);
+        WarpTeleportEvent event = new WarpTeleportEvent(fplayer, faction, warp, seconds);
+        if (org.bukkit.Bukkit.getServer() != null) {
+            org.bukkit.Bukkit.getServer().getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                fplayer.msg(Lang.warpTeleportCancelled);
+                return false;
+            }
+        }
         if (seconds > 0) {
             fplayer.msg("<i>Warping in <h>%s<i> seconds. Do not move.", seconds);
         }

@@ -3,6 +3,7 @@ package com.massivecraft.factions.cmd;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
+import com.massivecraft.factions.zcore.Lang;
 
 /**
  * @author drtshock
@@ -54,7 +55,10 @@ public class CmdDemote extends FCommand {
                 msg("<b>You must be an officer to demote a member to recruit.");
                 return;
             }
-            you.setRole(Rel.RECRUIT);
+            if (!you.setRole(Rel.RECRUIT)) {
+                msg(Lang.roleChangeCancelled);
+                return;
+            }
             myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.RECRUIT);
             myFaction.msg("%s<i> was demoted to being a recruit in your faction.",
                     you.describeTo(myFaction, true));
@@ -63,7 +67,10 @@ public class CmdDemote extends FCommand {
                 msg("<b>You must be a co-leader or the leader to demote an officer to member.");
                 return;
             }
-            you.setRole(Rel.MEMBER);
+            if (!you.setRole(Rel.MEMBER)) {
+                msg(Lang.roleChangeCancelled);
+                return;
+            }
             myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.MEMBER);
             myFaction.msg("%s<i> was demoted to being a member in your faction.",
                     you.describeTo(myFaction, true));
@@ -72,7 +79,10 @@ public class CmdDemote extends FCommand {
                 msg("<b>You must be the leader to demote a co-leader to officer.");
                 return;
             }
-            you.setRole(Rel.OFFICER);
+            if (!you.setRole(Rel.OFFICER)) {
+                msg(Lang.roleChangeCancelled);
+                return;
+            }
             myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.OFFICER);
             myFaction.msg("%s<i> was demoted to being an officer in your faction.",
                     you.describeTo(myFaction, true));

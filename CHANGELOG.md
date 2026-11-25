@@ -8,6 +8,8 @@ the project uses semantic versioning.
 
 ### Added
 
+- Public API accessors for factions, players, claims, bank balances and warps,
+  plus cancellable bank, warp, upgrade, shield, role and mission events.
 - Shop offers can be perks: temporary faction power, faction bank money,
   faction points and temporary flags. Points are charged only after the perk
   validates, and are refunded if its application fails; temporary perks expire.

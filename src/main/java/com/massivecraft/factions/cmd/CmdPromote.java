@@ -3,6 +3,7 @@ package com.massivecraft.factions.cmd;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
+import com.massivecraft.factions.zcore.Lang;
 
 /**
  * @author drtshock
@@ -54,7 +55,10 @@ public class CmdPromote extends FCommand {
                 msg("<b>You must be an officer to promote someone to member.");
                 return;
             }
-            you.setRole(Rel.MEMBER);
+            if (!you.setRole(Rel.MEMBER)) {
+                msg(Lang.roleChangeCancelled);
+                return;
+            }
             myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.MEMBER);
             myFaction.msg("%s<i> was promoted to being a member of your faction.",
                     you.describeTo(myFaction, true));
@@ -63,7 +67,10 @@ public class CmdPromote extends FCommand {
                 msg("<b>You must be a co-leader or the leader to promote someone to officer.");
                 return;
             }
-            you.setRole(Rel.OFFICER);
+            if (!you.setRole(Rel.OFFICER)) {
+                msg(Lang.roleChangeCancelled);
+                return;
+            }
             myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.OFFICER);
             myFaction.msg("%s<i> was promoted to being an officer in your faction.",
                     you.describeTo(myFaction, true));
@@ -72,7 +79,10 @@ public class CmdPromote extends FCommand {
                 msg("<b>You must be the leader to promote someone to co-leader.");
                 return;
             }
-            you.setRole(Rel.COLEADER);
+            if (!you.setRole(Rel.COLEADER)) {
+                msg(Lang.roleChangeCancelled);
+                return;
+            }
             myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.COLEADER);
             myFaction.msg("%s<i> was promoted to being a co-leader in your faction.",
                     you.describeTo(myFaction, true));

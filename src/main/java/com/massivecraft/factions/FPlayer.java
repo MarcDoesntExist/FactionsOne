@@ -127,8 +127,24 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
         return this.role;
     }
 
-    public void setRole(Rel role) {
+    public boolean setRole(Rel role) {
+        return this.setRole(role, null);
+    }
+
+    public boolean setRole(Rel role, FPlayer actor) {
+        Faction faction = this.getFaction();
+        if (faction != null && Main.main != null
+                && org.bukkit.Bukkit.getServer() != null) {
+            com.massivecraft.factions.event.FactionRoleChangeEvent event =
+                    new com.massivecraft.factions.event.FactionRoleChangeEvent(
+                            this, faction, this.role, role, actor);
+            org.bukkit.Bukkit.getServer().getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return false;
+            }
+        }
         this.role = role;
+        return true;
     }
 
     public String getTitle() {

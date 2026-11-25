@@ -3,6 +3,7 @@ package com.massivecraft.factions.shield;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.event.ShieldChangeEvent;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Rel;
 
@@ -75,7 +76,16 @@ public final class ShieldService {
         int max = Math.max(1, Conf.shieldMaxHours);
         int applied = Math.max(1, Math.min(hours, max));
         long until = ShieldPolicy.addHours(this.clock.millis(), applied);
-        faction.setShieldUntil(Math.max(faction.getShieldUntil(), until));
+        long oldUntil = faction.getShieldUntil();
+        ShieldChangeEvent event = new ShieldChangeEvent(faction, oldUntil,
+                Math.max(oldUntil, until), applied);
+        if (org.bukkit.Bukkit.getServer() != null) {
+            org.bukkit.Bukkit.getServer().getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return 0;
+            }
+        }
+        faction.setShieldUntil(event.getNewUntil());
         return applied;
     }
 }

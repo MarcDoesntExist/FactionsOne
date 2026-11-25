@@ -1,8 +1,11 @@
 package com.massivecraft.factions;
 
+import com.massivecraft.factions.event.MissionClaimEvent;
+import com.massivecraft.factions.event.UpgradePurchaseEvent;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.zcore.Lang;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -25,7 +28,8 @@ public final class FeatureService {
         NOT_ENOUGH_POINTS,
         NO_SPACE,
         NOT_READY,
-        REWARD_FAILED
+        REWARD_FAILED,
+        CANCELLED
     }
 
     private final Main plugin;
@@ -99,6 +103,14 @@ public final class FeatureService {
         int cost = this.upgradeCost(faction, definition);
         if (faction.getFactionPoints() < cost) {
             return Result.NOT_ENOUGH_POINTS;
+        }
+        UpgradePurchaseEvent event = new UpgradePurchaseEvent(fplayer, faction, definition,
+                level, cost);
+        if (Bukkit.getServer() != null) {
+            Bukkit.getServer().getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return Result.CANCELLED;
+            }
         }
 
         faction.addFactionPoints(-cost);
@@ -184,6 +196,13 @@ public final class FeatureService {
         }
         if (player == null || emptySlots(player) < rewards.size()) {
             return Result.NO_SPACE;
+        }
+        MissionClaimEvent event = new MissionClaimEvent(fplayer, faction, mission);
+        if (Bukkit.getServer() != null) {
+            Bukkit.getServer().getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return Result.CANCELLED;
+            }
         }
         if (mission.rewardMoney() > 0.0
                 && !Econ.modifyMoney(faction, mission.rewardMoney(), null, "mission reward")) {
@@ -288,6 +307,7 @@ public final class FeatureService {
             case NO_SPACE -> Lang.featureNoSpace;
             case NOT_READY -> Lang.featureNotReady;
             case REWARD_FAILED -> Lang.missionRewardFailed;
+            case CANCELLED -> Lang.featureCancelled;
         };
     }
 

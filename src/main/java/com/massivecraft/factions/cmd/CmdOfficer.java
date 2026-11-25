@@ -4,6 +4,7 @@ import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
+import com.massivecraft.factions.zcore.Lang;
 
 /**
  * @author drtshock
@@ -64,7 +65,10 @@ public class CmdOfficer extends FCommand {
                 msg("<b>Only the leader can change a co-leader's role.");
                 return;
             }
-            you.setRole(Rel.OFFICER);
+            if (!you.setRole(Rel.OFFICER)) {
+                msg(Lang.roleChangeCancelled);
+                return;
+            }
             targetFaction.msg("%s<i> is no longer co-leader in your faction.",
                     you.describeTo(targetFaction, true));
             msg("<i>You have demoted %s<i> to officer.", you.describeTo(fme, true));
@@ -73,13 +77,19 @@ public class CmdOfficer extends FCommand {
 
         if (you.getRole() == Rel.OFFICER) {
             // Revoke
-            you.setRole(Rel.MEMBER);
+            if (!you.setRole(Rel.MEMBER)) {
+                msg(Lang.roleChangeCancelled);
+                return;
+            }
             targetFaction.msg("%s<i> is no longer officer in your faction.",
                     you.describeTo(targetFaction, true));
             msg("<i>You have removed officer status from %s<i>.", you.describeTo(fme, true));
         } else {
             // Give
-            you.setRole(Rel.OFFICER);
+            if (!you.setRole(Rel.OFFICER)) {
+                msg(Lang.roleChangeCancelled);
+                return;
+            }
             targetFaction.msg("%s<i> was promoted to officer in your faction.",
                     you.describeTo(targetFaction, true));
             msg("<i>You have promoted %s<i> to officer.", you.describeTo(fme, true));

@@ -2,6 +2,7 @@ package com.massivecraft.factions.bank;
 
 import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.Main;
+import com.massivecraft.factions.event.BankTransactionEvent;
 import com.massivecraft.factions.iface.EconomyParticipator;
 import com.massivecraft.factions.zcore.Lang;
 
@@ -16,7 +17,7 @@ import java.util.function.DoubleConsumer;
 public final class BankService {
 
     public enum Result {
-        SUCCESS, DISABLED, INVALID_AMOUNT, NOT_ENOUGH_MONEY, BACKEND_ERROR, FORBIDDEN
+        SUCCESS, DISABLED, INVALID_AMOUNT, NOT_ENOUGH_MONEY, BACKEND_ERROR, FORBIDDEN, CANCELLED
     }
     private static final double EPSILON = 1.0e-6;
     private static volatile BankService installed = new BankService(null);
@@ -96,6 +97,19 @@ public final class BankService {
         }
 
         double exact = exactAmount(minor);
+        Faction eventFaction = to instanceof Faction ? (Faction) to
+                : from instanceof Faction ? (Faction) from : null;
+        BankTransactionEvent.Type eventType = from instanceof Faction && to instanceof Faction
+                ? BankTransactionEvent.Type.TRANSFER
+                : to instanceof Faction ? BankTransactionEvent.Type.DEPOSIT
+                : BankTransactionEvent.Type.WITHDRAW;
+        if (!BankTransactionEvent.fire(eventFaction, eventType, exact,
+                BankJournalSupport.actor(invoker))) {
+            if (notify && invoker != null) {
+                invoker.msg(Lang.bankTransactionCancelled);
+            }
+            return Result.CANCELLED;
+        }
         String journalId = this.journalSupport.start("transfer", fromAccount, toAccount, exact,
                 BankJournalSupport.actor(invoker), fromAccount, exact, "transfer");
         if (this.journalSupport.failed(journalId)) {
