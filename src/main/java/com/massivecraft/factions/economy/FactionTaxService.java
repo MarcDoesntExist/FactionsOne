@@ -1,0 +1,178 @@
+package com.massivecraft.factions.economy;
+
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Factions;
+import com.massivecraft.factions.Main;
+import com.massivecraft.factions.api.SkyAPI;
+import com.massivecraft.factions.bank.BankService;
+import com.massivecraft.factions.event.FactionTaxCollectedEvent;
+import com.massivecraft.factions.event.FactionTaxFailedEvent;
+import com.massivecraft.factions.struct.FFlag;
+import com.massivecraft.factions.struct.Rel;
+import com.massivecraft.factions.zcore.Lang;
+import org.bukkit.Bukkit;
+import org.bukkit.event.Event;
+
+import java.time.Clock;
+import java.util.Comparator;
+import java.util.Set;
+
+/**
+ * Charges the periodic faction tax through {@link BankService}, applies the
+ * arrears policy and runs the configured insolvency action.
+ *
+ * @author MarcDoesntExists
+ */
+public final class FactionTaxService {
+
+    private final BankService bank;
+    private final Clock clock;
+    private boolean warnedNoEconomy;
+
+    public FactionTaxService(BankService bank, Clock clock) {
+        this.bank = bank;
+        this.clock = clock;
+    }
+
+    /**
+     * Processes every eligible faction and returns how many were charged.
+     *
+     * @param force when true the interval check is skipped
+     */
+    public int run(boolean force) {
+        if (!Conf.taxEnabled) {
+            return 0;
+        }
+        if (!this.bank.available()) {
+            if (!this.warnedNoEconomy && Main.main != null) {
+                Main.main.getLogger().warning("Faction tax is enabled but the economy is unavailable; skipping the run.");
+                this.warnedNoEconomy = true;
+            }
+            return 0;
+        }
+        this.warnedNoEconomy = false;
+
+        TaxSettings settings = this.settings();
+        long now = this.clock.millis();
+        long interval = intervalMillis();
+        int charged = 0;
+
+        for (Faction faction : Factions.i.get()) {
+            if (!isEligible(faction)) {
+                continue;
+            }
+            if (!force && faction.getLastTaxAt() > 0 && now - faction.getLastTaxAt() < interval) {
+                continue;
+            }
+
+            double due = TaxCalculator.due(faction.getFPlayers().size(), faction.getLandRounded(), settings);
+            if (due <= 0.0) {
+                faction.setLastTaxAt(now);
+                continue;
+            }
+
+            if (this.bank.modifyMoney(faction, -due, "to pay the faction tax", "for the faction tax")) {
+                faction.setTaxArrears(0);
+                faction.setTaxInsolvent(false);
+                faction.setLastTaxAt(now);
+                faction.addLog("tax", "TAX_PAID", this.bank.format(due));
+                this.fire(new FactionTaxCollectedEvent(faction.getId(), faction.getTagPlain(), due, now));
+                charged++;
+            } else {
+                this.handleShortfall(faction, due, now);
+            }
+        }
+        return charged;
+    }
+
+    /** Current amount one period would cost the faction. */
+    public double dueFor(Faction faction) {
+        if (faction == null) {
+            return 0.0;
+        }
+        return TaxCalculator.due(faction.getFPlayers().size(), faction.getLandRounded(), this.settings());
+    }
+
+    /** Configured interval in minutes, at least one. */
+    public long intervalMinutes() {
+        return Math.max(1, Conf.taxIntervalMinutes);
+    }
+
+    /** Configured interval in milliseconds. */
+    public long intervalMillis() {
+        return this.intervalMinutes() * 60_000L;
+    }
+
+    private TaxSettings settings() {
+        return new TaxSettings(Conf.taxEnabled, Conf.taxBase, Conf.taxPerMember, Conf.taxPerChunk, Conf.taxCap);
+    }
+
+    private static boolean isEligible(Faction faction) {
+        return faction != null && faction.isNormal() && !faction.getFlag(FFlag.PERMANENT)
+                && !faction.getFPlayers().isEmpty();
+    }
+
+    private void handleShortfall(Faction faction, double due, long now) {
+        TaxPolicy.Outcome outcome = TaxPolicy.evaluate(false, faction.getTaxArrears(), Conf.taxGracePeriods);
+        faction.setTaxArrears(outcome.arrears());
+        faction.setLastTaxAt(now);
+        faction.addLog("tax", "TAX_FAILED", this.bank.format(due) + " arrears=" + outcome.arrears());
+        this.fire(new FactionTaxFailedEvent(faction.getId(), faction.getTagPlain(), due, outcome.arrears(), "NO_FUNDS"));
+
+        if (Conf.taxNotifyOfficers) {
+            this.notifyOfficers(faction, Lang.taxArrearsNotice, outcome.arrears());
+        }
+
+        if (!outcome.insolvent() || faction.isTaxInsolvent()) {
+            return;
+        }
+
+        faction.setTaxInsolvent(true);
+        TaxInsolvencyAction action = TaxInsolvencyAction.parse(Conf.taxInsolvencyAction);
+        faction.addLog("tax", "TAX_INSOLVENT", "periods=" + outcome.arrears() + " action=" + action.name());
+        if (action == TaxInsolvencyAction.UNCLAIM) {
+            this.unclaimOne(faction);
+        }
+        if (Conf.taxNotifyOfficers) {
+            this.notifyOfficers(faction, Lang.taxInsolventNotice, faction.getTagPlain(), outcome.arrears(), action.name());
+        }
+    }
+
+    private void notifyOfficers(Faction faction, String message, Object... args) {
+        for (FPlayer player : faction.getFPlayersWhereRole(Rel.LEADER)) {
+            player.msg(message, args);
+        }
+        for (FPlayer player : faction.getFPlayersWhereRole(Rel.COLEADER)) {
+            player.msg(message, args);
+        }
+        for (FPlayer player : faction.getFPlayersWhereRole(Rel.OFFICER)) {
+            player.msg(message, args);
+        }
+    }
+
+    private void unclaimOne(Faction faction) {
+        Set<FLocation> claims = SkyAPI.getFactionClaims(faction);
+        if (claims.isEmpty()) {
+            return;
+        }
+        FLocation target = claims.stream()
+                .min(Comparator.comparing(FLocation::getCoordString))
+                .orElse(null);
+        Faction wilderness = Factions.i.get("0");
+        if (target == null || wilderness == null) {
+            return;
+        }
+        Board.setFactionAt(wilderness, target);
+        faction.addLog("tax", "TAX_UNCLAIM", target.toString());
+    }
+
+    private void fire(Event event) {
+        if (Bukkit.getServer() != null) {
+            Bukkit.getServer().getPluginManager().callEvent(event);
+        }
+    }
+}
