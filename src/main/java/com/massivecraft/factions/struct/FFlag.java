@@ -32,6 +32,11 @@ public enum FFlag {
             "<i>Can fire spread in territory?",
             true), //LIGHTNING("lightning", "<i>Can lightning strike in this territory?", true), Possible to add later.
     ENDERGRIEF("endergrief", "<i>Can endermen grief in this territory?", false),
+    SPAWNERS("spawners", "<i>Can mob spawners spawn mobs in this territory?", true),
+    TNT("tnt", "<i>Can TNT explode in this territory?", true),
+    ANIMALS("animals", "<i>Can animals be harmed in this territory?", true),
+    FIRE_FRIENDLY("firefriendly", "<i>Can fire damage players in this territory?", true),
+    OPEN("open", "<i>Can players join without an invitation?", false),
     ;
 
     public final boolean defaultDefaultValue;
@@ -45,7 +50,29 @@ public enum FFlag {
     }
 
     public static FFlag parse(String str) {
-        str = str.toLowerCase();
+        if (str == null) {
+            return null;
+        }
+        str = str.trim().toLowerCase(java.util.Locale.ROOT);
+        if (str.isEmpty()) {
+            return null;
+        }
+        for (FFlag flag : FFlag.values()) {
+            if (flag.name().toLowerCase(java.util.Locale.ROOT).equals(str)
+                    || flag.nicename.equals(str)) {
+                return flag;
+            }
+        }
+        if (str.startsWith("spa"))
+            return SPAWNERS;
+        if (str.startsWith("tnt"))
+            return TNT;
+        if (str.startsWith("ani"))
+            return ANIMALS;
+        if (str.startsWith("firef"))
+            return FIRE_FRIENDLY;
+        if (str.startsWith("op"))
+            return OPEN;
         if (str.startsWith("per"))
             return PERMANENT;
         if (str.startsWith("pea"))

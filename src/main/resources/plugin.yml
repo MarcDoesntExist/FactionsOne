@@ -18,12 +18,16 @@ permissions:
   factions.access.view: { description: view territory access info for your faction }
   factions.adminmode: { description: enable admin bypass mode }
   factions.autoclaim: { description: auto-claim land as you walk around }
+  factions.ban: { description: ban a player from your faction }
+  factions.banlist: { description: list the players banned from your faction }
   factions.cape: { description: manage faction capes }
   factions.cape.get: { description: get faction cape }
   factions.cape.set: { description: set faction cape }
   factions.cape.remove: { description: remove faction cape }
   factions.claim: { description: claim land where you are standing }
   factions.claim.radius: { description: claim land in a large radius }
+  factions.coords: { description: show the current chunk and its owner }
+  factions.chat: { description: use faction chat channels }
   factions.config: { description: change a conf.json setting }
   factions.create: { description: create a new faction }
   factions.deinvite: { description: remove a pending invitation }
@@ -33,6 +37,7 @@ permissions:
   factions.flag: { description: read faction flags }
   factions.flag.set: { description: set faction flags }
   factions.help: { description: display a help page }
+  factions.fly: { description: fly in your faction territory }
   factions.home: { description: teleport to the faction home }
   factions.invite: { description: invite a player to your faction }
   factions.join: { description: join a faction }
@@ -44,6 +49,7 @@ permissions:
   factions.leave: { description: leave your faction }
   factions.list: { description: see a list of the factions }
   factions.lock: { description: lock all write stuff }
+  factions.logs: { description: view the faction audit log }
   factions.map: { description: show the territory map, and set optional auto update }
   factions.money.balance: { description: show your factions current money balance }
   factions.money.balance.any: { description: show money balance for factions other than your own }
@@ -52,8 +58,11 @@ permissions:
   factions.money.f2p: { description: transfer money from faction to player }
   factions.money.p2f: { description: transfer money from player to faction }
   factions.money.withdraw: { description: withdraw money from your faction bank }
+  factions.menu: { description: open the faction menu }
+  factions.missions: { description: view and claim faction missions }
   factions.officer: { description: give or revoke officer rights }
   factions.officer.any: { description: give or revoke officer rights for any player in any faction }
+  factions.near: { description: list nearby enemy or neutral factions }
   factions.open: { description: switch if invitation is required to join }
   factions.perm: { description: change faction permissions }
   factions.power: { description: show player power info }
@@ -65,12 +74,25 @@ permissions:
   factions.save: { description: save all data to disk }
   factions.seechunk: { description: see the chunk you stand in }
   factions.sethome: { description: set the faction home }
+  factions.setwarp: { description: create or remove faction warps }
+  factions.shield: { description: view a faction shield or grace window }
+  factions.shield.set: { description: set a faction shield window }
+  factions.shop: { description: use the faction shop }
   factions.show: { description: show faction information }
   factions.tag: { description: change the faction tag }
+  factions.top: { description: show the faction leaderboard }
+  factions.status: { description: show a compact faction status }
+  factions.stuck: { description: teleport out of a stuck position }
+  factions.tax: { description: view faction tax information }
+  factions.tax.run: { description: run a faction tax period }
   factions.title: { description: set or remove a players title }
+  factions.tnt: { description: use the faction TNT bank }
+  factions.unban: { description: lift a faction ban }
   factions.unclaim: { description: unclaim the land where you are standing }
   factions.unclaimall: { description: unclaim all of your factions land }
+  factions.upgrade: { description: buy faction upgrades }
   factions.version: { description: see the version of the plugin }
+  factions.warp: { description: list and use faction warps }
   # -------------------------------------------- #
   # STAR NOTATION
   # -------------------------------------------- #
@@ -130,15 +152,20 @@ permissions:
       factions.access: true
       factions.access.view: true
       factions.autoclaim: true
+      factions.ban: true
+      factions.banlist: true
+      factions.unban: true
       factions.cape: true
       factions.cape.*: true
       factions.claim: true
       factions.claim.radius: true
+      factions.chat: true
       factions.deinvite: true
       factions.demote: true
       factions.description: true
       factions.disband: true
       factions.flag: true
+      factions.fly: true
       factions.help: true
       factions.home: true
       factions.invite: true
@@ -147,8 +174,12 @@ permissions:
       factions.leader: true
       factions.leave: true
       factions.list: true
+      factions.logs: true
       factions.map: true
       factions.money.*: true
+      factions.menu: true
+      factions.missions: true
+      factions.officer: true
       factions.open: true
       factions.perm: true
       factions.power: true
@@ -157,9 +188,15 @@ permissions:
       factions.relation: true
       factions.seechunk: true
       factions.sethome: true
+      factions.setwarp: true
+      factions.shop: true
       factions.show: true
       factions.tag: true
+      factions.tax: true
       factions.title: true
+      factions.tnt: true
       factions.unclaim: true
       factions.unclaimall: true
+      factions.upgrade: true
       factions.version: true
+      factions.warp: true

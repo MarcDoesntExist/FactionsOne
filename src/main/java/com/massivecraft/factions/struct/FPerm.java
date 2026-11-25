@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -41,6 +42,29 @@ public enum FPerm {
     ACCESS("access", "grant territory", Rel.LEADER, Rel.COLEADER, Rel.OFFICER),
     DISBAND("disband", "disband the faction", Rel.LEADER),
     PERMS("perms", "manage permissions", Rel.LEADER, Rel.COLEADER),
+    WARP("warp", "use faction warps", Rel.LEADER, Rel.COLEADER, Rel.OFFICER, Rel.MEMBER),
+    SETWARP("setwarp", "set faction warps", Rel.LEADER, Rel.COLEADER, Rel.OFFICER),
+    FLY("fly", "fly in faction territory", Rel.LEADER, Rel.COLEADER, Rel.OFFICER, Rel.MEMBER),
+    BANK_DEPOSIT("bankdeposit", "deposit into the faction bank", Rel.LEADER, Rel.COLEADER,
+            Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT),
+    BANK_WITHDRAW("bankwithdraw", "withdraw from the faction bank", Rel.LEADER, Rel.COLEADER,
+            Rel.OFFICER),
+    TNT_DEPOSIT("tntdeposit", "deposit TNT into the faction bank", Rel.LEADER, Rel.COLEADER,
+            Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT),
+    TNT_WITHDRAW("tntwithdraw", "withdraw TNT from the faction bank", Rel.LEADER, Rel.COLEADER,
+            Rel.OFFICER),
+    UPGRADE("upgrade", "upgrade the faction", Rel.LEADER, Rel.COLEADER),
+    SHOP("shop", "use the faction shop", Rel.LEADER, Rel.COLEADER, Rel.OFFICER, Rel.MEMBER,
+            Rel.RECRUIT),
+    MISSIONS("missions", "manage faction missions", Rel.LEADER, Rel.COLEADER, Rel.OFFICER,
+            Rel.MEMBER, Rel.RECRUIT),
+    CHAT_ALLY("chatally", "use the ally chat channel", Rel.LEADER, Rel.COLEADER, Rel.OFFICER,
+            Rel.MEMBER, Rel.RECRUIT),
+    LOGS("logs", "view faction logs", Rel.LEADER, Rel.COLEADER, Rel.OFFICER),
+    BAN("ban", "ban players from the faction", Rel.LEADER, Rel.COLEADER, Rel.OFFICER),
+    MENU_MEMBERS("menumembers", "open the members menu", Rel.LEADER, Rel.COLEADER, Rel.OFFICER,
+            Rel.MEMBER, Rel.RECRUIT),
+    MENU_PERMS("menuperms", "open the permissions menu", Rel.LEADER, Rel.COLEADER),
     ;
 
     // Perms which apply strictly to granting territory access
@@ -59,36 +83,84 @@ public enum FPerm {
     }
 
     public static FPerm parse(String str) {
-        str = str.toLowerCase();
-        if (str.startsWith("a"))
-            return ACCESS;
-        if (str.startsWith("bui"))
-            return BUILD;
-        if (str.startsWith("pa"))
-            return PAINBUILD;
-        if (str.startsWith("do"))
-            return DOOR;
-        if (str.startsWith("but"))
-            return BUTTON;
-        if (str.startsWith("l"))
-            return LEVER;
-        if (str.startsWith("co"))
-            return CONTAINER;
-        if (str.startsWith("i"))
-            return INVITE;
-        if (str.startsWith("k"))
-            return KICK;
-        if (str.startsWith("s"))
-            return SETHOME;
-        if (str.startsWith("w"))
+        if (str == null) {
+            return null;
+        }
+
+        String normalized = str.trim().toLowerCase(Locale.ROOT)
+                .replace("_", "").replace("-", "").replace(".", "").replace(" ", "");
+        if (normalized.isEmpty()) {
+            return null;
+        }
+
+        for (FPerm perm : FPerm.values()) {
+            String enumName = perm.name().toLowerCase(Locale.ROOT).replace("_", "");
+            if (enumName.equals(normalized) || perm.nicename.equals(normalized)) {
+                return perm;
+            }
+        }
+
+        // Longest prefixes first so new permissions do not change the meaning of
+        // the short forms used by existing setups.
+        if (normalized.startsWith("wa"))
+            return WARP;
+        if (normalized.startsWith("w"))
             return WITHDRAW;
-        if (str.startsWith("t"))
-            return TERRITORY;
-        if (str.startsWith("ca"))
-            return CAPE;
-        if (str.startsWith("di"))
+        if (normalized.startsWith("setw"))
+            return SETWARP;
+        if (normalized.startsWith("sh"))
+            return SHOP;
+        if (normalized.startsWith("s"))
+            return SETHOME;
+        if (normalized.startsWith("bankd"))
+            return BANK_DEPOSIT;
+        if (normalized.startsWith("bankw"))
+            return BANK_WITHDRAW;
+        if (normalized.startsWith("ban"))
+            return BAN;
+        if (normalized.startsWith("bui"))
+            return BUILD;
+        if (normalized.startsWith("but"))
+            return BUTTON;
+        if (normalized.startsWith("pa"))
+            return PAINBUILD;
+        if (normalized.startsWith("do"))
+            return DOOR;
+        if (normalized.startsWith("di"))
             return DISBAND;
-        if (str.startsWith("pe"))
+        if (normalized.startsWith("lo"))
+            return LOGS;
+        if (normalized.startsWith("l"))
+            return LEVER;
+        if (normalized.startsWith("chat"))
+            return CHAT_ALLY;
+        if (normalized.startsWith("ca"))
+            return CAPE;
+        if (normalized.startsWith("co"))
+            return CONTAINER;
+        if (normalized.startsWith("i"))
+            return INVITE;
+        if (normalized.startsWith("k"))
+            return KICK;
+        if (normalized.startsWith("tntd"))
+            return TNT_DEPOSIT;
+        if (normalized.startsWith("tntw"))
+            return TNT_WITHDRAW;
+        if (normalized.startsWith("t"))
+            return TERRITORY;
+        if (normalized.startsWith("menum"))
+            return MENU_MEMBERS;
+        if (normalized.startsWith("menup"))
+            return MENU_PERMS;
+        if (normalized.startsWith("mi") || normalized.equals("m"))
+            return MISSIONS;
+        if (normalized.startsWith("u"))
+            return UPGRADE;
+        if (normalized.startsWith("f"))
+            return FLY;
+        if (normalized.startsWith("a"))
+            return ACCESS;
+        if (normalized.startsWith("pe"))
             return PERMS;
         return null;
     }

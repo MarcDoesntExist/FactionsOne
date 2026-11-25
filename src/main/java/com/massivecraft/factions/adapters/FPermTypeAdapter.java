@@ -19,6 +19,9 @@ public class FPermTypeAdapter implements JsonDeserializer<FPerm> {
     @Override
     public FPerm deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
+        if (json == null || json.isJsonNull() || !json.isJsonPrimitive()) {
+            return null;
+        }
         return FPerm.parse(json.getAsString());
     }
 }
