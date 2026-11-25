@@ -57,6 +57,17 @@ class TaxCalculatorTest {
     }
 
     @Test
+    void percentZeroBalanceAndRounding() {
+        TaxSettings percent = new TaxSettings(true, 0.0, 0.0, 0.0, 0.0, 10.0,
+                TaxSettings.Mode.PERCENT);
+        assertEquals(0.0, TaxCalculator.due(0, 0, 0.0, percent));
+        assertEquals(10.01, TaxCalculator.due(0, 0, 100.05, percent));
+        assertEquals(0.0, TaxCalculator.due(0, 0, 100.0,
+                new TaxSettings(true, 0.0, 0.0, 0.0, 0.0, -5.0,
+                        TaxSettings.Mode.PERCENT)));
+    }
+
+    @Test
     void invalidModeFallsBackToFlat() {
         assertEquals(TaxSettings.Mode.FLAT, TaxSettings.Mode.parse("unknown"));
         assertEquals(TaxSettings.Mode.PERCENT, TaxSettings.Mode.parse("percent"));

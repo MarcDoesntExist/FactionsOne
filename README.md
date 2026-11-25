@@ -27,6 +27,36 @@ Usage
 
 A default config file will be created on the first run.
 
+Features
+---------
+Factions with claims, relations and raids; an atomic faction bank with a
+journal; warps, upgrades, missions and a points shop; faction shields, periodic
+taxes, TNT bank fill/siphon, audit logs and a public `SkyAPI` with cancellable
+events. Optional integrations are detected at runtime: Vault, EssentialsX,
+PlaceholderAPI and WorldGuard.
+
+Build and verification
+----------
+Requires JDK 25 and a Paper 26.3 server jar for the smoke test
+(`test-server/paper-26.3-259.jar`, `-PpaperServerJar=...` or
+`PAPER_SERVER_JAR`).
+
+```
+JAVA_TOOL_OPTIONS=-Djava.net.preferIPv4Stack=true ./gradlew --no-daemon cleanTest test smokeTest
+```
+
+`./scripts/check-authors.sh` verifies the author headers. `./gradlew liveTest`
+runs the optional Paper crash harnesses when Node and the server jar are
+available.
+
+Documentation
+----------
+- `docs/API.md` — public API and cancellable events
+- `docs/ARCHITETTURA.md` — packages, threading and persistence
+- `docs/TEST_MANUALI.md` — live checks that the headless suite cannot cover
+- `docs/RECOVERY.md` — backup and recovery procedures
+- `CHANGELOG.md` — release history
+
 License
 ----------
 This project has a LGPL license just like the Bukkit project.<br>
