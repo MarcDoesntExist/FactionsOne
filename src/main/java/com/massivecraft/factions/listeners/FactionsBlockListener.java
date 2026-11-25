@@ -124,7 +124,7 @@ public class FactionsBlockListener implements Listener {
             return;
         }
         Faction owner = Board.getFactionAt(new FLocation(event.getBlock()));
-        if (owner == faction || owner.isNone()) {
+        if (owner == faction || owner == null || owner.isNone()) {
             Main.main.featureService.progress(faction, FeatureConfig.MissionType.MINE_BLOCK, 1);
         }
     }
