@@ -8,7 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 
 /**
  * @author drtshock
@@ -25,8 +25,10 @@ public class MPluginSecretPlayerListener implements Listener {
         Bukkit.getPluginManager().registerEvents(this, this.p);
     }
 
+    // PlayerLoginEvent is deprecated on Paper: it creates the player entity early
+    // and bypasses a server validation step. Joining is the supported hook point.
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerPreLogin(PlayerLoginEvent event) {
+    public void onPlayerJoin(PlayerJoinEvent event) {
         for (EntityCollection<? extends Entity> ecoll : EM.class2Entities.values()) {
             if (ecoll instanceof PlayerEntityCollection) {
                 ecoll.get(event.getPlayer().getUniqueId().toString());

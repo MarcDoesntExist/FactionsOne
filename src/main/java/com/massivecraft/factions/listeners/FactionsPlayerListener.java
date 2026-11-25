@@ -17,6 +17,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
 import org.bukkit.util.NumberConversions;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
 import java.util.*;
 
@@ -119,6 +120,10 @@ public class FactionsPlayerListener implements Listener {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerQuit(PlayerQuitEvent event) {
+        // Drop the fake blocks and the per-player tracking; nothing can be sent to a
+        // player who is leaving, so there is no need to restore the real blocks.
+        VisualizeUtil.forget(event.getPlayer());
+
         FPlayer me = FPlayers.i.get(event.getPlayer());
 
         // Make sure player's power is up to date when they log off.
@@ -168,7 +173,8 @@ public class FactionsPlayerListener implements Listener {
         //	boolean handledBySpout = changedFaction;
 
         if (me.isMapAutoUpdating()) {
-            me.sendMessage(Board.getMap(me.getFaction(), to, player.getLocation().getYaw()));
+            // The auto-updating map lives in the action bar so it does not spam chat.
+            player.sendActionBar(Board.getActionBarMap(me, to));
         } else if (changedFaction) {
             me.sendFactionHereMessage();
         }
@@ -326,7 +332,8 @@ public class FactionsPlayerListener implements Listener {
         }
 
         // if player was banned (not just kicked), get rid of their stored info
-        if (Conf.removePlayerDataWhenBanned && event.getReason().equals("Banned by admin.")) {
+        if (Conf.removePlayerDataWhenBanned && PlainTextComponentSerializer.plainText()
+                .serialize(event.reason()).equals("Banned by admin.")) {
             if (badGuy.getRole() == Rel.LEADER)
                 badGuy.getFaction().promoteNewLeader();
             badGuy.leave(false);

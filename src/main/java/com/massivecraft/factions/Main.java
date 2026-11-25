@@ -6,6 +6,7 @@ import com.massivecraft.factions.adapters.FPermTypeAdapter;
 import com.massivecraft.factions.adapters.LocationTypeAdapter;
 import com.massivecraft.factions.adapters.RelTypeAdapter;
 import com.massivecraft.factions.cmd.CmdAutoHelp;
+import com.massivecraft.factions.cmd.CommandTabComplete;
 import com.massivecraft.factions.cmd.FCmdRoot;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.integration.Essentials;
@@ -25,7 +26,10 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NonNull;
 
@@ -33,6 +37,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -43,7 +48,7 @@ import java.util.Set;
  * @author Brett Flannigan
  * @author Daniel Saukel
  */
-public class Main extends MPlugin {
+public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     // Our single plugin instance
     public static Main main;
 
@@ -96,6 +101,14 @@ public class Main extends MPlugin {
         // Add Base Commands
         this.cmdAutoHelp = new CmdAutoHelp();
         this.cmdBase = new FCmdRoot();
+
+        // Keep the existing plugin.yml registration, but wire suggestions into
+        // the same FCommand tree used for execution.
+        PluginCommand command = this.getCommand("factions");
+        if (command != null) {
+            command.setExecutor(this);
+            command.setTabCompleter(this);
+        }
 
         Essentials.setup();
         Econ.setup();
@@ -186,6 +199,13 @@ public class Main extends MPlugin {
     public boolean onCommand(@NonNull CommandSender sender, Command command, String label, String[] split) {
         this.cmdBase.execute(sender, new ArrayList<String>(Arrays.asList(split)));
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(@NonNull CommandSender sender, Command command, String alias,
+                                      String[] args) {
+        return CommandTabComplete.complete(this.cmdBase, sender,
+                new ArrayList<>(Arrays.asList(args)));
     }
 
     // -------------------------------------------- //
@@ -282,7 +302,7 @@ public class Main extends MPlugin {
     public Set<String> getFactionTags() {
         Set<String> tags = new HashSet<String>();
         for (Faction faction : Factions.i.get()) {
-            tags.add(faction.getTag());
+            tags.add(faction.getTagPlain());
         }
         return tags;
     }

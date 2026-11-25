@@ -3,6 +3,7 @@ package com.massivecraft.factions.cmd;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.zcore.CommandVisibility;
 import com.massivecraft.factions.zcore.MCommand;
+import net.kyori.adventure.text.Component;
 
 import java.util.ArrayList;
 
@@ -31,9 +32,11 @@ public class CmdAutoHelp extends MCommand<Main> {
             return;
         MCommand<?> pcmd = this.commandChain.get(this.commandChain.size() - 1);
 
-        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<Component> lines = new ArrayList<Component>();
 
-        lines.addAll(pcmd.helpLong);
+        for (String line : pcmd.helpLong) {
+            lines.add(p.txt.parse(line));
+        }
 
         for (MCommand<?> scmd : pcmd.subCommands) {
             if (scmd.visibility == CommandVisibility.VISIBLE || (

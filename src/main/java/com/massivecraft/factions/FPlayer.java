@@ -11,8 +11,10 @@ import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.util.RelationUtil;
 import com.massivecraft.factions.zcore.persist.PlayerEntity;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.Style;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import com.massivecraft.factions.util.Color;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -244,8 +246,12 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
         }
     }
 
-    public String getTag() {
-        return this.hasFaction() ? this.getFaction().getTag() : "";
+    public Component getTag() {
+        return this.hasFaction() ? this.getFaction().getTag() : Component.empty();
+    }
+
+    public String getTagPlain() {
+        return this.hasFaction() ? this.getFaction().getTagPlain() : "";
     }
 
     // Base concatenations:
@@ -259,23 +265,25 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
         return ret;
     }
 
-    public String getNameAndTitle() {
-        return this.getNameAndSomething(this.getTitle());
+    public Component getNameAndTitle() {
+        return Component.text(this.getNameAndSomething(this.getTitle()));
     }
 
-    public String getNameAndTag() {
-        return this.getNameAndSomething(this.getTag());
+    public Component getNameAndTag() {
+        return Component.text(this.getNameAndSomething(this.getTagPlain()));
     }
 
     // Colored concatenations:
     // These are used in information messages
 
-    public String getNameAndTitle(Faction faction) {
-        return this.getColorTo(faction) + this.getNameAndTitle();
+    public Component getNameAndTitle(Faction faction) {
+        return this.getNameAndTitle()
+                .colorIfAbsent(this.getColorTo(faction).toTextColor());
     }
 
-    public String getNameAndTitle(FPlayer fplayer) {
-        return this.getColorTo(fplayer) + this.getNameAndTitle();
+    public Component getNameAndTitle(FPlayer fplayer) {
+        return this.getNameAndTitle()
+                .colorIfAbsent(this.getColorTo(fplayer).toTextColor());
     }
 
     // Chat Tag:
@@ -283,7 +291,7 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
 
     public String getChatTag() {
         return this.hasFaction() ?
-                String.format(Conf.chatTagFormat, this.role.getPrefix() + this.getTag()) :
+                String.format(Conf.chatTagFormat, this.role.getPrefix() + this.getTagPlain()) :
                 "";
     }
 
@@ -301,12 +309,12 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
     // -------------------------------
 
     @Override
-    public String describeTo(RelationParticipator observer, boolean ucfirst) {
+    public Component describeTo(RelationParticipator observer, boolean ucfirst) {
         return RelationUtil.describeThatToMe(this, observer, ucfirst);
     }
 
     @Override
-    public String describeTo(RelationParticipator observer) {
+    public Component describeTo(RelationParticipator observer) {
         return RelationUtil.describeThatToMe(this, observer);
     }
 
@@ -325,7 +333,7 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
     }
 
     @Override
-    public ChatColor getColorTo(RelationParticipator observer) {
+    public Color getColorTo(RelationParticipator observer) {
         return RelationUtil.getColorOfThatToMe(this, observer);
     }
 
@@ -463,9 +471,10 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
 
     public void sendFactionHereMessage() {
         Faction factionHere = Board.getFactionAt(this.getLastStoodAt());
-        String msg = Main.main.txt.parse("<i>") + " ~ " + factionHere.getTag(this);
+        Style infoStyle = Main.main.txt.getTagStyle("i");
+        Component msg = Component.text(" ~ ", infoStyle).append(factionHere.getTag(this));
         if (factionHere.getDescription().length() > 0) {
-            msg += " - " + factionHere.getDescription();
+            msg = msg.append(Component.text(" - " + factionHere.getDescription(), infoStyle));
         }
         this.sendMessage(msg);
     }
@@ -526,7 +535,7 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
             }
 
             if (Conf.logFactionLeave)
-                Main.main.log(this.getName() + " left the faction: " + myFaction.getTag());
+                Main.main.log(this.getName() + " left the faction: " + myFaction.getTagPlain());
         }
 
         this.resetFactionData();
@@ -540,14 +549,14 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
 
             myFaction.detach();
             if (Conf.logFactionDisband)
-                Main.main.log("The faction " + myFaction.getTag() + " (" + myFaction.getId()
+                Main.main.log("The faction " + myFaction.getTagPlain() + " (" + myFaction.getId()
                         + ") was disbanded due to the last player (" + this.getName() + ") leaving.");
         }
     }
 
     public boolean canClaimForFactionAtLocation(Faction forFaction, Location location,
                                                 boolean notifyFailure) {
-        String error = null;
+        Component error = null;
         FLocation flocation = new FLocation(location);
         Faction myFaction = getFaction();
         Faction currentFaction = Board.getFactionAt(flocation);
@@ -664,7 +673,7 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
 
         if (Conf.logLandClaims)
             Main.main.log(this.getName() + " claimed land at (" + flocation.getCoordString()
-                    + ") for the faction: " + forFaction.getTag());
+                    + ") for the faction: " + forFaction.getTagPlain());
 
         return true;
     }
@@ -683,5 +692,9 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
 
     public void msg(String str, Object... args) {
         this.sendMessage(Main.main.txt.parse(str, args));
+    }
+
+    public void msg(Component message) {
+        this.sendMessage(message);
     }
 }

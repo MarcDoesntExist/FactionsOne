@@ -73,7 +73,7 @@ public class Econ {
             return;
         if (Conf.econUniverseAccount.length() == 0)
             return;
-        if (!econ.hasAccount(Conf.econUniverseAccount))
+        if (!econ.hasAccount(toOfflinePlayer(Conf.econUniverseAccount)))
             return;
 
         modifyBalance(Conf.econUniverseAccount, delta);
@@ -86,7 +86,7 @@ public class Econ {
             return;
         }
         to.msg("<a>%s's<i> balance is <h>%s<i>.", about.describeTo(to, true),
-                Econ.moneyString(econ.getBalance(about.getAccountId())));
+                Econ.moneyString(econ.getBalance(toOfflinePlayer(about.getAccountId()))));
     }
 
     public static boolean canIControllYou(EconomyParticipator i, EconomyParticipator you) {
@@ -281,7 +281,7 @@ public class Econ {
         } else {
             acc = Bukkit.getOfflinePlayer(ep.getAccountId());
         }
-        String You = ep.describeTo(ep, true);
+        net.kyori.adventure.text.Component You = ep.describeTo(ep, true);
 
         if (delta == 0) {
             // no money actually transferred?
@@ -337,7 +337,7 @@ public class Econ {
 
         for (Faction faction : Factions.i.get()) {
             if (faction.money > 0) {
-                econ.depositPlayer(faction.getAccountId(), faction.money);
+                econ.depositPlayer(toOfflinePlayer(faction.getAccountId()), faction.money);
                 faction.money = 0;
             }
         }
@@ -429,6 +429,17 @@ public class Econ {
     // ---------------------------------------
     // Helpful Utilities
     // ---------------------------------------
+
+    /**
+     * Resolves a Factions account id (player UUID or legacy account name) to the
+     * {@link OfflinePlayer} expected by the current Vault API.
+     */
+    private static OfflinePlayer toOfflinePlayer(String accountId) {
+        if (isUUID(accountId)) {
+            return Bukkit.getOfflinePlayer(UUID.fromString(accountId));
+        }
+        return Bukkit.getOfflinePlayer(accountId);
+    }
 
     public static boolean isUUID(String uuid) {
         try {

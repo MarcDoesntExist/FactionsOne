@@ -2,6 +2,10 @@ package com.massivecraft.factions.zcore.util;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 /**
  * @author drtshock
@@ -14,6 +18,8 @@ public class DiscUtil {
     // -------------------------------------------- //
     // CONSTANTS
     // -------------------------------------------- //
+
+    private static final SaveQueue ASYNC_SAVES = new SaveQueue();
 
     // -------------------------------------------- //
     // BYTE
@@ -35,10 +41,56 @@ public class DiscUtil {
         return output;
     }
 
+    /**
+     * Writes the bytes to a temporary file next to the target and then moves it
+     * into place atomically. A crash can therefore leave either the old file or
+     * the new one, never a truncated JSON document.
+     */
     public static void writeBytes(File file, byte[] bytes) throws IOException {
-        try (FileOutputStream out = new FileOutputStream(file)) {
-            out.write(bytes);
+        Path target = file.toPath();
+        Path parent = target.toAbsolutePath().getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
         }
+        Path temp = Files.createTempFile(parent, file.getName() + ".", ".tmp");
+        try {
+            Files.write(temp, bytes);
+            try {
+                Files.move(temp, target, StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException | UnsupportedOperationException ex) {
+                // Some file systems cannot move atomically; fall back to a replace.
+                Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            Files.deleteIfExists(temp);
+        }
+    }
+
+    // -------------------------------------------- //
+    // ASYNC
+    // -------------------------------------------- //
+
+    /**
+     * Queues a write on the background save thread. Repeated calls for the same
+     * file before it is written keep only the latest content.
+     */
+    public static void writeAsync(File file, String content) {
+        ASYNC_SAVES.submit(file, content);
+    }
+
+    /**
+     * Waits for queued writes to reach the disk.
+     */
+    public static void flushAsync(long timeoutMillis) {
+        ASYNC_SAVES.flush(timeoutMillis);
+    }
+
+    /**
+     * Flushes and stops the background save thread.
+     */
+    public static void shutdownAsync(long timeoutMillis) {
+        ASYNC_SAVES.shutdown(timeoutMillis);
     }
 
     // -------------------------------------------- //

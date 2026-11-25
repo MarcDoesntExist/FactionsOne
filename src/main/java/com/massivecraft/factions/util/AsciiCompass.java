@@ -1,6 +1,5 @@
 package com.massivecraft.factions.util;
 
-import org.bukkit.ChatColor;
 
 import java.util.ArrayList;
 
@@ -39,7 +38,7 @@ public class AsciiCompass {
             return null;
     }
 
-    public static ArrayList<String> getAsciiCompass(Point point, ChatColor colorActive,
+    public static ArrayList<String> getAsciiCompass(Point point, Color colorActive,
                                                     String colorDefault) {
         ArrayList<String> ret = new ArrayList<String>();
         String row;
@@ -65,7 +64,7 @@ public class AsciiCompass {
         return ret;
     }
 
-    public static ArrayList<String> getAsciiCompass(double inDegrees, ChatColor colorActive,
+    public static ArrayList<String> getAsciiCompass(double inDegrees, Color colorActive,
                                                     String colorDefault) {
         return getAsciiCompass(getCompassPointForDirection(inDegrees), colorActive, colorDefault);
     }
@@ -84,7 +83,7 @@ public class AsciiCompass {
             return String.valueOf(this.asciiChar);
         }
 
-        public String toString(boolean isActive, ChatColor colorActive, String colorDefault) {
+        public String toString(boolean isActive, Color colorActive, String colorDefault) {
             return (isActive ? colorActive : colorDefault) + String.valueOf(this.asciiChar);
         }
     }

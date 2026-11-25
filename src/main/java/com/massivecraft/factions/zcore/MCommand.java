@@ -1,6 +1,8 @@
 package com.massivecraft.factions.zcore;
 
 import com.massivecraft.factions.zcore.util.TextUtil;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.Style;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -197,17 +199,18 @@ public abstract class MCommand<T extends MPlugin> {
     // Help and Usage information
     // -------------------------------------------- //
 
-    public String getUseageTemplate(List<MCommand<?>> commandChain, boolean addShortHelp) {
-        StringBuilder ret = new StringBuilder();
-        ret.append(p.txt.parseTags("<c>"));
-        ret.append('/');
+    public Component getUseageTemplate(List<MCommand<?>> commandChain, boolean addShortHelp) {
+        Style commandStyle = p.txt.getTagStyle("c");
+        Style mainStyle = p.txt.getTagStyle("main");
+        Style infoStyle = p.txt.getTagStyle("i");
+
+        Component ret = Component.text("/", commandStyle);
 
         for (MCommand<?> mc : commandChain) {
-            ret.append(TextUtil.implode(mc.aliases, ","));
-            ret.append(' ');
+            ret = ret.append(Component.text(TextUtil.implode(mc.aliases, ",") + " ", commandStyle));
         }
 
-        ret.append(TextUtil.implode(this.aliases, ","));
+        ret = ret.append(Component.text(TextUtil.implode(this.aliases, ","), commandStyle));
 
         List<String> args = new ArrayList<String>();
 
@@ -225,24 +228,22 @@ public abstract class MCommand<T extends MPlugin> {
             args.add("[" + optionalArg.getKey() + val + "]");
         }
 
-        if (args.size() > 0) {
-            ret.append(p.txt.parseTags("<main> "));
-            ret.append(TextUtil.implode(args, " "));
+        if (!args.isEmpty()) {
+            ret = ret.append(Component.text(" " + TextUtil.implode(args, " "), mainStyle));
         }
 
         if (addShortHelp) {
-            ret.append(p.txt.parseTags(" <i>"));
-            ret.append(this.getHelpShort());
+            ret = ret.append(Component.text(" " + this.getHelpShort(), infoStyle));
         }
 
-        return ret.toString();
+        return ret;
     }
 
-    public String getUseageTemplate(boolean addShortHelp) {
+    public Component getUseageTemplate(boolean addShortHelp) {
         return getUseageTemplate(this.commandChain, addShortHelp);
     }
 
-    public String getUseageTemplate() {
+    public Component getUseageTemplate() {
         return getUseageTemplate(false);
     }
 
@@ -254,13 +255,21 @@ public abstract class MCommand<T extends MPlugin> {
         sender.sendMessage(p.txt.parse(str, args));
     }
 
-    public void sendMessage(String msg) {
+    public void msg(Component message) {
+        sender.sendMessage(message);
+    }
+
+    public void sendMessage(Component msg) {
         sender.sendMessage(msg);
     }
 
-    public void sendMessage(List<String> msgs) {
-        for (String msg : msgs) {
-            this.sendMessage(msg);
+    public void sendMessage(String msg) {
+        sender.sendMessage(p.txt.parse(msg));
+    }
+
+    public void sendMessage(List<Component> msgs) {
+        for (Component msg : msgs) {
+            sender.sendMessage(msg);
         }
     }
 

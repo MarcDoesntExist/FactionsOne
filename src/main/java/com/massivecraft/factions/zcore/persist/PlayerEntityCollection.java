@@ -34,11 +34,36 @@ public abstract class PlayerEntityCollection<E extends Entity> extends EntityCol
     }
 
     public E get(OfflinePlayer player) {
-        return this.get(player.getUniqueId().toString());
+        return this.getForPlayer(player);
     }
 
     public E get(Player player) {
-        return this.get(player.getUniqueId().toString());
+        return this.getForPlayer(player);
+    }
+
+    /**
+     * A file written by an old version may still be keyed by player name while the
+     * background UUID conversion runs. Resolve those entries and migrate the one
+     * that just came online, so no second profile is created for the player.
+     */
+    private E getForPlayer(OfflinePlayer player) {
+        String uuid = player.getUniqueId().toString();
+        E direct = this.id2entity.get(uuid);
+        if (direct != null) {
+            return direct;
+        }
+
+        String name = player.getName();
+        if (name != null) {
+            E legacy = this.id2entity.get(name);
+            if (legacy != null) {
+                this.migrateEntityId(legacy, uuid);
+                return legacy;
+            }
+        }
+
+        // Creative collections create the entry on demand; legacy ones return null.
+        return super.get(uuid);
     }
 
     public Set<E> getOnline() {

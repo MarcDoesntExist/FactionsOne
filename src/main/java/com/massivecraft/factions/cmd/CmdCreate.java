@@ -47,7 +47,7 @@ public class CmdCreate extends FCommand {
             return;
         }
 
-        ArrayList<String> tagValidationErrors = Factions.validateTag(tag);
+        ArrayList<net.kyori.adventure.text.Component> tagValidationErrors = Factions.validateTag(tag);
         if (tagValidationErrors.size() > 0) {
             sendMessage(tagValidationErrors);
             return;

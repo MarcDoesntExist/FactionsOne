@@ -45,7 +45,7 @@ public class CmdTag extends FCommand {
             return;
         }
 
-        ArrayList<String> errors = new ArrayList<String>();
+        ArrayList<net.kyori.adventure.text.Component> errors = new ArrayList<>();
         errors.addAll(Factions.validateTag(tag));
         if (errors.size() > 0) {
             sendMessage(errors);
@@ -67,7 +67,7 @@ public class CmdTag extends FCommand {
                 "for changing the faction tag"))
             return;
 
-        String oldtag = myFaction.getTag();
+        String oldtag = myFaction.getTagPlain();
         myFaction.setTag(tag);
 
         // Inform
@@ -78,7 +78,10 @@ public class CmdTag extends FCommand {
                 continue;
             }
             faction.msg("<i>The faction %s<i> changed their name to %s.",
-                    fme.getColorTo(faction) + oldtag, myFaction.getTag(faction));
+                    net.kyori.adventure.text.Component.text(oldtag,
+                            net.kyori.adventure.text.format.Style.style(
+                                    fme.getColorTo(faction).toTextColor())),
+                    myFaction.getTag(faction));
         }
     }
 

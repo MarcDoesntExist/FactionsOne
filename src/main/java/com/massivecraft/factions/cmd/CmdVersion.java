@@ -29,6 +29,7 @@ public class CmdVersion extends FCommand {
 
     @Override
     public void perform() {
-        msg("<i>You are running " + Main.main.getDescription().getFullName());
+        msg("<i>You are running " + Main.main.getPluginMeta().getName() + " v"
+                + Main.main.getPluginMeta().getVersion());
     }
 }

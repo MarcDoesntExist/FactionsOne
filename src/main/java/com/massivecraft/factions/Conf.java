@@ -4,7 +4,7 @@ import com.massivecraft.factions.api.LegacyUtil;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
-import org.bukkit.ChatColor;
+import com.massivecraft.factions.util.Color;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 
@@ -29,14 +29,14 @@ public class Conf {
     // -------------------------------------------- //
     private static final transient Conf i = new Conf();
     // Colors
-    public static ChatColor colorMember = ChatColor.GREEN;
-    public static ChatColor colorAlly = ChatColor.DARK_PURPLE;
-    //public static ChatColor colorWilderness = ChatColor.DARK_GREEN;
-    public static ChatColor colorTruce = ChatColor.LIGHT_PURPLE;
-    public static ChatColor colorNeutral = ChatColor.WHITE;
-    public static ChatColor colorEnemy = ChatColor.RED;
-    public static ChatColor colorNoPVP = ChatColor.GOLD;
-    public static ChatColor colorFriendlyFire = ChatColor.DARK_RED;
+    public static Color colorMember = Color.GREEN;
+    public static Color colorAlly = Color.DARK_PURPLE;
+    //public static Color colorWilderness = Color.DARK_GREEN;
+    public static Color colorTruce = Color.LIGHT_PURPLE;
+    public static Color colorNeutral = Color.WHITE;
+    public static Color colorEnemy = Color.RED;
+    public static Color colorNoPVP = Color.GOLD;
+    public static Color colorFriendlyFire = Color.DARK_RED;
     public static Map<FFlag, Boolean> factionFlagDefaults;
     public static Map<FFlag, Boolean> factionFlagIsChangeable;
     public static Map<FPerm, Set<Rel>> factionPermDefaults;
@@ -82,14 +82,14 @@ public class Conf {
     public static boolean chatSetFormat = false;
     public static String chatSetFormatTo =
             "<{faction_relcolor}\u00A7l{faction_roleprefix}\u00A7lr{faction_relcolor}{faction_tag_pr}"
-                    + ChatColor.WHITE.toString() + "%s> %s";
+                    + Color.WHITE.toString() + "%s> %s";
     // This one is almost deprecated now right? or is it?
     public static boolean chatParseTags = true;
     public static boolean chatParseTagsColored = false;
     public static Map<String, String> chatSingleFormats = new HashMap<String, String>();
     public static transient boolean chatTagHandledByAnotherPlugin = false;
     // Why do we need this? (Olof asks)
-    public static String chatTagFormat = "%s" + ChatColor.WHITE;
+    public static String chatTagFormat = "%s" + Color.WHITE;
     public static boolean broadcastDescriptionChanges = false;
     public static double saveToFileEveryXMinutes = 30.0;
     public static double autoLeaveAfterDaysOfInactivity = 10.0;
@@ -289,7 +289,7 @@ public class Conf {
     }
 
     public static void save() {
-        Main.main.persist.save(i);
+        Main.main.persist.saveAsync(i);
     }
 }
 

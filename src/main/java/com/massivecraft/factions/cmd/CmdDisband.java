@@ -61,7 +61,9 @@ public class CmdDisband extends FCommand {
 
         // Inform all players
         for (FPlayer fplayer : FPlayers.i.getOnline()) {
-            String who = senderIsConsole ? "A server admin" : fme.describeTo(fplayer);
+            net.kyori.adventure.text.Component who = senderIsConsole
+                    ? net.kyori.adventure.text.Component.text("A server admin")
+                    : fme.describeTo(fplayer);
             if (fplayer.getFaction() == faction) {
                 fplayer.msg("<h>%s<i> disbanded your faction.", who);
             } else {
@@ -70,7 +72,7 @@ public class CmdDisband extends FCommand {
         }
         if (Conf.logFactionDisband)
             Main.main.log(
-                    "The faction " + faction.getTag() + " (" + faction.getId() + ") was disbanded by "
+                    "The faction " + faction.getTagPlain() + " (" + faction.getId() + ") was disbanded by "
                             + (senderIsConsole ? "console command" : fme.getName()) + ".");
 
         if (Econ.shouldBeUsed() && !senderIsConsole) {
@@ -83,7 +85,7 @@ public class CmdDisband extends FCommand {
                 msg("<i>You have been given the disbanded faction's bank, totaling %s.",
                         amountString);
                 Main.main.log(fme.getName() + " has been given bank holdings of " + amountString
-                        + " from disbanding " + faction.getTag() + ".");
+                        + " from disbanding " + faction.getTagPlain() + ".");
             }
         }
 

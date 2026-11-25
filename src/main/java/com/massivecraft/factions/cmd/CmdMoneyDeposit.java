@@ -5,7 +5,7 @@ import com.massivecraft.factions.Main;
 import com.massivecraft.factions.iface.EconomyParticipator;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.Permission;
-import org.bukkit.ChatColor;
+import com.massivecraft.factions.util.Color;
 
 
 /**
@@ -43,9 +43,9 @@ public class CmdMoneyDeposit extends FCommand {
         boolean success = Econ.transferMoney(fme, fme, faction, amount);
 
         if (success && Conf.logMoneyTransactions)
-            Main.main.log(ChatColor.stripColor(Main.main.txt
+            Main.main.log(Main.main.txt
                     .parse("%s deposited %s in the faction bank: %s", fme.getName(),
-                            Econ.moneyString(amount), faction.describeTo(null))));
+                            Econ.moneyString(amount), faction.describeTo(null)));
     }
 
 }

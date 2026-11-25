@@ -61,7 +61,7 @@ public class CmdPowerBoost extends FCommand {
             if (targetFaction == null)
                 return;
             targetFaction.setPowerBoost(targetPower);
-            target = "Faction \"" + targetFaction.getTag() + "\"";
+            target = "Faction \"" + targetFaction.getTagPlain() + "\"";
         }
 
         msg("<i>" + target + " now has a power bonus/penalty of " + targetPower

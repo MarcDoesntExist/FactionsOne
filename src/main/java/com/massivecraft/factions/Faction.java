@@ -10,7 +10,8 @@ import com.massivecraft.factions.util.LazyLocation;
 import com.massivecraft.factions.util.MiscUtil;
 import com.massivecraft.factions.util.RelationUtil;
 import com.massivecraft.factions.zcore.persist.Entity;
-import org.bukkit.ChatColor;
+import com.massivecraft.factions.util.Color;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -93,7 +94,14 @@ public class Faction extends Entity implements EconomyParticipator {
         open = isOpen;
     }
 
-    public String getTag() {
+    public Component getTag() {
+        return Component.text(this.tag);
+    }
+
+    /**
+     * Plain tag for storage, logs, events and validation.
+     */
+    public String getTagPlain() {
         return this.tag;
     }
 
@@ -104,15 +112,12 @@ public class Faction extends Entity implements EconomyParticipator {
         this.tag = str;
     }
 
-    public String getTag(String prefix) {
-        return prefix + this.tag;
-    }
-
-    public String getTag(RelationParticipator observer) {
+    public Component getTag(RelationParticipator observer) {
+        Component ret = this.getTag();
         if (observer == null) {
-            return getTag();
+            return ret;
         }
-        return this.getTag(this.getColorTo(observer).toString());
+        return ret.colorIfAbsent(this.getColorTo(observer).toTextColor());
     }
 
     public String getComparisonTag() {
@@ -260,12 +265,12 @@ public class Faction extends Entity implements EconomyParticipator {
     // -------------------------------
 
     @Override
-    public String describeTo(RelationParticipator observer, boolean ucfirst) {
+    public Component describeTo(RelationParticipator observer, boolean ucfirst) {
         return RelationUtil.describeThatToMe(this, observer, ucfirst);
     }
 
     @Override
-    public String describeTo(RelationParticipator observer) {
+    public Component describeTo(RelationParticipator observer) {
         return RelationUtil.describeThatToMe(this, observer);
     }
 
@@ -280,7 +285,7 @@ public class Faction extends Entity implements EconomyParticipator {
     }
 
     @Override
-    public ChatColor getColorTo(RelationParticipator observer) {
+    public Color getColorTo(RelationParticipator observer) {
         return RelationUtil.getColorOfThatToMe(this, observer);
     }
 
@@ -299,16 +304,16 @@ public class Faction extends Entity implements EconomyParticipator {
         }
     }
 
-    public Map<Rel, List<String>> getFactionTagsPerRelation(RelationParticipator rp) {
+    public Map<Rel, List<Component>> getFactionTagsPerRelation(RelationParticipator rp) {
         return getFactionTagsPerRelation(rp, false);
     }
 
     // onlyNonNeutral option provides substantial performance boost on large servers for listing only non-neutral factions
-    public Map<Rel, List<String>> getFactionTagsPerRelation(RelationParticipator rp,
-                                                            boolean onlyNonNeutral) {
-        Map<Rel, List<String>> ret = new HashMap<Rel, List<String>>();
+    public Map<Rel, List<Component>> getFactionTagsPerRelation(RelationParticipator rp,
+                                                               boolean onlyNonNeutral) {
+        Map<Rel, List<Component>> ret = new HashMap<Rel, List<Component>>();
         for (Rel rel : Rel.values()) {
-            ret.put(rel, new ArrayList<String>());
+            ret.put(rel, new ArrayList<Component>());
         }
         for (Faction faction : Factions.i.get()) {
             Rel relation = faction.getRelationTo(this);
@@ -484,7 +489,7 @@ public class Faction extends Entity implements EconomyParticipator {
 
             // no members left and faction isn't permanent, so disband it
             if (Conf.logFactionDisband)
-                Main.main.log("The faction " + this.getTag() + " (" + this.getId()
+                Main.main.log("The faction " + this.getTagPlain() + " (" + this.getId()
                         + ") has been disbanded since it has no members left.");
 
             for (FPlayer fplayer : FPlayers.i.getOnline()) {
@@ -499,7 +504,7 @@ public class Faction extends Entity implements EconomyParticipator {
             this.msg(
                     "<i>Faction leader <h>%s<i> has been removed. %s<i> has been promoted as the new faction leader.",
                     oldLeader == null ? "" : oldLeader.getName(), replacements.get(0).getName());
-            Main.main.log("Faction " + this.getTag() + " (" + this.getId()
+            Main.main.log("Faction " + this.getTagPlain() + " (" + this.getId()
                     + ") leader was removed. Replacement leader: " + replacements.get(0).getName());
         }
     }
@@ -508,20 +513,20 @@ public class Faction extends Entity implements EconomyParticipator {
     // Messages
     //----------------------------------------------//
     public void msg(String message, Object... args) {
-        message = Main.main.txt.parse(message, args);
-
-        for (FPlayer fplayer : this.getFPlayersWhereOnline(true)) {
-            fplayer.sendMessage(message);
-        }
+        this.sendMessage(Main.main.txt.parse(message, args));
     }
 
     public void sendMessage(String message) {
+        this.sendMessage(Main.main.txt.parse(message));
+    }
+
+    public void sendMessage(Component message) {
         for (FPlayer fplayer : this.getFPlayersWhereOnline(true)) {
             fplayer.sendMessage(message);
         }
     }
 
-    public void sendMessage(List<String> messages) {
+    public void sendMessage(List<Component> messages) {
         for (FPlayer fplayer : this.getFPlayersWhereOnline(true)) {
             fplayer.sendMessage(messages);
         }
@@ -564,6 +569,7 @@ public class Faction extends Entity implements EconomyParticipator {
     /**
      * @deprecated As of release 1.7, replaced by {@link #getFPlayerLeader()}
      */
+    @Deprecated
     public FPlayer getFPlayerAdmin() {
         return getFPlayerLeader();
     }
@@ -571,6 +577,7 @@ public class Faction extends Entity implements EconomyParticipator {
     /**
      * @deprecated As of release 1.7, replaced by {@link #getFlag()}
      */
+    @Deprecated
     public boolean isPeaceful() {
         return this.getFlag(FFlag.PEACEFUL);
     }
@@ -578,6 +585,7 @@ public class Faction extends Entity implements EconomyParticipator {
     /**
      * @deprecated As of release 1.7, replaced by {@link #getFlag()}
      */
+    @Deprecated
     public boolean getPeacefulExplosionsEnabled() {
         return this.getFlag(FFlag.EXPLOSIONS);
     }
@@ -585,6 +593,7 @@ public class Faction extends Entity implements EconomyParticipator {
     /**
      * @deprecated As of release 1.7, replaced by {@link #getFlag()}
      */
+    @Deprecated
     public boolean noExplosionsInTerritory() {
         return !this.getFlag(FFlag.EXPLOSIONS);
     }
@@ -592,6 +601,7 @@ public class Faction extends Entity implements EconomyParticipator {
     /**
      * @deprecated As of release 1.7, replaced by {@link #getFlag()}
      */
+    @Deprecated
     public boolean isSafeZone() {
         return !this.getFlag(FFlag.EXPLOSIONS);
     }

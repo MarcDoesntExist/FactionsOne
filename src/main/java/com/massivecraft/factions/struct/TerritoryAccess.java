@@ -143,7 +143,7 @@ public class TerritoryAccess
         for (String factionID : factionIDs) {
             if (list.length() > 0)
                 list.append(", ");
-            list.append(Factions.i.get(factionID).getTag());
+            list.append(Factions.i.get(factionID).getTagPlain());
         }
         return list.toString();
     }

@@ -2,6 +2,7 @@ package com.massivecraft.factions.zcore.persist;
 
 import com.google.gson.Gson;
 import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.zcore.util.DiscUtil;
 import com.massivecraft.factions.zcore.util.TextUtil;
 import com.massivecraft.factions.zcore.util.UUIDFetcher;
@@ -12,7 +13,9 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 /**
  * @author drtshock
@@ -38,8 +41,11 @@ public abstract class EntityCollection<E extends Entity> {
     // Info on how to persist
     private Gson gson;
     private File file;
-    // we don't want to let saveToDisc() run multiple iterations simultaneously
-    private boolean saveIsRunning = false;
+    private static final Pattern UUID_PATTERN = Pattern.compile(
+            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+    private static final Pattern LEGACY_NAME_PATTERN = Pattern.compile("[a-zA-Z0-9_]{2,16}");
+    // Guards the one-time background conversion of legacy player names to UUIDs.
+    private final AtomicBoolean uuidMigrationScheduled = new AtomicBoolean(false);
 
     public EntityCollection(Class<E> entityClass, Collection<E> entities, Map<String, E> id2entity,
                             File file, Gson gson, boolean creative) {
@@ -192,10 +198,6 @@ public abstract class EntityCollection<E extends Entity> {
     }
 
     public boolean saveToDisc() {
-        if (saveIsRunning)
-            return true;
-        saveIsRunning = true;
-
         Map<String, E> entitiesThatShouldBeSaved = new HashMap<>();
         for (E entity : this.entities) {
             if (entity.shouldBeSaved()) {
@@ -203,15 +205,21 @@ public abstract class EntityCollection<E extends Entity> {
             }
         }
 
-        saveIsRunning = false;
-        return this.saveCore(this.file, entitiesThatShouldBeSaved);
-    }
-
-    private boolean saveCore(File target, Map<String, E> entities) {
-        return DiscUtil.writeCatch(target, this.gson.toJson(entities));
+        try {
+            // Serialize on the calling thread so the snapshot is consistent, then let the
+            // background queue perform the disk I/O.
+            DiscUtil.writeAsync(this.file, this.gson.toJson(entitiesThatShouldBeSaved));
+            return true;
+        } catch (RuntimeException ex) {
+            Bukkit.getLogger().log(Level.WARNING,
+                    "[Factions] Could not queue a save for \"" + this.file + "\": " + ex.getMessage());
+            return false;
+        }
     }
 
     public boolean loadFromDisc() {
+        // Make sure a queued save cannot be overtaken by a reload.
+        DiscUtil.flushAsync(5000L);
         Map<String, E> id2entity = this.loadCore();
         if (id2entity == null)
             return false;
@@ -223,6 +231,7 @@ public abstract class EntityCollection<E extends Entity> {
         return true;
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, E> loadCore() {
         if (!this.file.exists()) {
             return new HashMap<>();
@@ -239,80 +248,32 @@ public abstract class EntityCollection<E extends Entity> {
             if (data == null) {
                 return new HashMap<>();
             }
-            List<String> invalidNames = new ArrayList<String>();
             // Convert any leftover player names in this file
-            ArrayList<String> list = new ArrayList<String>();
-            for (String value : data.keySet()) {
-                if (!value
-                        .matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
-                    // Not a valid UUID..
-                    if (!value.matches("[a-zA-Z0-9_]{2,16}")) {
-                        // Not even a valid player name.. go ahead and mark it for removal
-                        invalidNames.add(value);
-                    } else {
-                        // We'll mark this as one for conversion to UUID
-                        list.add(value);
-                    }
+            List<String> list = new ArrayList<>();
+            List<String> invalidNames = new ArrayList<>();
+            for (String value : new ArrayList<>(data.keySet())) {
+                if (UUID_PATTERN.matcher(value).matches()) {
+                    continue;
+                }
+                if (LEGACY_NAME_PATTERN.matcher(value).matches()) {
+                    list.add(value);
+                } else {
+                    // Not even a valid player name: drop it instead of keeping garbage.
+                    invalidNames.add(value);
+                    data.remove(value);
                 }
             }
-            if (list.size() > 0) {
-                //Got some converting to do
-                Bukkit.getLogger().log(Level.INFO,
-                        "Please wait while Factions converts " + list.size()
-                                + " old player names to UUID. This may take a while.");
-                // First we'll make a backup, because god forbid anybody heed a warning
-                File file = new File(this.file.getParentFile(), "players.json.old");
-                try {
-                    file.createNewFile();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                saveCore(file, (Map<String, E>) data);
-                Bukkit.getLogger()
-                        .log(Level.INFO, "Backed up your old data at " + file.getAbsolutePath());
-
-                // Start fetching those UUIDs
-                UUIDFetcher fetcher = new UUIDFetcher(list);
-                try {
-                    Map<String, UUID> response = fetcher.call();
-                    for (String s : list) {
-                        // Are we missing any responses?
-                        if (!response.containsKey(s)) {
-                            // They don't have a UUID so they should just be removed
-                            invalidNames.add(s);
-                        }
-                    }
-                    for (String value : response.keySet()) {
-                        // For all the valid responses, let's replace their old named entry with a UUID key
-                        String id = response.get(value).toString();
-
-                        FPlayer player = data.get(value);
-
-                        if (player == null) {
-                            // The player never existed here, and shouldn't persist
-                            invalidNames.add(value);
-                            continue;
-                        }
-
-                        data.remove(value); // Out with the old...
-                        data.put(id, player); // And in with the new
-                        player.setId(id); // Update the object so it knows
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                if (invalidNames.size() > 0) {
-                    for (String name : invalidNames) {
-                        // Remove all the invalid names we collected
-                        data.remove(name);
-                    }
-                    Bukkit.getLogger().log(Level.INFO,
-                            "While converting we found names that either don't have a UUID or aren't players and removed them from storage.");
-                    Bukkit.getLogger().log(Level.INFO,
-                            "The following names were detected as being invalid: " + String.join(", ", invalidNames));
-                }
-                saveCore(this.file, (Map<String, E>) data);
-                Bukkit.getLogger().log(Level.INFO, "Done converting to UUID.");
+            if (!invalidNames.isEmpty()) {
+                Bukkit.getLogger().log(Level.INFO, "[Factions] Removed " + invalidNames.size()
+                        + " invalid player entries while loading: " + String.join(", ", invalidNames));
+            }
+            if (!list.isEmpty()) {
+                // Never block the server start on the Mojang API. The entries stay keyed
+                // by name until the conversion finishes; a player who joins meanwhile is
+                // migrated immediately with his real UUID (see #migrateEntityId).
+                Bukkit.getLogger().log(Level.INFO, "[Factions] Converting " + list.size()
+                        + " old player names to UUID in the background.");
+                this.scheduleUuidMigration(list, content);
             }
             return (Map<String, E>) data;
         }
@@ -331,6 +292,114 @@ public abstract class EntityCollection<E extends Entity> {
             return null;
 
         }
+    }
+
+    /**
+     * Backs up the file and asks Mojang for the UUIDs on a background thread, then
+     * re-keys the live collection on the main thread. A failed lookup keeps the
+     * name-keyed entries usable instead of deleting data.
+     */
+    private void scheduleUuidMigration(final List<String> names, final String originalContent) {
+        if (!this.uuidMigrationScheduled.compareAndSet(false, true)) {
+            return;
+        }
+
+        final File backup = new File(this.file.getParentFile(), this.file.getName() + ".old");
+        Bukkit.getScheduler().runTaskAsynchronously(Main.main, () -> {
+            try {
+                DiscUtil.write(backup, originalContent);
+            } catch (IOException ex) {
+                Bukkit.getLogger().log(Level.WARNING, "[Factions] Could not back up " + this.file
+                        + " to " + backup + "; legacy player names were left untouched: "
+                        + ex.getMessage());
+                this.uuidMigrationScheduled.set(false);
+                return;
+            }
+            Bukkit.getLogger().log(Level.INFO,
+                    "[Factions] Backed up old player data at " + backup.getAbsolutePath());
+
+            Map<String, UUID> response;
+            try {
+                response = new UUIDFetcher(names).call();
+            } catch (Exception ex) {
+                Bukkit.getLogger().log(Level.WARNING,
+                        "[Factions] Could not convert old player names to UUID now: " + ex.getMessage());
+                this.uuidMigrationScheduled.set(false);
+                return;
+            }
+
+            if (!Main.main.isEnabled()) {
+                // Keep the name-keyed data; the conversion is retried on the next start.
+                this.uuidMigrationScheduled.set(false);
+                return;
+            }
+
+            Bukkit.getScheduler().runTask(Main.main, () -> {
+                try {
+                    this.applyUuidMigration(response);
+                } finally {
+                    this.uuidMigrationScheduled.set(false);
+                }
+            });
+        });
+    }
+
+    private void applyUuidMigration(Map<String, UUID> response) {
+        List<String> removed = new ArrayList<>();
+        for (String key : new ArrayList<>(this.id2entity.keySet())) {
+            if (UUID_PATTERN.matcher(key).matches()) {
+                continue;
+            }
+            UUID uuid = response.get(key);
+            E entity = this.id2entity.remove(key);
+            if (uuid == null || entity == null) {
+                if (entity != null) {
+                    this.entities.remove(entity);
+                }
+                removed.add(key);
+                continue;
+            }
+            String newId = uuid.toString();
+            if (this.id2entity.containsKey(newId)) {
+                // The player joined while the conversion was running and already got a
+                // fresh profile: keep that one instead of ending up with two objects.
+                this.entities.remove(entity);
+                continue;
+            }
+            entity.setId(newId);
+            this.id2entity.put(newId, entity);
+        }
+
+        if (!removed.isEmpty()) {
+            Bukkit.getLogger().log(Level.INFO,
+                    "[Factions] Removed player entries without a valid UUID: "
+                            + String.join(", ", removed));
+        }
+        this.saveToDisc();
+        Bukkit.getLogger().log(Level.INFO, "[Factions] Done converting old player names to UUID.");
+    }
+
+    /**
+     * Re-keys a single legacy name entry when its owner joins before the background
+     * conversion finished. The real UUID from the Player is authoritative, so no
+     * Mojang request is needed here.
+     */
+    protected void migrateEntityId(E entity, String newId) {
+        if (entity == null || newId == null) {
+            return;
+        }
+        String oldId = entity.getId();
+        if (newId.equals(oldId)) {
+            return;
+        }
+        if (oldId != null) {
+            this.id2entity.remove(oldId);
+        }
+        entity.setId(newId);
+        this.id2entity.put(newId, entity);
+        Bukkit.getLogger().log(Level.INFO,
+                "[Factions] Moved legacy player data from \"" + oldId + "\" to " + newId);
+        this.saveToDisc();
     }
 
     // -------------------------------------------- //

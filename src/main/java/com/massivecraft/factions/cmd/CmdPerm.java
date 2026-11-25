@@ -50,7 +50,8 @@ public class CmdPerm extends FCommand {
         }
 
         if (!this.argIsSet(1)) {
-            msg(p.txt.titleize("Perms for " + faction.describeTo(fme, true)));
+            msg(p.txt.titleize(net.kyori.adventure.text.Component.text("Perms for ")
+                    .append(faction.describeTo(fme, true))));
             msg(FPerm.getStateHeaders());
             for (FPerm perm : FPerm.values()) {
                 msg(perm.getStateInfo(faction.getPermittedRelations(perm), true));
@@ -62,7 +63,8 @@ public class CmdPerm extends FCommand {
         if (perm == null)
             return;
         if (!this.argIsSet(2)) {
-            msg(p.txt.titleize("Perm for " + faction.describeTo(fme, true)));
+            msg(p.txt.titleize(net.kyori.adventure.text.Component.text("Perm for ")
+                    .append(faction.describeTo(fme, true))));
             msg(FPerm.getStateHeaders());
             msg(perm.getStateInfo(faction.getPermittedRelations(perm), true));
             return;
@@ -88,7 +90,8 @@ public class CmdPerm extends FCommand {
             faction.setRelationPermitted(FPerm.PERMS, Rel.LEADER, true);
         }
 
-        msg(p.txt.titleize("Perm for " + faction.describeTo(fme, true)));
+        msg(p.txt.titleize(net.kyori.adventure.text.Component.text("Perm for ")
+                .append(faction.describeTo(fme, true))));
         msg(FPerm.getStateHeaders());
         msg(perm.getStateInfo(faction.getPermittedRelations(perm), true));
     }

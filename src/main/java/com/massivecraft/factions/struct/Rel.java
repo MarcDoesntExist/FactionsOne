@@ -1,7 +1,7 @@
 package com.massivecraft.factions.struct;
 
 import com.massivecraft.factions.Conf;
-import org.bukkit.ChatColor;
+import com.massivecraft.factions.util.Color;
 
 /**
  * @author drtshock
@@ -109,7 +109,7 @@ public enum Rel {
         return this.value > rel.value;
     }
 
-    public ChatColor getColor() {
+    public Color getColor() {
         if (this.isAtLeast(RECRUIT))
             return Conf.colorMember;
         else if (this == ALLY)

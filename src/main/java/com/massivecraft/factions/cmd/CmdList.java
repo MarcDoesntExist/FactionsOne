@@ -78,7 +78,7 @@ public class CmdList extends FCommand {
             }
         });
 
-        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<net.kyori.adventure.text.Component> lines = new ArrayList<>();
 
 /*		// this code was really slow on large servers, getting full info for every faction and then only showing 9 of them; rewritten below
 		lines.add(main.txt.parse("<i>Factionless<i> %d online", Factions.i.getNone().getFPlayersWhereOnline(true).size()));

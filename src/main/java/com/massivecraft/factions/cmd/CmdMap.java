@@ -4,6 +4,7 @@ import com.massivecraft.factions.Board;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.struct.Permission;
+import org.bukkit.entity.Player;
 
 
 /**
@@ -43,8 +44,8 @@ public class CmdMap extends FCommand {
                 fme.setMapAutoUpdating(true);
                 msg("<i>Map auto update <green>ENABLED.");
 
-                // And show the map once
-                showMap();
+                // Show the compact map in the action bar, not in chat.
+                showActionBarMap();
             } else {
                 // Turn off
                 fme.setMapAutoUpdating(false);
@@ -62,6 +63,13 @@ public class CmdMap extends FCommand {
     public void showMap() {
         sendMessage(
                 Board.getMap(myFaction, new FLocation(fme), fme.getPlayer().getLocation().getYaw()));
+    }
+
+    public void showActionBarMap() {
+        Player player = fme.getPlayer();
+        if (player == null)
+            return;
+        player.sendActionBar(Board.getActionBarMap(fme, new FLocation(player)));
     }
 
 }

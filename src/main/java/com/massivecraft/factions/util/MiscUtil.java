@@ -1,6 +1,5 @@
 package com.massivecraft.factions.util;
 
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -51,7 +50,7 @@ public class MiscUtil {
     public static String getComparisonString(String str) {
         String ret = "";
 
-        str = ChatColor.stripColor(str);
+        str = Color.strip(str);
         str = str.toLowerCase();
 
         for (char c : str.toCharArray()) {

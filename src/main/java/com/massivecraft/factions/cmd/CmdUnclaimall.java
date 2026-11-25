@@ -58,7 +58,7 @@ public class CmdUnclaimall extends FCommand {
 
         if (Conf.logLandUnclaims)
             Main.main.log(
-                    fme.getName() + " unclaimed everything for the faction: " + myFaction.getTag());
+                    fme.getName() + " unclaimed everything for the faction: " + myFaction.getTagPlain());
     }
 
 }

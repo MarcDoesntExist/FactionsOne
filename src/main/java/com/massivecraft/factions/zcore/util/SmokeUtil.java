@@ -1,7 +1,7 @@
 package com.massivecraft.factions.zcore.util;
 
-import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 
 import java.util.Collection;
 import java.util.Random;
@@ -41,7 +41,9 @@ public class SmokeUtil {
     public static void spawnSingle(Location location, int direction) {
         if (location == null)
             return;
-        location.getWorld().playEffect(location.clone(), Effect.SMOKE, direction);
+        // The legacy client-side smoke direction has no modern equivalent: the
+        // particle is spawned at the exact location instead.
+        location.getWorld().spawnParticle(Particle.SMOKE, location.clone(), 1, 0, 0, 0, 0);
     }
 
     public static void spawnSingle(Location location) {

@@ -7,7 +7,6 @@ import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.TerritoryAccess;
-import com.massivecraft.factions.zcore.util.TextUtil;
 
 
 /**
@@ -85,17 +84,17 @@ public class CmdAccess extends FCommand {
             if (targetFaction == null)
                 return;
             added = territory.toggleFaction(targetFaction);
-            target = "Faction \"" + targetFaction.getTag() + "\"";
+            target = "Faction \"" + targetFaction.getTagPlain() + "\"";
         }
 
         msg("<i>%s has been %s<i> the access list for this territory.", target,
-                TextUtil.parseColor(added ? "<lime>added to" : "<rose>removed from"));
+                p.txt.parse(added ? "<lime>added to" : "<rose>removed from"));
         showAccessList(territory, locFaction);
     }
 
     private void showAccessList(TerritoryAccess territory, Faction locFaction) {
-        msg("<i>Host faction %s has %s<i> in this territory.", locFaction.getTag(), TextUtil
-                .parseColor(territory.isHostFactionAllowed() ?
+        msg("<i>Host faction %s has %s<i> in this territory.", locFaction.getTagPlain(),
+                p.txt.parse(territory.isHostFactionAllowed() ?
                         "<lime>normal access" :
                         "<rose>restricted access"));
         String players = territory.fplayerList();

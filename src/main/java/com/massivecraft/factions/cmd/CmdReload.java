@@ -5,6 +5,7 @@ import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayers;
 import com.massivecraft.factions.Factions;
 import com.massivecraft.factions.struct.Permission;
+import com.massivecraft.factions.zcore.util.DiscUtil;
 
 /**
  * @author drtshock
@@ -34,6 +35,8 @@ public class CmdReload extends FCommand {
     @Override
     public void perform() {
         long timeInitStart = System.currentTimeMillis();
+        // A save may still be queued: make sure the reload reads what was just saved.
+        DiscUtil.flushAsync(5000L);
 
         String file = this.argAsString(0, "all").toLowerCase();
         String fileName;

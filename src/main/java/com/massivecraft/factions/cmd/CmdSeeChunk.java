@@ -29,6 +29,12 @@ public class CmdSeeChunk extends FCommand {
         senderMustBeLeader = false;
     }
 
+    /**
+     * How far above and below the player the corner pillars are drawn. Only the
+     * part of the column the player can actually see is worth sending.
+     */
+    private static final int VERTICAL_RANGE = 32;
+
     @Override
     public void perform() {
         Location meLoc = me.getLocation();
@@ -37,29 +43,37 @@ public class CmdSeeChunk extends FCommand {
         int chunkX = meLoc.getBlockX() >> 4;
         int chunkZ = meLoc.getBlockZ() >> 4;
 
+        World world = me.getWorld();
+        int centerY = meLoc.getBlockY();
+        int minY = Math.max(world.getMinHeight(), centerY - VERTICAL_RANGE);
+        int maxY = Math.min(world.getMaxHeight() - 1, centerY + VERTICAL_RANGE);
+
         // Get the pillars for that chunk
         int blockX;
         int blockZ;
 
         blockX = chunkX * 16;
         blockZ = chunkZ * 16;
-        showPillar(me, me.getWorld(), blockX, blockZ);
+        showPillar(me, world, blockX, blockZ, minY, maxY);
 
         blockX = chunkX * 16 + 15;
         blockZ = chunkZ * 16;
-        showPillar(me, me.getWorld(), blockX, blockZ);
+        showPillar(me, world, blockX, blockZ, minY, maxY);
 
         blockX = chunkX * 16;
         blockZ = chunkZ * 16 + 15;
-        showPillar(me, me.getWorld(), blockX, blockZ);
+        showPillar(me, world, blockX, blockZ, minY, maxY);
 
         blockX = chunkX * 16 + 15;
         blockZ = chunkZ * 16 + 15;
-        showPillar(me, me.getWorld(), blockX, blockZ);
+        showPillar(me, world, blockX, blockZ, minY, maxY);
+
+        // One multi-block packet instead of one packet per block.
+        VisualizeUtil.flush(me);
     }
 
-    public void showPillar(Player player, World world, int blockX, int blockZ) {
-        for (int blockY = 0; blockY < world.getMaxHeight(); blockY++) {
+    public void showPillar(Player player, World world, int blockX, int blockZ, int minY, int maxY) {
+        for (int blockY = minY; blockY <= maxY; blockY++) {
             Location loc = new Location(world, blockX, blockY, blockZ);
             if (loc.getBlock().getType() != Material.AIR)
                 continue;

@@ -45,7 +45,7 @@ public class FactionRenameEvent extends Event implements Cancellable {
     }
 
     public String getOldFactionTag() {
-        return (faction.getTag());
+        return (faction.getTagPlain());
     }
 
     public String getFactionTag() {

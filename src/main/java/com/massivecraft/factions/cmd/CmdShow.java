@@ -7,6 +7,7 @@ import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
+import net.kyori.adventure.text.Component;
 import com.massivecraft.factions.zcore.util.TextUtil;
 
 import java.util.ArrayList;
@@ -99,26 +100,26 @@ public class CmdShow extends FCommand {
             }
         }
 
-        String sepparator = p.txt.parse("<i>") + ", ";
+        Component sepparator = Component.text(", ", p.txt.getTagStyle("i"));
 
         // List the relations to other factions
-        Map<Rel, List<String>> relationTags = faction.getFactionTagsPerRelation(fme, true);
+        Map<Rel, List<Component>> relationTags = faction.getFactionTagsPerRelation(fme, true);
 
         if (faction.getFlag(FFlag.PEACEFUL)) {
             sendMessage(p.txt.parse("<a>In Truce with:<i> *everyone*"));
         } else {
-            sendMessage(p.txt.parse("<a>In Truce with: ") + TextUtil
-                    .implode(relationTags.get(Rel.TRUCE), sepparator));
+            sendMessage(p.txt.parse("<a>In Truce with: ").append(TextUtil
+                    .implodeComponents(relationTags.get(Rel.TRUCE), sepparator)));
         }
 
-        sendMessage(p.txt.parse("<a>Allied to: ") + TextUtil
-                .implode(relationTags.get(Rel.ALLY), sepparator));
-        sendMessage(p.txt.parse("<a>Enemies: ") + TextUtil
-                .implode(relationTags.get(Rel.ENEMY), sepparator));
+        sendMessage(p.txt.parse("<a>Allied to: ").append(TextUtil
+                .implodeComponents(relationTags.get(Rel.ALLY), sepparator)));
+        sendMessage(p.txt.parse("<a>Enemies: ").append(TextUtil
+                .implodeComponents(relationTags.get(Rel.ENEMY), sepparator)));
 
         // List the members...
-        List<String> memberOnlineNames = new ArrayList<String>();
-        List<String> memberOfflineNames = new ArrayList<String>();
+        List<Component> memberOnlineNames = new ArrayList<Component>();
+        List<Component> memberOfflineNames = new ArrayList<Component>();
 
         for (FPlayer follower : admins) {
             if (follower.isOnlineAndVisibleTo(me)) {
@@ -152,9 +153,11 @@ public class CmdShow extends FCommand {
             }
         }
         sendMessage(
-                p.txt.parse("<a>Members online: ") + TextUtil.implode(memberOnlineNames, sepparator));
+                p.txt.parse("<a>Members online: ")
+                        .append(TextUtil.implodeComponents(memberOnlineNames, sepparator)));
         sendMessage(
-                p.txt.parse("<a>Members offline: ") + TextUtil.implode(memberOfflineNames, sepparator));
+                p.txt.parse("<a>Members offline: ")
+                        .append(TextUtil.implodeComponents(memberOfflineNames, sepparator)));
     }
 
 }

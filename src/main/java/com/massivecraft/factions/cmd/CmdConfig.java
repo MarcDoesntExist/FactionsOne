@@ -6,7 +6,7 @@ import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
-import org.bukkit.ChatColor;
+import com.massivecraft.factions.util.Color;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
@@ -147,11 +147,11 @@ public class CmdConfig extends FCommand {
                 success = "\"" + fieldName + "\" option set to \"" + value + "\".";
             }
 
-            // ChatColor
-            else if (target.getType() == ChatColor.class) {
-                ChatColor newColor = null;
+            // Color
+            else if (target.getType() == Color.class) {
+                Color newColor = null;
                 try {
-                    newColor = ChatColor.valueOf(value.toUpperCase());
+                    newColor = Color.valueOf(value.toUpperCase());
                 } catch (IllegalArgumentException ex) {
 
                 }

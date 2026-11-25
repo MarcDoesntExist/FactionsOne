@@ -5,7 +5,10 @@ import com.massivecraft.factions.iface.RelationParticipator;
 import com.massivecraft.factions.struct.TerritoryAccess;
 import com.massivecraft.factions.util.AsciiCompass;
 import com.massivecraft.factions.zcore.util.DiscUtil;
-import org.bukkit.ChatColor;
+import com.massivecraft.factions.util.Color;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 
@@ -164,12 +167,13 @@ public class Board {
      * north is in the direction of decreasing x
      * east is in the direction of decreasing z
      */
-    public static ArrayList<String> getMap(RelationParticipator observer, FLocation flocation,
-                                           double inDegrees) {
-        ArrayList<String> ret = new ArrayList<String>();
+    public static ArrayList<Component> getMap(RelationParticipator observer, FLocation flocation,
+                                              double inDegrees) {
+        ArrayList<Component> ret = new ArrayList<Component>();
         Faction factionLoc = getFactionAt(flocation);
-        ret.add(Main.main.txt
-                .titleize("(" + flocation.getCoordString() + ") " + factionLoc.getTag(observer)));
+        Component header = Component.text("(" + flocation.getCoordString() + ") ")
+                .append(factionLoc.getTag(observer));
+        ret.add(Main.main.txt.titleize(header));
 
         int halfWidth = Conf.mapWidth / 2;
         int halfHeight = Conf.mapHeight / 2;
@@ -183,6 +187,7 @@ public class Board {
 
         Map<Faction, Character> fList = new HashMap<Faction, Character>();
         int chrIdx = 0;
+        ArrayList<String> rows = new ArrayList<String>();
 
         // For each row
         for (int dz = 0; dz < height; dz++) {
@@ -190,14 +195,14 @@ public class Board {
             String row = "";
             for (int dx = 0; dx < width; dx++) {
                 if (dx == halfWidth && dz == halfHeight) {
-                    row += ChatColor.AQUA + "+";
+                    row += Color.AQUA + "+";
                     continue;
                 }
 
                 FLocation flocationHere = topLeft.getRelative(dx, dz);
                 Faction factionHere = getFactionAt(flocationHere);
                 if (factionHere.isNone()) {
-                    row += ChatColor.GRAY + "-";
+                    row += Color.GRAY + "-";
                 } else {
                     Character fchar = fList.get(factionHere);
                     if (fchar == null) {
@@ -211,29 +216,50 @@ public class Board {
                     row += factionHere.getColorTo(observer) + "" + fchar;
                 }
             }
-            ret.add(row);
+            rows.add(row);
         }
 
         // Get the compass
         ArrayList<String> asciiCompass =
-                AsciiCompass.getAsciiCompass(inDegrees, ChatColor.RED, Main.main.txt.parse("<a>"));
+                AsciiCompass.getAsciiCompass(inDegrees, Color.RED, Color.GOLD.toString());
 
-        // Add the compass
-        ret.set(1, asciiCompass.get(0) + ret.get(1).substring(3 * 3));
-        ret.set(2, asciiCompass.get(1) + ret.get(2).substring(3 * 3));
-        ret.set(3, asciiCompass.get(2) + ret.get(3).substring(3 * 3));
+        // Add the compass to the first map rows
+        rows.set(0, asciiCompass.get(0) + rows.get(0).substring(3 * 3));
+        rows.set(1, asciiCompass.get(1) + rows.get(1).substring(3 * 3));
+        rows.set(2, asciiCompass.get(2) + rows.get(2).substring(3 * 3));
 
-        String fRow = "";
-        for (Faction keyfaction : fList.keySet()) {
-            fRow += "" + keyfaction.getColorTo(observer) + fList.get(keyfaction) + ": " + keyfaction
-                    .getTag() + " ";
+        for (String row : rows) {
+            ret.add(Main.main.txt.parse(row));
         }
-        fRow = fRow.trim();
-        ret.add(fRow);
+
+        Component legend = Component.empty();
+        for (Faction keyfaction : fList.keySet()) {
+            legend = legend
+                    .append(Component.text(fList.get(keyfaction) + ": ",
+                            Style.style(keyfaction.getColorTo(observer).toTextColor())))
+                    .append(keyfaction.getTag(observer))
+                    .append(Component.text(" "));
+        }
+        ret.add(legend);
 
         return ret;
     }
 
+
+    /**
+     * One-line version of the map for the action bar: the row the player is
+     * standing on, prefixed by the chunk coordinates and the faction tag.
+     */
+    public static Component getActionBarMap(RelationParticipator observer, FLocation flocation) {
+        List<Component> map = getMap(observer, flocation, 0.0);
+        int centerRow = 1 + (Conf.mapHeight / 2);
+        Component row = centerRow < map.size() ? map.get(centerRow) : Component.empty();
+        return Component.text("(" + flocation.getCoordString() + ") ",
+                        Style.style(NamedTextColor.GRAY))
+                .append(getFactionAt(flocation).getTag(observer))
+                .append(Component.text(" "))
+                .append(row);
+    }
 
     // -------------------------------------------- //
     // Persistance
@@ -284,7 +310,8 @@ public class Board {
         //Factions.log("Saving board to disk");
 
         try {
-            DiscUtil.write(file, Main.main.gson.toJson(dumpAsSaveFormat()));
+            // Serialize now, write on the background save queue.
+            DiscUtil.writeAsync(file, Main.main.gson.toJson(dumpAsSaveFormat()));
         } catch (Exception e) {
             e.printStackTrace();
             Main.main.log("Failed to save the board to disk.");
@@ -299,7 +326,11 @@ public class Board {
 
         if (!file.exists()) {
             Main.main.log("No board to load from disk. Creating new file.");
-            save();
+            // First creation is synchronous so the file is there for the rest of startup.
+            if (!DiscUtil.writeCatch(file, Main.main.gson.toJson(dumpAsSaveFormat()))) {
+                Main.main.log("Failed to save the board to disk.");
+                return false;
+            }
             return true;
         }
 

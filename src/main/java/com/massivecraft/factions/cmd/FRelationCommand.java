@@ -49,7 +49,7 @@ public abstract class FRelationCommand extends FCommand {
         }
 
         if (myFaction.getRelationWish(them) == targetRelation) {
-            msg("<b>You already have that relation wish set with %s.", them.getTag());
+            msg("<b>You already have that relation wish set with %s.", them.getTagPlain());
             return;
         }
 
@@ -80,7 +80,7 @@ public abstract class FRelationCommand extends FCommand {
             them.msg("%s<i> wishes to be %s.", myFaction.describeTo(them, true),
                     targetRelation.getColor() + targetRelation.getDescFactionOne());
             them.msg("<i>Type <c>/" + Conf.baseCommandAliases.get(0) + " " + targetRelation + " "
-                    + myFaction.getTag() + "<i> to accept.");
+                    + myFaction.getTagPlain() + "<i> to accept.");
             myFaction.msg("%s<i> were informed that you wish to be %s<i>.",
                     them.describeTo(myFaction, true),
                     targetRelation.getColor() + targetRelation.getDescFactionOne());

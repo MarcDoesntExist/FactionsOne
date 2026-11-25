@@ -110,6 +110,17 @@ public class Persist {
         return DiscUtil.writeCatch(file, p.gson.toJson(instance));
     }
 
+    /**
+     * Serializes now (consistent snapshot) and writes the file in the background.
+     */
+    public void saveAsync(Object instance, File file) {
+        DiscUtil.writeAsync(file, p.gson.toJson(instance));
+    }
+
+    public void saveAsync(Object instance) {
+        saveAsync(instance, getFile(instance));
+    }
+
     // LOAD BY CLASS
 
     public <T> T load(Class<T> clazz) {

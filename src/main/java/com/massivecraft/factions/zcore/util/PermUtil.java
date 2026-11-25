@@ -29,7 +29,7 @@ public class PermUtil {
         this.setup();
     }
 
-    public String getForbiddenMessage(String perm) {
+    public net.kyori.adventure.text.Component getForbiddenMessage(String perm) {
         return p.txt.parse(Lang.permForbidden, getPermissionDescription(perm));
     }
 
@@ -37,7 +37,7 @@ public class PermUtil {
      * This method hooks into all permission plugins we are supporting
      */
     public final void setup() {
-        for (Permission permission : p.getDescription().getPermissions()) {
+        for (Permission permission : p.getPluginMeta().getPermissions()) {
             //main.log("\""+permission.getName()+"\" = \""+permission.getDescription()+"\"");
             this.permissionDescriptions.put(permission.getName(), permission.getDescription());
         }

@@ -8,7 +8,8 @@ import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.util.MiscUtil;
 import com.massivecraft.factions.zcore.persist.EntityCollection;
 import com.massivecraft.factions.zcore.util.TextUtil;
-import org.bukkit.ChatColor;
+import com.massivecraft.factions.util.Color;
+import net.kyori.adventure.text.Component;
 
 import java.io.File;
 import java.lang.reflect.Type;
@@ -38,8 +39,8 @@ public class Factions extends EntityCollection<Faction> {
                 new File(Main.main.getDataFolder(), "factions.json"), Main.main.gson);
     }
 
-    public static ArrayList<String> validateTag(String str) {
-        ArrayList<String> errors = new ArrayList<String>();
+    public static ArrayList<Component> validateTag(String str) {
+        ArrayList<Component> errors = new ArrayList<>();
 
         if (MiscUtil.getComparisonString(str).length() < Conf.factionTagLengthMin) {
             errors.add(Main.main.txt
@@ -79,7 +80,7 @@ public class Factions extends EntityCollection<Faction> {
         //----------------------------------------------//
         if (!this.exists("0")) {
             Faction faction = this.create("0");
-            faction.setTag(ChatColor.DARK_GREEN + "Wilderness");
+            faction.setTag(Color.DARK_GREEN + "Wilderness");
             faction.setDescription("");
             this.setFlagsForWilderness(faction);
         }
@@ -105,9 +106,9 @@ public class Factions extends EntityCollection<Faction> {
         Faction warZone = this.get("-2");
 
         // Remove troublesome " " from old pre-1.6.0 names
-        if (safeZone != null && safeZone.getTag().contains(" "))
+        if (safeZone != null && safeZone.getTagPlain().contains(" "))
             safeZone.setTag("SafeZone");
-        if (warZone != null && warZone.getTag().contains(" "))
+        if (warZone != null && warZone.getTagPlain().contains(" "))
             warZone.setTag("WarZone");
 
         // Set Flags if they are not set already.
@@ -251,7 +252,7 @@ public class Factions extends EntityCollection<Faction> {
 
         // TODO: Slow index building
         for (Faction faction : this.get()) {
-            tag2faction.put(ChatColor.stripColor(faction.getTag()), faction);
+            tag2faction.put(faction.getTagPlain(), faction);
         }
 
         String tag = TextUtil.getBestStartWithCI(tag2faction.keySet(), searchFor);

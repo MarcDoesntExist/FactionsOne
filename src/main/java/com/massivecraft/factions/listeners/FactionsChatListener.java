@@ -34,6 +34,7 @@ public class FactionsChatListener implements Listener {
 
     private static final LegacyComponentSerializer LEGACY =
             LegacyComponentSerializer.legacySection();
+    private static final Pattern FORMAT_PLACEHOLDER = Pattern.compile("%([0-9]+[$])?s");
 
     public Main main;
 
@@ -91,10 +92,10 @@ public class FactionsChatListener implements Listener {
             ret = fpfrom.getTitle();
         } else if (tag.equals("tag")) {
             if (fpfrom.hasFaction()) {
-                ret = fpfrom.getFaction().getTag();
+                ret = fpfrom.getFaction().getTagPlain();
             }
         } else if (tag.startsWith("tagforce") && fpfrom.hasFaction()) {
-            ret = fpfrom.getFaction().getTag();
+            ret = fpfrom.getFaction().getTagPlain();
         }
 
         if (ret == null)
@@ -163,16 +164,40 @@ public class FactionsChatListener implements Listener {
             }
         }
 
-        private static String formatMessage(String format, String displayName, String message) {
-            try {
-                return String.format(format, displayName, message);
-            } catch (RuntimeException ignored) {
-                return displayName + ": " + message;
-            }
-        }
-
         private static Component deserialize(String legacy) {
             return LEGACY.deserialize(legacy);
+        }
+
+        /**
+         * Builds the configured layout as components. The legacy serializer only parses the
+         * configured format string; display name and message are already components.
+         * Supports both %s and positional %1$s/%2$s placeholders.
+         */
+        private static Component renderFormat(String format, Component displayName,
+                                               Component message) {
+            Matcher matcher = FORMAT_PLACEHOLDER.matcher(format);
+            Component ret = Component.empty();
+            int last = 0;
+            int next = 0;
+
+            while (matcher.find()) {
+                ret = ret.append(deserialize(format.substring(last, matcher.start())));
+                int arg;
+                if (matcher.group(1) != null) {
+                    String index = matcher.group(1);
+                    arg = Integer.parseInt(index.substring(0, index.length() - 1)) - 1;
+                } else {
+                    arg = next++;
+                }
+                if (arg == 0) {
+                    ret = ret.append(displayName);
+                } else if (arg == 1) {
+                    ret = ret.append(message);
+                }
+                last = matcher.end();
+            }
+
+            return ret.append(deserialize(format.substring(last)));
         }
 
         @Override
@@ -196,9 +221,7 @@ public class FactionsChatListener implements Listener {
                 return prefix.append(previous.render(source, sourceDisplayName, message, viewer));
             }
 
-            String displayName = LEGACY.serialize(sourceDisplayName);
-            String body = LEGACY.serialize(message);
-            return deserialize(formatMessage(resolved, displayName, body));
+            return renderFormat(resolved, sourceDisplayName, message);
         }
     }
 }

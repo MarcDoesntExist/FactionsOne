@@ -64,7 +64,7 @@ public class CmdUnclaim extends FCommand {
 
         if (Conf.logLandUnclaims)
             Main.main.log(fme.getName() + " unclaimed land at (" + flocation.getCoordString()
-                    + ") from the faction: " + otherFaction.getTag());
+                    + ") from the faction: " + otherFaction.getTagPlain());
     }
 
 }

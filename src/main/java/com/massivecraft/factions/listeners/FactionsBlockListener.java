@@ -124,8 +124,8 @@ public class FactionsBlockListener implements Listener {
         Faction pistonFaction = Board.getFactionAt(new FLocation(event.getBlock()));
 
         // target end-of-the-line empty (air) block which is being pushed into, including if piston itself would extend into air
-        Block targetBlock =
-                event.getBlock().getRelative(event.getDirection(), event.getLength() + 1);
+        Block targetBlock = event.getBlock()
+                .getRelative(event.getDirection(), event.getBlocks().size() + 1);
 
         // members of faction might not have build rights in their own territory, but pistons should still work regardless; so, address that corner case
         Faction targetFaction = Board.getFactionAt(new FLocation(targetBlock));
@@ -151,7 +151,7 @@ public class FactionsBlockListener implements Listener {
         if (event.isCancelled() || !event.isSticky() || !Conf.pistonProtectionThroughDenyBuild)
             return;
 
-        Location targetLoc = event.getRetractLocation();
+        Location targetLoc = event.getBlock().getRelative(event.getDirection(), 2).getLocation();
 
         // if potentially retracted block is just air/water/lava, no worries
         if (targetLoc.getBlock().isEmpty() || targetLoc.getBlock().isLiquid())

@@ -150,12 +150,8 @@ public class FactionsEntityListener implements Listener {
         if (event.isCancelled())
             return;
 
-        EntityDamageByEntityEvent sub =
-                new EntityDamageByEntityEvent(event.getCombuster(), event.getEntity(),
-                        EntityDamageEvent.DamageCause.FIRE, 0);
-        if (!this.canDamagerHurtDamagee(sub, false))
+        if (!this.canDamagerHurtDamagee(event.getCombuster(), event.getEntity(), 0, false))
             event.setCancelled(true);
-        sub = null;
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
@@ -181,7 +177,7 @@ public class FactionsEntityListener implements Listener {
         if (thrower instanceof Player) {
             Player player = (Player) thrower;
             FPlayer fPlayer = FPlayers.i.get(player);
-            if (badjuju && fPlayer.getFaction().isPeaceful()) {
+            if (badjuju && fPlayer.getFaction().getFlag(FFlag.PEACEFUL)) {
                 event.setCancelled(true);
                 return;
             }
@@ -190,12 +186,9 @@ public class FactionsEntityListener implements Listener {
         Iterator<LivingEntity> iter = event.getAffectedEntities().iterator();
         while (iter.hasNext()) {
             LivingEntity target = iter.next();
-            EntityDamageByEntityEvent sub = new EntityDamageByEntityEvent((Entity) thrower, target,
-                    EntityDamageEvent.DamageCause.CUSTOM, 0);
-            if (!this.canDamagerHurtDamagee(sub, true))
+            if (!this.canDamagerHurtDamagee((Entity) thrower, target, 0, true))
                 event.setIntensity(target,
                         0.0);  // affected entity list doesn't accept modification (iter.remove() is a no-go), but this works
-            sub = null;
         }
     }
 
@@ -204,10 +197,11 @@ public class FactionsEntityListener implements Listener {
     }
 
     public boolean canDamagerHurtDamagee(EntityDamageByEntityEvent sub, boolean notify) {
-        Entity damager = sub.getDamager();
-        Entity damagee = sub.getEntity();
-        double damage = sub.getDamage();
+        return canDamagerHurtDamagee(sub.getDamager(), sub.getEntity(), sub.getDamage(), notify);
+    }
 
+    public boolean canDamagerHurtDamagee(Entity damager, Entity damagee, double damage,
+                                         boolean notify) {
         if (!(damagee instanceof Player))
             return true;
 

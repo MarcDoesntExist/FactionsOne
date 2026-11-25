@@ -6,9 +6,11 @@ import com.google.gson.reflect.TypeToken;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.zcore.persist.EM;
 import com.massivecraft.factions.zcore.persist.SaveTask;
+import com.massivecraft.factions.zcore.util.DiscUtil;
 import com.massivecraft.factions.zcore.util.PermUtil;
 import com.massivecraft.factions.zcore.util.Persist;
 import com.massivecraft.factions.zcore.util.TextUtil;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -101,6 +103,9 @@ public abstract class MPlugin extends JavaPlugin {
         // only save data if plugin actually loaded successfully
         if (loadSuccessful)
             EM.saveAllToDisc();
+        // Writes run on a background queue: wait for them and stop the worker before
+        // the class loader goes away. A later save starts a fresh worker.
+        DiscUtil.shutdownAsync(15000L);
         log("Disabled");
     }
 
@@ -149,6 +154,7 @@ public abstract class MPlugin extends JavaPlugin {
 
         for (Entry<String, String> rawTag : this.rawTags.entrySet()) {
             this.txt.tags.put(rawTag.getKey(), TextUtil.parseColor(rawTag.getValue()));
+            this.txt.tagStyles.put(rawTag.getKey(), TextUtil.styleFromConfig(rawTag.getValue()));
         }
     }
 
@@ -179,6 +185,8 @@ public abstract class MPlugin extends JavaPlugin {
     }
 
     public void log(Level level, Object msg) {
-        Bukkit.getLogger().log(level, "[" + this.getDescription().getFullName() + "] " + msg);
+        String text = msg instanceof Component ? TextUtil.plain((Component) msg) : String.valueOf(msg);
+        Bukkit.getLogger().log(level, "[" + this.getPluginMeta().getName() + " v"
+                + this.getPluginMeta().getVersion() + "] " + text);
     }
 }

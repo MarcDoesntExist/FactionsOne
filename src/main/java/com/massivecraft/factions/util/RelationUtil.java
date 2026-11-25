@@ -7,7 +7,7 @@ import com.massivecraft.factions.iface.RelationParticipator;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.zcore.util.TextUtil;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
 
 /**
  * @author drtshock
@@ -17,35 +17,33 @@ import org.bukkit.ChatColor;
  * @author Daniel Saukel
  */
 public class RelationUtil {
-    public static String describeThatToMe(RelationParticipator that, RelationParticipator me,
-                                          boolean ucfirst) {
-        String ret = "";
-
+    public static Component describeThatToMe(RelationParticipator that, RelationParticipator me,
+                                             boolean ucfirst) {
         if (that == null) {
-            return "A server admin";
+            return Component.text("A server admin");
         }
 
         Faction thatFaction = getFaction(that);
         if (thatFaction == null)
-            return "ERROR"; // ERROR
+            return Component.text("ERROR"); // ERROR
 
         Faction myFaction = getFaction(me);
-        //		if (myFaction == null) return thatFaction.getTag(); // no relation, but can show basic name or tag
+        String ret = "";
 
         if (that instanceof Faction) {
             if (me instanceof FPlayer && myFaction == thatFaction) {
                 ret = "your faction";
             } else {
-                ret = thatFaction.getTag();
+                ret = thatFaction.getTagPlain();
             }
         } else if (that instanceof FPlayer) {
             FPlayer fplayerthat = (FPlayer) that;
             if (that == me) {
                 ret = "you";
             } else if (thatFaction == myFaction) {
-                ret = fplayerthat.getNameAndTitle();
+                ret = TextUtil.plain(fplayerthat.getNameAndTitle());
             } else {
-                ret = fplayerthat.getNameAndTag();
+                ret = TextUtil.plain(fplayerthat.getNameAndTag());
             }
         }
 
@@ -53,10 +51,10 @@ public class RelationUtil {
             ret = TextUtil.upperCaseFirst(ret);
         }
 
-        return "" + getColorOfThatToMe(that, me) + ret;
+        return Component.text(ret).colorIfAbsent(getColorOfThatToMe(that, me).toTextColor());
     }
 
-    public static String describeThatToMe(RelationParticipator that, RelationParticipator me) {
+    public static Component describeThatToMe(RelationParticipator that, RelationParticipator me) {
         return describeThatToMe(that, me, false);
     }
 
@@ -113,7 +111,7 @@ public class RelationUtil {
         return null;
     }
 
-    public static ChatColor getColorOfThatToMe(RelationParticipator that, RelationParticipator me) {
+    public static Color getColorOfThatToMe(RelationParticipator that, RelationParticipator me) {
         Faction thatFaction = getFaction(that);
         if (thatFaction != null && thatFaction != getFaction(me)) {
             if (thatFaction.getFlag(FFlag.FRIENDLYFIRE) == true) {

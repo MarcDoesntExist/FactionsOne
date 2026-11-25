@@ -50,7 +50,7 @@ public class LandUnclaimEvent extends Event implements Cancellable {
     }
 
     public String getFactionTag() {
-        return faction.getTag();
+        return faction.getTagPlain();
     }
 
     public FPlayer getFPlayer() {

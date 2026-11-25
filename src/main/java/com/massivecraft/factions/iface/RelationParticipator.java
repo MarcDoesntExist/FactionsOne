@@ -1,7 +1,8 @@
 package com.massivecraft.factions.iface;
 
 import com.massivecraft.factions.struct.Rel;
-import org.bukkit.ChatColor;
+import com.massivecraft.factions.util.Color;
+import net.kyori.adventure.text.Component;
 
 /**
  * @author drtshock
@@ -11,13 +12,13 @@ import org.bukkit.ChatColor;
  * @author Daniel Saukel
  */
 public interface RelationParticipator {
-    String describeTo(RelationParticipator observer);
+    Component describeTo(RelationParticipator observer);
 
-    String describeTo(RelationParticipator observer, boolean ucfirst);
+    Component describeTo(RelationParticipator observer, boolean ucfirst);
 
     Rel getRelationTo(RelationParticipator observer);
 
     Rel getRelationTo(RelationParticipator observer, boolean ignorePeaceful);
 
-    ChatColor getColorTo(RelationParticipator observer);
+    Color getColorTo(RelationParticipator observer);
 }
