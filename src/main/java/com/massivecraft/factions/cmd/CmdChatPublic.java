@@ -34,6 +34,7 @@ public final class CmdChatPublic extends FCommand {
             msg(Lang.chatChannelSet, ChatChannel.PUBLIC.name().toLowerCase(Locale.ROOT));
             return;
         }
+        this.fme.setChatChannel(ChatChannel.PUBLIC);
         this.fme.getPlayer().chat(message);
     }
 }

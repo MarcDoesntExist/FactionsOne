@@ -2,6 +2,7 @@ package com.massivecraft.factions.listeners;
 
 import com.massivecraft.factions.ChatChannel;
 import com.massivecraft.factions.ChatChannelResolver;
+import com.massivecraft.factions.ChatChannelService;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.FPlayers;
@@ -13,6 +14,8 @@ import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import com.massivecraft.factions.Faction;
 import org.bukkit.event.EventHandler;
@@ -162,6 +165,16 @@ public class FactionsChatListener implements Listener {
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerChat(AsyncChatEvent event) {
+        FPlayer sender = FPlayers.i.get(event.getPlayer());
+        ChatChannel channel = sender.getChatChannel();
+        if (channel != ChatChannel.PUBLIC) {
+            event.setCancelled(true);
+            String message = PlainTextComponentSerializer.plainText().serialize(event.message());
+            Bukkit.getScheduler().runTask(this.main,
+                    () -> ChatChannelService.send(sender, channel, message));
+            return;
+        }
+
         // With no full format there is no Factions format string to parse. Leave the event alone
         // so another chat plugin can own the layout.
         if (!Conf.chatSetFormat)
