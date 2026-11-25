@@ -33,6 +33,9 @@ the project uses semantic versioning.
   while keys for pending/ambiguous claims and unfinished refunds are protected.
   Delivered claims and fully refunded expired claims are dropped; pending,
   ambiguous and unrefunded claims are retained.
+- Bank journal retention (`bankJournalRetentionDays`, default 30): terminal
+  entries are compacted atomically with rotated backups at enable and from the
+  compensation task. Pending movements and pending compensations are kept.
 - `BankService` now journals credits, debits, transfers, balance sets and
   universe movements; account locking was extracted to `AccountLocks`.
 - Headless coverage for journal replay, compensation retry, idempotent claims,
