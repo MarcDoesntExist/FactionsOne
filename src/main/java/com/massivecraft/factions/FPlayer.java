@@ -10,6 +10,7 @@ import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.util.RelationUtil;
+import com.massivecraft.factions.zcore.Lang;
 import com.massivecraft.factions.zcore.persist.PlayerEntity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.Style;
@@ -368,7 +369,11 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
     }
 
     public double getPowerMax() {
-        return Conf.powerPlayerMax + this.powerBoost;
+        FeatureService service = Main.main == null ? null : Main.main.featureService;
+        Faction faction = this.getFaction();
+        double base = service == null || faction == null
+                ? Conf.powerPlayerMax : service.powerMax(faction);
+        return base + this.powerBoost;
     }
 
     public double getPowerMin() {
@@ -583,9 +588,9 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
                             Conf.claimsRequireMinFactionMembers);
         } else if (ownedLand >= forFaction.getPowerRounded()) {
             error = Main.main.txt.parse("<b>You can't claim more land! You need more power!");
-        } else if (Conf.claimedLandsMax != 0 && ownedLand >= Conf.claimedLandsMax && !forFaction
-                .getFlag(FFlag.INFPOWER)) {
-            error = Main.main.txt.parse("<b>Limit reached. You can't claim more land!");
+        } else if (claimLimit(forFaction) != 0 && ownedLand >= claimLimit(forFaction)
+                && !forFaction.getFlag(FFlag.INFPOWER)) {
+            error = Main.main.txt.parse(Lang.claimLimit);
         } else if (!Conf.claimingFromOthersAllowed && currentFaction.isNormal()) {
             error = Main.main.txt.parse("<b>You may not claim land from others.");
         } else if (currentFaction.getRelationTo(forFaction).isAtLeast(Rel.TRUCE) && !currentFaction
@@ -617,6 +622,11 @@ public class FPlayer extends PlayerEntity implements EconomyParticipator {
             msg(error);
         }
         return error == null;
+    }
+
+    private int claimLimit(Faction faction) {
+        FeatureService service = Main.main == null ? null : Main.main.featureService;
+        return service == null ? Conf.claimedLandsMax : service.claimLimit(faction);
     }
 
     public boolean attemptClaim(Faction forFaction, Location location, boolean notifyFailure) {

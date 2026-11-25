@@ -2,10 +2,13 @@ package com.massivecraft.factions.cmd;
 
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Factions;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.event.FactionRelationEvent;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
+import com.massivecraft.factions.zcore.Lang;
 import org.bukkit.Bukkit;
 
 /**
@@ -53,6 +56,15 @@ public abstract class FRelationCommand extends FCommand {
             return;
         }
 
+        if (targetRelation == Rel.ALLY && myFaction.getRelationTo(them, true) != Rel.ALLY) {
+            int limit = Main.main.featureService == null
+                    ? Conf.factionAllyLimit : Main.main.featureService.allyLimit(myFaction);
+            if (limit > 0 && countAllies(myFaction) >= limit) {
+                msg(Lang.allyLimit, limit);
+                return;
+            }
+        }
+
         // if economy is enabled, they're not on the bypass list, and this command has a cost set, make 'em pay
         if (!payForCommand(targetRelation.getRelationCost(), "to change a relation wish",
                 "for changing a relation wish"))
@@ -98,5 +110,15 @@ public abstract class FRelationCommand extends FCommand {
             them.msg("<i>This will have no effect while their faction is peaceful.");
             myFaction.msg("<i>This will have no effect while your faction is peaceful.");
         }
+    }
+
+    private int countAllies(Faction faction) {
+        int count = 0;
+        for (Faction other : Factions.i.get()) {
+            if (other != faction && faction.getRelationTo(other, true) == Rel.ALLY) {
+                count++;
+            }
+        }
+        return count;
     }
 }

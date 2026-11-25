@@ -36,31 +36,47 @@ public final class FeatureService {
         return this.config;
     }
 
-    public int warpLimit(Faction faction) {
-        int limit = Math.max(0, Conf.warpMax);
-        for (FeatureConfig.UpgradeDefinition definition : this.config.upgrades()) {
-            if (definition.effect() == FeatureConfig.UpgradeEffect.WARP_LIMIT) {
-                limit += faction.getUpgradeLevel(definition.id()) * definition.amountPerLevel();
-            }
+    private int bonus(Faction faction, FeatureConfig.UpgradeEffect effect) {
+        if (faction == null) {
+            return 0;
         }
-        return limit;
+        return UpgradeMath.bonus(this.config.upgrades(), effect, faction::getUpgradeLevel);
+    }
+
+    public int warpLimit(Faction faction) {
+        return UpgradeMath.additive(Conf.warpMax,
+                bonus(faction, FeatureConfig.UpgradeEffect.WARP_LIMIT));
     }
 
     public int tntLimit(Faction faction) {
-        int limit = Math.max(0, Conf.tntBankMax);
-        for (FeatureConfig.UpgradeDefinition definition : this.config.upgrades()) {
-            if (definition.effect() == FeatureConfig.UpgradeEffect.TNT_LIMIT) {
-                limit += faction.getUpgradeLevel(definition.id()) * definition.amountPerLevel();
-            }
-        }
-        return limit;
+        return UpgradeMath.additive(Conf.tntBankMax,
+                bonus(faction, FeatureConfig.UpgradeEffect.TNT_LIMIT));
+    }
+
+    public int memberLimit(Faction faction) {
+        return UpgradeMath.limit(Conf.factionMemberLimit,
+                bonus(faction, FeatureConfig.UpgradeEffect.MEMBER_LIMIT), 0);
+    }
+
+    public int allyLimit(Faction faction) {
+        return UpgradeMath.limit(Conf.factionAllyLimit,
+                bonus(faction, FeatureConfig.UpgradeEffect.ALLY_LIMIT), 0);
+    }
+
+    public int claimLimit(Faction faction) {
+        return UpgradeMath.limit(Conf.claimedLandsMax,
+                bonus(faction, FeatureConfig.UpgradeEffect.CLAIM_LIMIT),
+                Conf.claimedLandsMaxHardCap);
+    }
+
+    public double powerMax(Faction faction) {
+        return UpgradeMath.power(Conf.powerPlayerMax,
+                bonus(faction, FeatureConfig.UpgradeEffect.POWER_MAX));
     }
 
     public int upgradeCost(Faction faction, FeatureConfig.UpgradeDefinition definition) {
         int level = faction.getUpgradeLevel(definition.id());
-        double cost = definition.baseCost()
-                * Math.pow(definition.costMultiplier(), level);
-        return (int) Math.min(Integer.MAX_VALUE, Math.ceil(cost));
+        return UpgradeMath.cost(definition.baseCost(), definition.costMultiplier(), level);
     }
 
     public Result buyUpgrade(FPlayer fplayer, Faction faction, String id) {

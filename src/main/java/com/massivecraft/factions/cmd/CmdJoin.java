@@ -3,6 +3,7 @@ package com.massivecraft.factions.cmd;
 import com.massivecraft.factions.*;
 import com.massivecraft.factions.event.FPlayerJoinEvent;
 import com.massivecraft.factions.struct.Permission;
+import com.massivecraft.factions.zcore.Lang;
 import org.bukkit.Bukkit;
 
 /**
@@ -57,10 +58,11 @@ public class CmdJoin extends FCommand {
             return;
         }
 
-        if (Conf.factionMemberLimit > 0
-                && faction.getFPlayers().size() >= Conf.factionMemberLimit) {
-            msg(" <b>!<white> The faction %s is at the limit of %d members, so %s cannot currently join.",
-                    faction.getTag(fme), Conf.factionMemberLimit, fplayer.describeTo(fme, false));
+        int memberLimit = Main.main.featureService == null
+                ? Conf.factionMemberLimit : Main.main.featureService.memberLimit(faction);
+        if (memberLimit > 0 && faction.getFPlayers().size() >= memberLimit) {
+            msg(Lang.memberLimit, faction.getTag(fme), memberLimit,
+                    fplayer.describeTo(fme, false));
             return;
         }
 

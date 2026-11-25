@@ -29,6 +29,15 @@ public class Lang {
     public static final String upgradeLine = "<aqua>%s <gray>level %s/%s, cost %s";
     public static final String upgradeNotFound = "<b>That upgrade does not exist.";
     public static final String upgradeBought = "<g>Bought upgrade <h>%s<g>.";
+    public static final String upgradeMenuTitle = "<gold>Upgrades";
+    public static final String upgradeMenuName = "<gold>%s";
+    public static final String upgradeMenuLevel = "<gray>Level: <white>%s/%s";
+    public static final String upgradeMenuCost = "<gray>Cost: <white>%s points";
+    public static final String upgradeMenuClick = "<yellow>Click to buy";
+    public static final String upgradeMenuBought = "<g>Upgrade bought.";
+    public static final String memberLimit = "<b>!<white> The faction %s is at the limit of %d members, so %s cannot currently join.";
+    public static final String allyLimit = "<b>Your faction has reached its ally limit of %d.";
+    public static final String claimLimit = "<b>Limit reached. You can't claim more land!";
     public static final String tntUsage = "<i>Use /f tnt deposit|withdraw|balance <amount>.";
     public static final String chatUsage = "<i>Use /f chat ally <message> to talk with your allies.";
     public static final String chatNoAllies = "<i>No allies are online.";

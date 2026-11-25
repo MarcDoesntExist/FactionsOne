@@ -8,6 +8,10 @@ the project uses semantic versioning.
 
 ### Added
 
+- Upgrade effects for faction member and ally limits, claim limits and the
+  per-player power cap. `factionAllyLimit` and `claimedLandsMaxHardCap`
+  default to 0 (no limit); old `upgrades.yml` files with only `WARP_LIMIT`
+  and `TNT_LIMIT` keep loading unchanged.
 - Faction audit log: `/f logs [all|bank] [page]` filters bank and tax
   movements, the GUI lists the newest entry first, and role changes are
   recorded. Faction creation/disband and home/description changes are not

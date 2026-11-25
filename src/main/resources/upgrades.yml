@@ -1,6 +1,10 @@
 # Faction upgrades bought with faction points.
-# effect: WARP_LIMIT or TNT_LIMIT
-# The cost is base-cost * (cost-multiplier ^ current-level), rounded up.
+# effect: WARP_LIMIT, TNT_LIMIT, MEMBER_LIMIT, ALLY_LIMIT, CLAIM_LIMIT or POWER_MAX.
+# MEMBER_LIMIT, ALLY_LIMIT and CLAIM_LIMIT only apply when the matching base
+# limit (factionMemberLimit, factionAllyLimit, claimedLandsMax) is greater than
+# zero; zero means no limit. POWER_MAX adds whole points per level to
+# powerPlayerMax. The cost is base-cost * (cost-multiplier ^ current-level),
+# rounded up.
 upgrades:
   warps:
     name: "Warp slots"

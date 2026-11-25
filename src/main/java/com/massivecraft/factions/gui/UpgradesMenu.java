@@ -7,6 +7,7 @@ import com.massivecraft.factions.FeatureConfig;
 import com.massivecraft.factions.FeatureService;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.FPerm;
+import com.massivecraft.factions.zcore.Lang;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -30,7 +31,7 @@ public final class UpgradesMenu extends PagedMenu {
     }
 
     private UpgradesMenu(Player player, GuiConfig config, Faction faction) {
-        super(player, config, config.title("menu.upgrades.title", "<gold>Upgrades"),
+        super(player, config, config.title("menu.upgrades.title", Lang.upgradeMenuTitle),
                 config.rows("menu.upgrades.rows", 6),
                 clicker -> {
                     FPlayer fplayer = FPlayers.i.get(clicker);
@@ -58,12 +59,12 @@ public final class UpgradesMenu extends PagedMenu {
             int cost = service.upgradeCost(this.faction, definition);
             ItemMeta meta = icon.getItemMeta();
             if (meta != null) {
-                meta.displayName(Main.main.txt.parse("<gold>%s", definition.name()));
+                meta.displayName(Main.main.txt.parse(Lang.upgradeMenuName, definition.name()));
                 List<Component> lore = new ArrayList<Component>();
-                lore.add(Main.main.txt.parse("<gray>Level: <white>%s/%s",
+                lore.add(Main.main.txt.parse(Lang.upgradeMenuLevel,
                         level, definition.maxLevel()));
-                lore.add(Main.main.txt.parse("<gray>Cost: <white>%s points", cost));
-                lore.add(Main.main.txt.parse("<yellow>Click to buy"));
+                lore.add(Main.main.txt.parse(Lang.upgradeMenuCost, cost));
+                lore.add(Main.main.txt.parse(Lang.upgradeMenuClick));
                 meta.lore(lore);
                 icon.setItemMeta(meta);
             }
@@ -72,7 +73,7 @@ public final class UpgradesMenu extends PagedMenu {
                 FeatureService.Result result = service.buyUpgrade(fplayer, this.faction,
                         definition.id());
                 if (result == FeatureService.Result.SUCCESS) {
-                    clicker.sendMessage(Main.main.txt.parse("<g>Upgrade bought."));
+                    clicker.sendMessage(Main.main.txt.parse(Lang.upgradeMenuBought));
                     new UpgradesMenu(clicker, this.config).open();
                 } else {
                     clicker.sendMessage(Main.main.txt.parse(FeatureService.message(result)));

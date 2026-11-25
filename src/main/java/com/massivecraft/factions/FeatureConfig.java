@@ -20,7 +20,11 @@ public final class FeatureConfig {
 
     public enum UpgradeEffect {
         WARP_LIMIT,
-        TNT_LIMIT
+        TNT_LIMIT,
+        MEMBER_LIMIT,
+        ALLY_LIMIT,
+        CLAIM_LIMIT,
+        POWER_MAX
     }
 
     public record UpgradeDefinition(String id, String name, int maxLevel, double baseCost,
@@ -72,7 +76,8 @@ public final class FeatureConfig {
                             effect,
                             Math.max(0, section.getInt("amount-per-level", 0))));
                 } catch (IllegalArgumentException exception) {
-                    this.plugin.getLogger().warning("Invalid upgrade definition: " + id);
+                    this.plugin.getLogger().warning("Invalid upgrade definition " + id + ": "
+                            + exception.getMessage());
                 }
             }
         }

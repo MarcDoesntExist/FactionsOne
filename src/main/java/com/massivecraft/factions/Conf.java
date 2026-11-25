@@ -77,6 +77,8 @@ public class Conf {
     public static boolean newFactionsDefaultOpen = false;
     // when faction membership hits this limit, players will no longer be able to join using /f join; default is 0, no limit
     public static int factionMemberLimit = 0;
+    // maximum number of allied factions; 0 means no limit
+    public static int factionAllyLimit = 0;
     // what faction ID to start new players in when they first join the server; default is 0, "no faction"
     public static String newPlayerStartingFactionID = "0";
     // Disallow joining/leaving/kicking while power is negative
@@ -145,6 +147,8 @@ public class Conf {
     public static boolean claimsCanBeUnconnectedIfOwnedByOtherFaction = true;
     public static int claimsRequireMinFactionMembers = 1;
     public static int claimedLandsMax = 0;
+    // absolute cap after claim upgrades; 0 means no hard cap
+    public static int claimedLandsMaxHardCap = 0;
     // if someone is doing a radius claim and the process fails to claim land this many times in a row, it will exit
     public static int radiusClaimFailureLimit = 9;
     public static boolean protectOfflineFactionsFromExplosions = false;
