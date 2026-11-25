@@ -124,6 +124,11 @@ the project uses semantic versioning.
 
 ### Fixed
 
+- Corrupt `players.json`, `factions.json` or `board.json` is moved to a
+  `*_bad` copy and FactionsOne disables itself instead of saving empty state
+  over the original data.
+- WorldGuard chunk checks use the inclusive maximum Y and document that any
+  overlapping region blocks a claim while PvP flags keep WorldGuard priority.
 - An interrupted mailbox refund is no longer treated as completed. When the
   refund key was claimed but the source credit is unconfirmed, the claim becomes
   `REFUND_UNKNOWN` instead of `refunded`; the periodic expiry run leaves it

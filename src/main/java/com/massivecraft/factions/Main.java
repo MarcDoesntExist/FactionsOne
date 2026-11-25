@@ -148,11 +148,22 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
 
         // Load Conf from disk
         Conf.load();
-        FPlayers.i.loadFromDisc();
-        Factions.i.loadFromDisc();
+        boolean playersLoaded = FPlayers.i.loadFromDisc();
+        boolean factionsLoaded = Factions.i.loadFromDisc();
+        if (!playersLoaded || !factionsLoaded) {
+            getLogger().severe("Core player or faction data could not be read; "
+                    + "disabling FactionsOne instead of overwriting it with empty state.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
         Conf.migrateColeaderPermissions();
         Conf.migrateExtendedPermissions();
-        Board.load();
+        if (!Board.load()) {
+            getLogger().severe("Core board data could not be read; "
+                    + "disabling FactionsOne instead of overwriting it with empty state.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
         this.guiConfig = new GuiConfig(this);
         this.menuManager = new MenuManager(this, this.guiConfig);

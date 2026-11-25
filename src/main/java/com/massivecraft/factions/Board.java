@@ -362,7 +362,12 @@ public class Board {
             loadFromSaveFormat(worldCoordIds);
         } catch (Exception e) {
             e.printStackTrace();
-            Main.main.log("Failed to load the board from disk.");
+            File backup = new File(file.getPath() + "_bad");
+            if (backup.exists()) {
+                backup.delete();
+            }
+            file.renameTo(backup);
+            Main.main.log("Failed to load the board from disk; moved it to " + backup + ".");
             return false;
         }
 

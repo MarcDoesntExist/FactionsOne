@@ -244,7 +244,12 @@ public abstract class EntityCollection<E extends Entity> {
 
         Type type = this.getMapType();
         if (type.toString().contains("FPlayer")) {
-            Map<String, FPlayer> data = this.gson.fromJson(content, type);
+            Map<String, FPlayer> data;
+            try {
+                data = this.gson.fromJson(content, type);
+            } catch (Exception ex) {
+                return this.handleCorrupt(ex);
+            }
             if (data == null) {
                 return new HashMap<>();
             }
@@ -280,18 +285,22 @@ public abstract class EntityCollection<E extends Entity> {
         try {
             return this.gson.fromJson(content, type);
         } catch (Exception ex) {
-            Bukkit.getLogger().log(Level.WARNING,
-                    "JSON error encountered loading \"" + file + "\": " + ex.getLocalizedMessage());
-
-            // backup bad file, so user can attempt to recover something from it
-            File backup = new File(file.getPath() + "_bad");
-            if (backup.exists())
-                backup.delete();
-            Bukkit.getLogger().log(Level.WARNING, "Backing up copy of bad file to: " + backup);
-            file.renameTo(backup);
-            return null;
-
+            return this.handleCorrupt(ex);
         }
+    }
+
+    private Map<String, E> handleCorrupt(Exception ex) {
+        Bukkit.getLogger().log(Level.WARNING,
+                "JSON error encountered loading \"" + this.file + "\": " + ex.getLocalizedMessage());
+
+        // Back up the bad file so the user can recover it; never replace it with empty state.
+        File backup = new File(this.file.getPath() + "_bad");
+        if (backup.exists()) {
+            backup.delete();
+        }
+        Bukkit.getLogger().log(Level.WARNING, "Backing up copy of bad file to: " + backup);
+        this.file.renameTo(backup);
+        return null;
     }
 
     /**
