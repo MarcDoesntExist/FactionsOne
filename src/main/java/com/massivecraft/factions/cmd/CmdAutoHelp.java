@@ -1,6 +1,5 @@
 package com.massivecraft.factions.cmd;
 
-import com.massivecraft.factions.Main;
 import com.massivecraft.factions.zcore.CommandVisibility;
 import com.massivecraft.factions.zcore.MCommand;
 import net.kyori.adventure.text.Component;
@@ -14,9 +13,9 @@ import java.util.ArrayList;
  * @author Brett Flannigan
  * @author Daniel Saukel
  */
-public class CmdAutoHelp extends MCommand<Main> {
+public class CmdAutoHelp extends FCommand {
     public CmdAutoHelp() {
-        super(Main.main);
+        super();
         this.aliases.add("?");
         this.aliases.add("h");
         this.aliases.add("help");
@@ -24,6 +23,9 @@ public class CmdAutoHelp extends MCommand<Main> {
         this.setHelpShort("");
 
         this.optionalArgs.put("page", "1");
+
+        // Help must stay usable while the plugin is locked.
+        this.disableOnLock = false;
     }
 
     @Override

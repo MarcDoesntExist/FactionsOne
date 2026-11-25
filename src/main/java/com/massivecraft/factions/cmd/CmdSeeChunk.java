@@ -68,8 +68,7 @@ public class CmdSeeChunk extends FCommand {
         blockZ = chunkZ * 16 + 15;
         showPillar(me, world, blockX, blockZ, minY, maxY);
 
-        // One multi-block packet instead of one packet per block.
-        VisualizeUtil.flush(me);
+        // VisualizeUtil sends the batch automatically at the end of the tick.
     }
 
     public void showPillar(Player player, World world, int blockX, int blockZ, int minY, int maxY) {

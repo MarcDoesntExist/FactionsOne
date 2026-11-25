@@ -5,13 +5,22 @@ import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
+import com.massivecraft.factions.util.Color;
 import com.massivecraft.factions.zcore.MCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.TreeSet;
 
 
 /**
@@ -22,6 +31,11 @@ import java.util.List;
  * @author Daniel Saukel
  */
 public abstract class FCommand extends MCommand<Main> {
+    private static final List<String> BOOLEAN_VALUES = List.of("yes", "no");
+    private static final List<String> TOGGLE_VALUES = List.of("on", "off");
+    private static final List<String> RELOAD_VALUES =
+            List.of("all", "conf", "board", "factions", "players");
+
     public boolean disableOnLock;
 
     public FPlayer fme;
@@ -328,6 +342,117 @@ public abstract class FCommand extends MCommand<Main> {
 
     public Rel argAsRel(int idx) {
         return this.argAsRel(idx, null);
+    }
+
+    // -------------------------------------------- //
+    // Tab completion suggestions
+    // -------------------------------------------- //
+
+    @Override
+    protected List<String> suggestArgument(CommandSender sender, String descriptor,
+                                           String current) {
+        String key = descriptor.toLowerCase(Locale.ROOT);
+        if (key.contains("|")) {
+            return filterStartingWith(Arrays.asList(key.split("\\|")), current);
+        }
+
+        return switch (key) {
+            case "player", "player name" -> filterStartingWith(playerNames(sender), current);
+            case "faction" -> filterStartingWith(factionTags(), current);
+            case "flag" -> filterStartingWith(flagNames(), current);
+            case "perm" -> filterStartingWith(permNames(), current);
+            case "relation" -> filterStartingWith(relationNames(), current);
+            case "name" -> filterStartingWith(nameAndFactionNames(sender), current);
+            case "page" -> filterStartingWith(pageNumbers(), current);
+            case "yes/no" -> filterStartingWith(BOOLEAN_VALUES, current);
+            case "on/off" -> filterStartingWith(TOGGLE_VALUES, current);
+            case "file" -> filterStartingWith(RELOAD_VALUES, current);
+            case "setting" -> filterStartingWith(configKeys(), current);
+            default -> Collections.emptyList();
+        };
+    }
+
+    private List<String> playerNames(CommandSender sender) {
+        Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (sender instanceof Player viewer && !viewer.canSee(player)) {
+                continue;
+            }
+            names.add(player.getName());
+        }
+
+        if (sender instanceof Player player) {
+            FPlayer fplayer = FPlayers.i.get(player);
+            if (fplayer != null && fplayer.hasFaction()) {
+                for (FPlayer member : fplayer.getFaction().getFPlayers()) {
+                    names.add(member.getName());
+                }
+            }
+        }
+        return new ArrayList<>(names);
+    }
+
+    private List<String> factionTags() {
+        Set<String> tags = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (Faction faction : Factions.i.get()) {
+            String tag = Color.strip(faction.getTagPlain());
+            if (tag != null && !tag.isEmpty()) {
+                tags.add(tag);
+            }
+        }
+        return new ArrayList<>(tags);
+    }
+
+    private List<String> nameAndFactionNames(CommandSender sender) {
+        List<String> names = new ArrayList<>(playerNames(sender));
+        names.addAll(factionTags());
+        return names;
+    }
+
+    private List<String> flagNames() {
+        List<String> values = new ArrayList<>();
+        for (FFlag flag : FFlag.values()) {
+            values.add(flag.getNicename());
+        }
+        return values;
+    }
+
+    private List<String> permNames() {
+        List<String> values = new ArrayList<>();
+        for (FPerm perm : FPerm.values()) {
+            values.add(perm.getNicename());
+        }
+        return values;
+    }
+
+    private List<String> relationNames() {
+        List<String> values = new ArrayList<>();
+        for (Rel rel : Rel.values()) {
+            values.add(rel.name().toLowerCase(Locale.ROOT));
+        }
+        return values;
+    }
+
+    private List<String> pageNumbers() {
+        // Root help has at least five pages; the faction list grows with the
+        // number of factions, nine entries per page.
+        int pages = Math.max(5, (Factions.i.get().size() / 9) + 1);
+        List<String> values = new ArrayList<>();
+        for (int page = 1; page <= pages; page++) {
+            values.add(Integer.toString(page));
+        }
+        return values;
+    }
+
+    private List<String> configKeys() {
+        Set<String> values = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (Field field : Conf.class.getDeclaredFields()) {
+            if (Modifier.isPublic(field.getModifiers())
+                    && Modifier.isStatic(field.getModifiers()) && !field.isSynthetic()) {
+                values.add(field.getName());
+            }
+        }
+        return new ArrayList<>(values);
     }
 
     // -------------------------------------------- //

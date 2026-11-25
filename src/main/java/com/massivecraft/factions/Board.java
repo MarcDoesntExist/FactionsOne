@@ -186,37 +186,12 @@ public class Board {
 
 
         Map<Faction, Character> fList = new HashMap<Faction, Character>();
-        int chrIdx = 0;
         ArrayList<String> rows = new ArrayList<String>();
 
         // For each row
         for (int dz = 0; dz < height; dz++) {
-            // Draw and add that row
-            String row = "";
-            for (int dx = 0; dx < width; dx++) {
-                if (dx == halfWidth && dz == halfHeight) {
-                    row += Color.AQUA + "+";
-                    continue;
-                }
-
-                FLocation flocationHere = topLeft.getRelative(dx, dz);
-                Faction factionHere = getFactionAt(flocationHere);
-                if (factionHere.isNone()) {
-                    row += Color.GRAY + "-";
-                } else {
-                    Character fchar = fList.get(factionHere);
-                    if (fchar == null) {
-                        if (chrIdx >= Conf.mapKeyChrs.length) {
-                            fchar = '?';
-                        } else {
-                            fchar = Conf.mapKeyChrs[chrIdx++];
-                            fList.put(factionHere, fchar);
-                        }
-                    }
-                    row += factionHere.getColorTo(observer) + "" + fchar;
-                }
-            }
-            rows.add(row);
+            rows.add(getMapRow(observer, topLeft.getRelative(0, dz), width,
+                    dz == halfHeight, fList));
         }
 
         // Get the compass
@@ -247,18 +222,54 @@ public class Board {
 
 
     /**
-     * One-line version of the map for the action bar: the row the player is
-     * standing on, prefixed by the chunk coordinates and the faction tag.
+     * Draws one row of the map. Only the center row passes {@code centerRow},
+     * so the player marker is not repeated on every line.
+     */
+    private static String getMapRow(RelationParticipator observer, FLocation rowStart, int width,
+                                    boolean centerRow, Map<Faction, Character> factionChars) {
+        int centerColumn = width / 2;
+        StringBuilder row = new StringBuilder();
+        for (int dx = 0; dx < width; dx++) {
+            if (centerRow && dx == centerColumn) {
+                row.append(Color.AQUA).append('+');
+                continue;
+            }
+
+            Faction factionHere = getFactionAt(rowStart.getRelative(dx, 0));
+            if (factionHere.isNone()) {
+                row.append(Color.GRAY).append('-');
+                continue;
+            }
+
+            Character fchar = factionChars.get(factionHere);
+            if (fchar == null) {
+                if (factionChars.size() >= Conf.mapKeyChrs.length) {
+                    fchar = '?';
+                } else {
+                    fchar = Conf.mapKeyChrs[factionChars.size()];
+                    factionChars.put(factionHere, fchar);
+                }
+            }
+            row.append(factionHere.getColorTo(observer)).append(fchar);
+        }
+        return row.toString();
+    }
+
+    /**
+     * One-line version of the map for the action bar: only the row the player
+     * is standing on is built. Prefixed by the chunk coordinates and faction tag.
      */
     public static Component getActionBarMap(RelationParticipator observer, FLocation flocation) {
-        List<Component> map = getMap(observer, flocation, 0.0);
-        int centerRow = 1 + (Conf.mapHeight / 2);
-        Component row = centerRow < map.size() ? map.get(centerRow) : Component.empty();
+        int halfWidth = Conf.mapWidth / 2;
+        int width = halfWidth * 2 + 1;
+        FLocation rowStart = flocation.getRelative(-halfWidth, 0);
+        String row = getMapRow(observer, rowStart, width, true,
+                new HashMap<Faction, Character>());
         return Component.text("(" + flocation.getCoordString() + ") ",
                         Style.style(NamedTextColor.GRAY))
                 .append(getFactionAt(flocation).getTag(observer))
                 .append(Component.text(" "))
-                .append(row);
+                .append(Main.main.txt.parse(row));
     }
 
     // -------------------------------------------- //

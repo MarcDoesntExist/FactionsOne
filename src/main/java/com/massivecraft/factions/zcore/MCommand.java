@@ -8,9 +8,14 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 
 /**
@@ -101,13 +106,12 @@ public abstract class MCommand<T extends MPlugin> {
 
         // Is there a matching sub command?
         if (args.size() > 0) {
-            for (MCommand<?> subCommand : this.subCommands) {
-                if (subCommand.aliases.contains(args.get(0))) {
-                    args.remove(0);
-                    commandChain.add(this);
-                    subCommand.execute(sender, args, commandChain);
-                    return;
-                }
+            MCommand<?> subCommand = getSubCommand(args.get(0));
+            if (subCommand != null) {
+                args.remove(0);
+                commandChain.add(this);
+                subCommand.execute(sender, args, commandChain);
+                return;
             }
         }
 
@@ -122,6 +126,127 @@ public abstract class MCommand<T extends MPlugin> {
 
     public void execute(CommandSender sender, List<String> args) {
         execute(sender, args, new ArrayList<MCommand<?>>());
+    }
+
+    // -------------------------------------------- //
+    // Tab completion
+    // -------------------------------------------- //
+
+    /**
+     * Finds a direct sub command by alias. Execution and completion share this
+     * lookup so they cannot disagree on which command a token refers to.
+     */
+    public MCommand<?> getSubCommand(String token) {
+        for (MCommand<?> subCommand : this.subCommands) {
+            if (subCommand.aliases.contains(token)) {
+                return subCommand;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Suggests arguments for the given tokens by walking the same tree that
+     * {@link #execute(CommandSender, List)} uses.
+     */
+    public List<String> tabComplete(CommandSender sender, List<String> args) {
+        if (!this.subCommands.isEmpty() && args.size() < 2) {
+            return completeSubCommands(sender, args.isEmpty() ? "" : args.get(0));
+        }
+
+        if (!this.subCommands.isEmpty()) {
+            MCommand<?> subCommand = getSubCommand(args.get(0));
+            if (subCommand != null) {
+                if (!subCommand.isTabVisible(sender)) {
+                    return Collections.emptyList();
+                }
+                return subCommand.tabComplete(sender, args.subList(1, args.size()));
+            }
+        }
+
+        if (args.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String descriptor = getArgDescriptor(args.size() - 1);
+        if (descriptor == null) {
+            return Collections.emptyList();
+        }
+        return suggestArgument(sender, descriptor, args.get(args.size() - 1));
+    }
+
+    /**
+     * Suggests values for one argument. Commands that do not have a meaningful
+     * value set simply suggest nothing; sub command classes override this.
+     */
+    protected List<String> suggestArgument(CommandSender sender, String descriptor,
+                                           String current) {
+        return Collections.emptyList();
+    }
+
+    protected boolean isTabVisible(CommandSender sender) {
+        if (this.visibility == CommandVisibility.INVISIBLE) {
+            return false;
+        }
+        if (this.visibility == CommandVisibility.SECRET
+                && !this.validSenderPermissions(sender, false)) {
+            return false;
+        }
+        return !this.senderMustBePlayer || sender instanceof Player;
+    }
+
+    protected String getArgDescriptor(int index) {
+        if (index < this.requiredArgs.size()) {
+            return this.requiredArgs.get(index);
+        }
+
+        int optionalIndex = index - this.requiredArgs.size();
+        if (optionalIndex < 0 || optionalIndex >= this.optionalArgs.size()) {
+            return null;
+        }
+        return new ArrayList<>(this.optionalArgs.keySet()).get(optionalIndex);
+    }
+
+    private List<String> completeSubCommands(CommandSender sender, String prefix) {
+        List<String> names = new ArrayList<>();
+        for (MCommand<?> subCommand : this.subCommands) {
+            if (!subCommand.isTabVisible(sender) || subCommand.aliases.isEmpty()) {
+                continue;
+            }
+
+            if (prefix.isEmpty()) {
+                names.add(subCommand.getPrimaryAlias());
+            } else {
+                names.addAll(subCommand.aliases);
+            }
+        }
+        return filterStartingWith(names, prefix);
+    }
+
+    /**
+     * The alias shown first: the longest one, so short admin shorthands such as
+     * "w" or "sc" do not hide the readable name.
+     */
+    public String getPrimaryAlias() {
+        String ret = "";
+        for (String alias : this.aliases) {
+            if (alias.length() > ret.length()) {
+                ret = alias;
+            }
+        }
+        return ret;
+    }
+
+    protected static List<String> filterStartingWith(Collection<String> values, String prefix) {
+        String lowerPrefix = prefix.toLowerCase(Locale.ROOT);
+        Set<String> matches = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (String value : values) {
+            if (value != null && !value.isEmpty()
+                    && value.toLowerCase(Locale.ROOT).startsWith(lowerPrefix)) {
+                matches.add(value);
+            }
+        }
+        return new ArrayList<>(matches);
     }
 
     // This is where the command action is performed.

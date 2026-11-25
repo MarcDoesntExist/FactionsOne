@@ -6,7 +6,6 @@ import com.massivecraft.factions.adapters.FPermTypeAdapter;
 import com.massivecraft.factions.adapters.LocationTypeAdapter;
 import com.massivecraft.factions.adapters.RelTypeAdapter;
 import com.massivecraft.factions.cmd.CmdAutoHelp;
-import com.massivecraft.factions.cmd.CommandTabComplete;
 import com.massivecraft.factions.cmd.FCmdRoot;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.integration.Essentials;
@@ -49,6 +48,8 @@ import java.util.Set;
  * @author Daniel Saukel
  */
 public class Main extends MPlugin implements CommandExecutor, TabCompleter {
+    private static final long MAP_AUTO_UPDATE_TICKS = 20L;
+
     // Our single plugin instance
     public static Main main;
 
@@ -66,6 +67,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     private boolean locked = false;
     private Integer AutoLeaveTask = null;
     private Integer econLandRewardTaskID = null;
+    private Integer mapAutoUpdateTask = null;
 
     public Main() {
         main = this;
@@ -131,6 +133,8 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         getServer().getPluginManager().registerEvents(this.blockListener, this);
         getServer().getPluginManager().registerEvents(this.serverListener, this);
 
+        startMapAutoUpdateTask();
+
         postEnable();
         this.loadSuccessful = true;
     }
@@ -156,6 +160,10 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         if (AutoLeaveTask != null) {
             this.getServer().getScheduler().cancelTask(AutoLeaveTask);
             AutoLeaveTask = null;
+        }
+        if (mapAutoUpdateTask != null) {
+            this.getServer().getScheduler().cancelTask(mapAutoUpdateTask);
+            mapAutoUpdateTask = null;
         }
         super.onDisable();
     }
@@ -189,6 +197,25 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         }
     }
 
+    private void startMapAutoUpdateTask() {
+        if (mapAutoUpdateTask != null) {
+            this.getServer().getScheduler().cancelTask(mapAutoUpdateTask);
+        }
+        mapAutoUpdateTask = getServer().getScheduler()
+                .scheduleSyncRepeatingTask(this, this::updateAutoMaps,
+                        MAP_AUTO_UPDATE_TICKS, MAP_AUTO_UPDATE_TICKS);
+    }
+
+    private void updateAutoMaps() {
+        for (Player player : getServer().getOnlinePlayers()) {
+            FPlayer fplayer = FPlayers.i.get(player);
+            if (fplayer == null || !fplayer.isMapAutoUpdating()) {
+                continue;
+            }
+            player.sendActionBar(Board.getActionBarMap(fplayer, new FLocation(player)));
+        }
+    }
+
     @Override
     public void postAutoSave() {
         Board.save();
@@ -204,8 +231,13 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(@NonNull CommandSender sender, Command command, String alias,
                                       String[] args) {
-        return CommandTabComplete.complete(this.cmdBase, sender,
-                new ArrayList<>(Arrays.asList(args)));
+        List<String> tokens = new ArrayList<>(Arrays.asList(args));
+        tokens.removeIf(String::isEmpty);
+        // A trailing space must stay meaningful: it asks for the next argument.
+        if (args.length > 0 && args[args.length - 1].isEmpty()) {
+            tokens.add("");
+        }
+        return this.cmdBase.tabComplete(sender, tokens);
     }
 
     // -------------------------------------------- //

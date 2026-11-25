@@ -1,5 +1,6 @@
 package com.massivecraft.factions.util;
 
+import com.massivecraft.factions.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -12,8 +13,10 @@ import java.util.*;
 
 /**
  * Sends fake blocks to a player. The changes are queued per player and sent in
- * a single multi-block packet when {@link #flush(Player)} is called, instead of
- * one packet per block. Clearing restores the real blocks in one batch too.
+ * a single multi-block packet at the end of the tick, instead of one packet per
+ * block, so callers cannot forget to flush. {@link #flush(Player)} remains
+ * available for an immediate send. Clearing restores the real blocks in one
+ * batch too.
  *
  * @author drtshock
  * @author externo6
@@ -62,8 +65,24 @@ public class VisualizeUtil {
         if (changes == null) {
             changes = new LinkedHashMap<>();
             pending.put(playerId, changes);
+            scheduleFlush(playerId);
         }
         changes.put(location, blockData);
+    }
+
+    /**
+     * Queues one flush for the next tick. The pending map itself is the guard,
+     * so adding hundreds of blocks still results in a single batch.
+     */
+    private static void scheduleFlush(UUID playerId) {
+        Bukkit.getScheduler().runTask(Main.main, () -> {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player == null) {
+                pending.remove(playerId);
+                return;
+            }
+            flush(player);
+        });
     }
 
     // -------------------------------------------- //
@@ -95,7 +114,9 @@ public class VisualizeUtil {
     // -------------------------------------------- //
 
     /**
-     * Sends every fake block queued for the player as one packet.
+     * Sends every fake block queued for the player as one packet. Additions are
+     * flushed automatically on the next tick; call this directly only when the
+     * batch must become visible immediately.
      */
     public static void flush(Player player) {
         Map<Location, BlockData> changes = pending.remove(player.getUniqueId());
