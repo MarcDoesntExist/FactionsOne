@@ -13,6 +13,7 @@ the project uses semantic versioning.
   logs.
 - Faction tax supports a percent-of-bank mode in addition to the flat
   per-member/per-chunk formula; the existing five-argument settings stay valid.
+  Members in `tax-exempt-roles` are excluded from the per-member component.
 - Symmetric shield rules: protected factions cannot attack or overclaim, and
   protected territory cannot be overclaimed.
 - Warp use can charge a configurable cost before warmup, with automatic refund

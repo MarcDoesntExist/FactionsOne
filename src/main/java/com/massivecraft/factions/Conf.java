@@ -206,6 +206,11 @@ public class Conf {
     public static double taxCap = 0.0;
     public static String taxMode = "FLAT";
     public static double taxPercent = 0.0;
+    /**
+     * Roles whose members do not count for the per-member part of the tax.
+     * Names are matched case-insensitively against {@code Rel}.
+     */
+    public static List<String> taxExemptRoles = new ArrayList<String>();
     public static int taxGracePeriods = 3;
     public static String taxInsolvencyAction = "NONE";
     public static boolean taxNotifyOfficers = true;

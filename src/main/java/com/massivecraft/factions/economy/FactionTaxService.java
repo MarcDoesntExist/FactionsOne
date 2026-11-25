@@ -95,7 +95,7 @@ public final class FactionTaxService {
                 continue;
             }
 
-            double due = TaxCalculator.due(faction.getFPlayers().size(), faction.getLandRounded(),
+            double due = TaxCalculator.due(taxableMembers(faction), faction.getLandRounded(),
                     this.bank.balance(faction), settings);
             if (due <= 0.0) {
                 faction.setLastTaxAt(now);
@@ -203,7 +203,7 @@ public final class FactionTaxService {
         if (faction == null) {
             return 0.0;
         }
-        return TaxCalculator.due(faction.getFPlayers().size(), faction.getLandRounded(),
+        return TaxCalculator.due(taxableMembers(faction), faction.getLandRounded(),
                 this.bank.balance(faction), this.settings());
     }
 
@@ -224,6 +224,32 @@ public final class FactionTaxService {
     /** Configured interval in milliseconds. */
     public long intervalMillis() {
         return this.intervalMinutes() * 60_000L;
+    }
+
+    /**
+     * Counts members that contribute the per-member tax. A configured exempt
+     * role only removes its members from that component; base and per-chunk
+     * charges still apply.
+     */
+    static int taxableMembers(Faction faction) {
+        int members = faction.getFPlayers().size();
+        if (Conf.taxExemptRoles == null || Conf.taxExemptRoles.isEmpty()) {
+            return members;
+        }
+        int exempt = 0;
+        for (FPlayer member : faction.getFPlayers()) {
+            Rel role = member.getRole();
+            if (role == null) {
+                continue;
+            }
+            for (String configured : Conf.taxExemptRoles) {
+                if (configured != null && role.name().equalsIgnoreCase(configured.trim())) {
+                    exempt++;
+                    break;
+                }
+            }
+        }
+        return Math.max(0, members - exempt);
     }
 
     private TaxSettings settings() {
