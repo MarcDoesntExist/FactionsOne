@@ -19,6 +19,7 @@ import com.massivecraft.factions.util.AutoLeaveTask;
 import com.massivecraft.factions.util.EconLandRewardTask;
 import com.massivecraft.factions.util.LazyLocation;
 import com.massivecraft.factions.zcore.MPlugin;
+import com.massivecraft.factions.zcore.util.DataVersionService;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
@@ -89,9 +90,16 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     }
 
     @Override
+    protected boolean prepareData() {
+        return DataVersionService.prepare(getDataFolder().toPath(), getLogger());
+    }
+
+    @Override
     public void onEnable() {
-        if (!preEnable())
+        if (!preEnable()) {
+            getServer().getPluginManager().disablePlugin(this);
             return;
+        }
         this.loadSuccessful = false;
 
         // Load Conf from disk

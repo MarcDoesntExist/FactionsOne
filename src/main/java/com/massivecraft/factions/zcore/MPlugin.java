@@ -65,6 +65,11 @@ public abstract class MPlugin extends JavaPlugin {
         // Ensure basefolder exists!
         this.getDataFolder().mkdirs();
 
+        if (!this.prepareData()) {
+            log(Level.SEVERE, "Data preparation failed; refusing to enable.");
+            return false;
+        }
+
         // Create Utility Instances
         this.perm = new PermUtil(this);
         this.persist = new Persist(this);
@@ -93,6 +98,14 @@ public abstract class MPlugin extends JavaPlugin {
 
     public void postEnable() {
         log("=== ENABLE DONE (Took " + (System.currentTimeMillis() - timeEnableStart) + "ms) ===");
+    }
+
+    /**
+     * Hook for plugins that must version or migrate their data before any
+     * file is read or written. Returning false aborts enable.
+     */
+    protected boolean prepareData() {
+        return true;
     }
 
     public void onDisable() {

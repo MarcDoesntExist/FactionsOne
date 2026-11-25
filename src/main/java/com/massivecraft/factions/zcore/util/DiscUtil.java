@@ -45,6 +45,9 @@ public class DiscUtil {
      * Writes the bytes to a temporary file next to the target and then moves it
      * into place atomically. A crash can therefore leave either the old file or
      * the new one, never a truncated JSON document.
+     *
+     * <p>An existing file is copied to the sibling {@code backups} directory
+     * before it is replaced, with rotation handled by {@link BackupService}.</p>
      */
     public static void writeBytes(File file, byte[] bytes) throws IOException {
         Path target = file.toPath();
@@ -52,6 +55,7 @@ public class DiscUtil {
         if (parent != null) {
             Files.createDirectories(parent);
         }
+        BackupService.backupBeforeWrite(target);
         Path temp = Files.createTempFile(parent, file.getName() + ".", ".tmp");
         try {
             Files.write(temp, bytes);

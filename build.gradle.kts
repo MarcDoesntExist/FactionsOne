@@ -48,6 +48,11 @@ dependencies {
         exclude(group = "org.apache.logging.log4j", module = "log4j-bom")
         exclude(group = "com.google.errorprone", module = "error_prone_annotations")
     }
+
+    testImplementation("io.papermc.paper:paper-api:$paperApiVersion")
+    testImplementation(platform("org.junit:junit-bom:5.11.4"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
@@ -69,6 +74,10 @@ tasks.processResources {
     filesMatching("plugin.yml") {
         expand(props)
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.jar {
