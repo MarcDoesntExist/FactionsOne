@@ -25,13 +25,6 @@ Usage
 ---------
 <b>Read the full userguide here: [http://massivecraft.com/dev/factions](http://massivecraft.com/dev/factions)</b>
 
-Installing
-----------
-
-1. Download the latest
-   release: [http://dev.bukkit.org/server-mods/factions/](http://dev.bukkit.org/server-mods/factions/)<br>
-1. Put Factions.jar in the plugins folder.
-
 A default config file will be created on the first run.
 
 License
