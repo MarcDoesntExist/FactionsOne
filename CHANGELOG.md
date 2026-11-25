@@ -8,6 +8,37 @@ the project uses semantic versioning.
 
 ### Added
 
+- Durable bank journal (`bank-journal.jsonl`): every movement is written as
+  `PENDING` and then committed or aborted. A transfer whose credit and refund
+  both fail is recorded as `COMPENSATION_PENDING`; the periodic retry and
+  `/f admin bank reconcile` (usable from the console) credit it and write
+  `COMPENSATED`. `/econfail on|off` in the local probe reproduces the failure.
+- Persistent idempotency store (`idempotency.json`) with atomic writes. Tax
+  periods claim `tax:<faction>:<period>` and mailbox deliveries claim
+  `mailbox:<claim>`, refusing a replay after a restart.
+- Offline payout mailbox (`mailbox.json`, `/f mail`, `/f mail claim [id|all]`).
+  Payouts expire after `mailboxTtlDays`, respect `mailboxMaxPerPlayer`, and are
+  returned to their source account through a retryable refund. `/f mail send`
+  queues a payout from a faction bank or the console universe account, and the
+  periodic land reward queues offline members instead of crediting them directly.
+  Delivery is explicitly **at-most-once**: a crash between the idempotency key
+  claim and the credit leaves the claim `DELIVERY_UNKNOWN`, never `DELIVERED`.
+  An operator resolves it with `/f mail reconcile <id> paid|retry` after checking
+  the economy; `retry` releases the key for one more claim. Recovery never turns
+  an unknown claim back into `PENDING` automatically, even if its idempotency
+  key is lost or corrupted, so an ambiguous payout cannot be retried by restart.
+- Storage retention (`idempotencyRetentionDays`, default 180;
+  `mailboxRetentionDays`, default 30): at enable and from the mailbox maintenance
+  task the stores are compacted atomically. Old idempotency keys are removed,
+  while keys for pending/ambiguous claims and unfinished refunds are protected.
+  Delivered claims and fully refunded expired claims are dropped; pending,
+  ambiguous and unrefunded claims are retained.
+- `BankService` now journals credits, debits, transfers, balance sets and
+  universe movements; account locking was extracted to `AccountLocks`.
+- Headless coverage for journal replay, compensation retry, idempotent claims,
+  concurrent mailbox claims, TTL/refund, capacity, restart recovery and the
+  crash window between key claim and delivery, plus `test-server/live-journal.js`
+  for the real Paper restart path.
 - Faction grace and shield windows (`shieldEnabled`, `shieldGraceHours`,
   `shieldMaxHours`): new factions start with grace, and leaders (or the
   console) can run `/f shield set <hours> [faction]`. While a window is active,
