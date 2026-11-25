@@ -1,9 +1,11 @@
 package com.massivecraft.factions.cmd;
 
 import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.iface.EconomyParticipator;
 import com.massivecraft.factions.integration.Econ;
+import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.util.Color;
 
@@ -37,8 +39,10 @@ public class CmdMoneyDeposit extends FCommand {
     @Override
     public void perform() {
         double amount = this.argAsDouble(0, 0d);
-        EconomyParticipator faction = this.argAsFaction(1, myFaction);
+        Faction faction = this.argAsFaction(1, myFaction);
         if (faction == null)
+            return;
+        if (!FPerm.BANK_DEPOSIT.has(fme, faction, true))
             return;
         boolean success = Econ.transferMoney(fme, fme, faction, amount);
 

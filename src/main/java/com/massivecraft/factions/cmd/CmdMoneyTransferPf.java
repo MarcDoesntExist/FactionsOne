@@ -1,9 +1,11 @@
 package com.massivecraft.factions.cmd;
 
 import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.iface.EconomyParticipator;
 import com.massivecraft.factions.integration.Econ;
+import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.util.Color;
 
@@ -43,13 +45,15 @@ public class CmdMoneyTransferPf extends FCommand {
         EconomyParticipator to = this.argAsFaction(2);
         if (to == null)
             return;
+        if (to instanceof Faction && !FPerm.BANK_DEPOSIT.has(fme, (Faction) to, true))
+            return;
 
         boolean success = Econ.transferMoney(fme, from, to, amount);
 
         if (success && Conf.logMoneyTransactions)
             Main.main.log(Main.main.txt
                     .parse("%s transferred %s from the player \"%s\" to the faction \"%s\"",
-                            fme.getName(), Econ.moneyString(amount), from.describeTo(null),
+                            actorName(), Econ.moneyString(amount), from.describeTo(null),
                             to.describeTo(null)));
     }
 }

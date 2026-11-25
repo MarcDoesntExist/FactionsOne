@@ -49,7 +49,7 @@ public class CmdMoneyTransferFp extends FCommand {
         if (success && Conf.logMoneyTransactions)
             Main.main.log(Main.main.txt
                     .parse("%s transferred %s from the faction \"%s\" to the player \"%s\"",
-                            fme.getName(), Econ.moneyString(amount), from.describeTo(null),
+                            actorName(), Econ.moneyString(amount), from.describeTo(null),
                             to.describeTo(null)));
     }
 }
