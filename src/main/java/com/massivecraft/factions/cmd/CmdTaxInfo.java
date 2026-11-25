@@ -55,10 +55,12 @@ public class CmdTaxInfo extends FCommand {
         BankService bank = BankService.get();
         msg(Lang.taxServerInfo,
                 "enabled",
+                Conf.taxMode,
                 Main.main.factionTaxService.intervalMinutes(),
                 bank.format(Conf.taxBase),
                 bank.format(Conf.taxPerMember),
                 bank.format(Conf.taxPerChunk),
+                bank.format(Conf.taxPercent),
                 bank.format(Conf.taxCap),
                 Conf.taxGracePeriods,
                 Conf.taxInsolvencyAction);

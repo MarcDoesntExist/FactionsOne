@@ -13,6 +13,8 @@ public final class CmdTnt extends FCommand {
     public final CmdTntDeposit cmdTntDeposit = new CmdTntDeposit();
     public final CmdTntWithdraw cmdTntWithdraw = new CmdTntWithdraw();
     public final CmdTntBalance cmdTntBalance = new CmdTntBalance();
+    public final CmdTntFill cmdTntFill = new CmdTntFill();
+    public final CmdTntSiphon cmdTntSiphon = new CmdTntSiphon();
 
     public CmdTnt() {
         super();
@@ -24,6 +26,8 @@ public final class CmdTnt extends FCommand {
         this.addSubCommand(this.cmdTntDeposit);
         this.addSubCommand(this.cmdTntWithdraw);
         this.addSubCommand(this.cmdTntBalance);
+        this.addSubCommand(this.cmdTntFill);
+        this.addSubCommand(this.cmdTntSiphon);
     }
 
     @Override

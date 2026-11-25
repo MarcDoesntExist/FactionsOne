@@ -45,7 +45,9 @@ public class Lang {
     public static final String memberLimit = "<b>!<white> The faction %s is at the limit of %d members, so %s cannot currently join.";
     public static final String allyLimit = "<b>Your faction has reached its ally limit of %d.";
     public static final String claimLimit = "<b>Limit reached. You can't claim more land!";
-    public static final String tntUsage = "<i>Use /f tnt deposit|withdraw|balance <amount>.";
+    public static final String tntUsage = "<i>Use /f tnt deposit|withdraw|balance|fill|siphon.";
+    public static final String tntNoContainer = "<b>No dispenser was changed.";
+    public static final String featureNoPlayer = "<b>That player is not online.";
     public static final String chatUsage = "<i>Use /f chat <public|faction|ally> [message], /fc <message> or /ac <message>.";
     public static final String chatNoAllies = "<i>No allies are online.";
     public static final String chatChannelSet = "<i>Chat channel set to <h>%s<i>.";
@@ -121,7 +123,7 @@ public class Lang {
 
     public static final String taxDisabled = "<b>Faction taxes are disabled on this server.";
     public static final String taxNoFaction = "<b>You are not in a faction.";
-    public static final String taxServerInfo = "<i>Faction tax: <h>%s<i>, interval <h>%d<i> min, base <h>%s<i>, per member <h>%s<i>, per chunk <h>%s<i>, cap <h>%s<i>, grace <h>%d<i>, insolvency <h>%s<i>.";
+    public static final String taxServerInfo = "<i>Faction tax: <h>%s<i>, mode <h>%s<i>, interval <h>%d<i> min, base <h>%s<i>, per member <h>%s<i>, per chunk <h>%s<i>, percent <h>%s<i>, cap <h>%s<i>, grace <h>%d<i>, insolvency <h>%s<i>.";
     public static final String taxFactionInfo = "<i>Tax for <h>%s<i>: current due <h>%s<i>, arrears <h>%d<i>, %s.";
     public static final String taxNeverPaid = "no charge recorded yet";
     public static final String taxNextCharge = "next charge in <h>%d<i> min";

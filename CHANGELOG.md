@@ -8,6 +8,11 @@ the project uses semantic versioning.
 
 ### Added
 
+- TNT bank `fill` and `siphon` commands that move only the amount the
+  dispenser inventories actually accepted or released, with FINE verification
+  logs.
+- Faction tax supports a percent-of-bank mode in addition to the flat
+  per-member/per-chunk formula; the existing five-argument settings stay valid.
 - Symmetric shield rules: protected factions cannot attack or overclaim, and
   protected territory cannot be overclaimed.
 - Warp use can charge a configurable cost before warmup, with automatic refund

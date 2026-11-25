@@ -21,13 +21,27 @@ public final class TaxCalculator {
      * @return the amount in the server currency, never negative
      */
     public static double due(int members, int land, TaxSettings settings) {
+        return due(members, land, 0.0, settings);
+    }
+
+    /**
+     * Computes the tax for one period. {@code PERCENT} mode uses the faction
+     * bank balance; {@code FLAT} mode keeps the historical per-member/per-chunk
+     * formula.
+     */
+    public static double due(int members, int land, double balance, TaxSettings settings) {
         if (settings == null || !settings.enabled()) {
             return 0.0;
         }
 
-        double raw = settings.base()
-                + settings.perMember() * Math.max(0, members)
-                + settings.perChunk() * Math.max(0, land);
+        double raw;
+        if (settings.mode() == TaxSettings.Mode.PERCENT) {
+            raw = Math.max(0.0, balance) * settings.percent() / 100.0;
+        } else {
+            raw = settings.base()
+                    + settings.perMember() * Math.max(0, members)
+                    + settings.perChunk() * Math.max(0, land);
+        }
         if (!Double.isFinite(raw) || raw <= 0.0) {
             return 0.0;
         }

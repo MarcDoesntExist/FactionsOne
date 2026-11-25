@@ -95,7 +95,8 @@ public final class FactionTaxService {
                 continue;
             }
 
-            double due = TaxCalculator.due(faction.getFPlayers().size(), faction.getLandRounded(), settings);
+            double due = TaxCalculator.due(faction.getFPlayers().size(), faction.getLandRounded(),
+                    this.bank.balance(faction), settings);
             if (due <= 0.0) {
                 faction.setLastTaxAt(now);
                 continue;
@@ -202,7 +203,8 @@ public final class FactionTaxService {
         if (faction == null) {
             return 0.0;
         }
-        return TaxCalculator.due(faction.getFPlayers().size(), faction.getLandRounded(), this.settings());
+        return TaxCalculator.due(faction.getFPlayers().size(), faction.getLandRounded(),
+                this.bank.balance(faction), this.settings());
     }
 
     /**
@@ -225,7 +227,8 @@ public final class FactionTaxService {
     }
 
     private TaxSettings settings() {
-        return new TaxSettings(Conf.taxEnabled, Conf.taxBase, Conf.taxPerMember, Conf.taxPerChunk, Conf.taxCap);
+        return new TaxSettings(Conf.taxEnabled, Conf.taxBase, Conf.taxPerMember, Conf.taxPerChunk,
+                Conf.taxCap, Conf.taxPercent, TaxSettings.Mode.parse(Conf.taxMode));
     }
 
     private static boolean isEligible(Faction faction) {

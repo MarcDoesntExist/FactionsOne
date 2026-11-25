@@ -204,6 +204,8 @@ public class Conf {
     public static double taxPerMember = 0.0;
     public static double taxPerChunk = 0.0;
     public static double taxCap = 0.0;
+    public static String taxMode = "FLAT";
+    public static double taxPercent = 0.0;
     public static int taxGracePeriods = 3;
     public static String taxInsolvencyAction = "NONE";
     public static boolean taxNotifyOfficers = true;

@@ -48,6 +48,21 @@ class TaxCalculatorTest {
     }
 
     @Test
+    void percentModeUsesBankBalanceAndCap() {
+        TaxSettings percent = new TaxSettings(true, 0.0, 0.0, 0.0, 50.0, 10.0,
+                TaxSettings.Mode.PERCENT);
+        assertEquals(10.0, TaxCalculator.due(0, 0, 100.0, percent));
+        assertEquals(50.0, TaxCalculator.due(0, 0, 1000.0, percent));
+        assertEquals(0.0, TaxCalculator.due(0, 0, -5.0, percent));
+    }
+
+    @Test
+    void invalidModeFallsBackToFlat() {
+        assertEquals(TaxSettings.Mode.FLAT, TaxSettings.Mode.parse("unknown"));
+        assertEquals(TaxSettings.Mode.PERCENT, TaxSettings.Mode.parse("percent"));
+    }
+
+    @Test
     void clampsNegativeInputsAndRates() {
         assertEquals(5.0, TaxCalculator.due(-3, -4, settings(5.0, -2.0, -1.0, 0.0)));
         assertEquals(0.0, TaxCalculator.due(1, 1, new TaxSettings(true, Double.NaN, 0.0, 0.0, 0.0)));
