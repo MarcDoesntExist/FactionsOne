@@ -69,10 +69,14 @@ final class WorldguardHook implements Worldguard.Hook {
         int maxChunkZ = minChunkZ + 15;
 
         BlockVector3 min = BlockVector3.at(minChunkX, world.getMinHeight(), minChunkZ);
-        BlockVector3 max = BlockVector3.at(maxChunkX, world.getMaxHeight(), maxChunkZ);
+        // WorldGuard cuboids use inclusive bounds; the world max height is exclusive.
+        BlockVector3 max = BlockVector3.at(maxChunkX, world.getMaxHeight() - 1, maxChunkZ);
         ProtectedCuboidRegion region =
                 new ProtectedCuboidRegion("wgfactionoverlapcheck", min, max);
 
+        // Any region overlapping the chunk blocks a faction claim. PvP flags are
+        // not merged here: WorldGuard's testState resolves overlapping flags by
+        // region priority, with deny winning an equal-priority conflict.
         Map<String, ProtectedRegion> allregions = regionManager.getRegions();
         List<ProtectedRegion> overlaps =
                 region.getIntersectingRegions(new ArrayList<ProtectedRegion>(allregions.values()));
