@@ -8,6 +8,9 @@ the project uses semantic versioning.
 
 ### Added
 
+- Menu items support independent `view` and `click` requirements; hidden entries
+  are re-evaluated every second and clicks are rejected when the faction or
+  FPerm changed after opening the menu.
 - `/f power` now shows the faction power breakdown: member sum, claim count and
   the combined bonus/malus.
 - `/f show` now displays a public status line with shield/grace, raidability and

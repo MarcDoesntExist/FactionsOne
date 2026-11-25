@@ -27,9 +27,12 @@ public final class MenuManager implements Listener {
 
     private void closeUnauthorizedMenus() {
         for (Player player : this.plugin.getServer().getOnlinePlayers()) {
-            if (player.getOpenInventory().getTopInventory().getHolder() instanceof Menu menu
-                    && !menu.isAllowed(player)) {
-                player.closeInventory();
+            if (player.getOpenInventory().getTopInventory().getHolder() instanceof Menu menu) {
+                if (!menu.isAllowed(player)) {
+                    player.closeInventory();
+                } else {
+                    menu.refreshVisibility();
+                }
             }
         }
     }

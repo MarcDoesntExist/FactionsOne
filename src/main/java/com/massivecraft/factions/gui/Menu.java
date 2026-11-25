@@ -52,7 +52,17 @@ public abstract class Menu implements InventoryHolder {
             return;
         }
         this.items.put(slot, item);
-        this.inventory.setItem(slot, item.icon());
+        this.inventory.setItem(slot, item.canView(this.player) ? item.icon() : null);
+    }
+
+    /**
+     * Re-evaluates item visibility after a faction, role or permission change.
+     */
+    public void refreshVisibility() {
+        for (Map.Entry<Integer, MenuItem> entry : this.items.entrySet()) {
+            MenuItem item = entry.getValue();
+            this.inventory.setItem(entry.getKey(), item.canView(this.player) ? item.icon() : null);
+        }
     }
 
     public void clearItems() {
@@ -66,7 +76,7 @@ public abstract class Menu implements InventoryHolder {
 
     public void handleClick(int slot) {
         MenuItem item = this.items.get(slot);
-        if (item != null) {
+        if (item != null && this.isAllowed(this.player) && item.canClick(this.player)) {
             item.click(this.player);
         }
     }
