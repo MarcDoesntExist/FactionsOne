@@ -1,10 +1,13 @@
 package com.massivecraft.factions;
 
+import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.zcore.Lang;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+
+import java.util.List;
 
 /**
  * Coordinates the small faction economy: points, upgrades, shop offers and
@@ -21,11 +24,13 @@ public final class FeatureService {
         MAX_LEVEL,
         NOT_ENOUGH_POINTS,
         NO_SPACE,
-        NOT_READY
+        NOT_READY,
+        REWARD_FAILED
     }
 
     private final Main plugin;
     private final FeatureConfig config;
+    private final ShopPerkService shopPerks = new ShopPerkService();
 
     public FeatureService(Main plugin, FeatureConfig config) {
         this.plugin = plugin;
@@ -110,6 +115,18 @@ public final class FeatureService {
         if (!FPerm.SHOP.has(fplayer, faction, false)) {
             return Result.NO_PERMISSION;
         }
+        if (offer.type() == FeatureConfig.ShopOfferType.PERK) {
+            if (faction.getFactionPoints() < offer.cost()) {
+                return Result.NOT_ENOUGH_POINTS;
+            }
+            faction.addFactionPoints(-offer.cost());
+            if (!this.shopPerks.apply(faction, offer)) {
+                faction.addFactionPoints(offer.cost());
+                return Result.REWARD_FAILED;
+            }
+            faction.addLog(fplayer.getName(), "SHOP", offer.id() + " perk");
+            return Result.SUCCESS;
+        }
         Player player = fplayer.getPlayer();
         if (player == null) {
             return Result.NO_SPACE;
@@ -147,10 +164,107 @@ public final class FeatureService {
             return Result.NOT_READY;
         }
 
+        Player player = fplayer.getPlayer();
+        List<ItemStack> rewards = new java.util.ArrayList<ItemStack>();
+        try {
+            for (MissionRewardParser.Reward reward : MissionRewardParser.parse(mission.rewardItems())) {
+                Material material = Material.matchMaterial(reward.material());
+                if (material == null || material.isAir()) {
+                    return Result.REWARD_FAILED;
+                }
+                int remaining = reward.amount();
+                while (remaining > 0) {
+                    int stack = Math.min(64, remaining);
+                    rewards.add(new ItemStack(material, stack));
+                    remaining -= stack;
+                }
+            }
+        } catch (IllegalArgumentException exception) {
+            return Result.REWARD_FAILED;
+        }
+        if (player == null || emptySlots(player) < rewards.size()) {
+            return Result.NO_SPACE;
+        }
+        if (mission.rewardMoney() > 0.0
+                && !Econ.modifyMoney(faction, mission.rewardMoney(), null, "mission reward")) {
+            return Result.REWARD_FAILED;
+        }
+
         faction.markMissionCompleted(mission.id());
         faction.addFactionPoints(mission.rewardPoints());
+        for (ItemStack reward : rewards) {
+            player.getInventory().addItem(reward);
+        }
         faction.addLog(fplayer.getName(), "MISSION", mission.id());
         return Result.SUCCESS;
+    }
+
+    private int emptySlots(Player player) {
+        int empty = 0;
+        for (ItemStack stack : player.getInventory().getStorageContents()) {
+            if (stack == null || stack.getType().isAir()) {
+                empty++;
+            }
+        }
+        return empty;
+    }
+
+    private boolean hasPeriod(FeatureConfig.MissionPeriod period) {
+        for (FeatureConfig.MissionDefinition mission : this.config.missions()) {
+            if (mission.period() == period) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int resetExpiredMissions(long now) {
+        int reset = 0;
+        for (FeatureConfig.MissionPeriod period : new FeatureConfig.MissionPeriod[]{
+                FeatureConfig.MissionPeriod.DAILY, FeatureConfig.MissionPeriod.WEEKLY}) {
+            if (!hasPeriod(period)) {
+                continue;
+            }
+            for (Faction faction : Factions.i.get()) {
+                long last = faction.getLastMissionResetAt(period);
+                if (last <= 0L) {
+                    faction.setLastMissionResetAt(period, now);
+                    continue;
+                }
+                long boundary = MissionResetSchedule.latestBoundary(last, period, now);
+                if (boundary <= last) {
+                    continue;
+                }
+                for (FeatureConfig.MissionDefinition mission : this.config.missions()) {
+                    if (mission.period() == period) {
+                        faction.clearMission(mission.id());
+                    }
+                }
+                faction.setLastMissionResetAt(period, boundary);
+                reset++;
+            }
+        }
+        return reset;
+    }
+
+    public long nextResetAt(Faction faction) {
+        if (faction == null) {
+            return 0L;
+        }
+        long next = Long.MAX_VALUE;
+        long now = System.currentTimeMillis();
+        for (FeatureConfig.MissionPeriod period : new FeatureConfig.MissionPeriod[]{
+                FeatureConfig.MissionPeriod.DAILY, FeatureConfig.MissionPeriod.WEEKLY}) {
+            if (!hasPeriod(period)) {
+                continue;
+            }
+            long candidate = MissionResetSchedule.nextBoundary(
+                    faction.getLastMissionResetAt(period), period, now);
+            if (candidate > 0L) {
+                next = Math.min(next, candidate);
+            }
+        }
+        return next == Long.MAX_VALUE ? 0L : next;
     }
 
     public void progress(Faction faction, FeatureConfig.MissionType type, int amount) {
@@ -173,6 +287,7 @@ public final class FeatureService {
             case NOT_ENOUGH_POINTS -> Lang.featureNotEnoughPoints;
             case NO_SPACE -> Lang.featureNoSpace;
             case NOT_READY -> Lang.featureNotReady;
+            case REWARD_FAILED -> Lang.missionRewardFailed;
         };
     }
 

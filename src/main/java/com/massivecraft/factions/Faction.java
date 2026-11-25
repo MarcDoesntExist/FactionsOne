@@ -52,6 +52,7 @@ public class Faction extends Entity implements EconomyParticipator {
     private Map<String, Integer> upgradeLevels;
     private Map<String, Integer> missionProgress;
     private Set<String> completedMissions;
+    private FactionPerks perks;
     private List<FactionLogEntry> logs;
     private int taxArrears;
     private boolean taxInsolvent;
@@ -87,6 +88,7 @@ public class Faction extends Entity implements EconomyParticipator {
         this.upgradeLevels = new LinkedHashMap<String, Integer>();
         this.missionProgress = new LinkedHashMap<String, Integer>();
         this.completedMissions = new HashSet<String>();
+        this.perks = new FactionPerks();
         this.logs = new ArrayList<FactionLogEntry>();
         this.powerBoost = 0.0;
         this.flagOverrides = new LinkedHashMap<FFlag, Boolean>();
@@ -222,7 +224,15 @@ public class Faction extends Entity implements EconomyParticipator {
     // Contains the modifications to the default values
 
     public double getPowerBoost() {
-        return this.powerBoost;
+        long now = System.currentTimeMillis();
+        return this.powerBoost + (this.perks == null ? 0.0 : this.perks.power(now));
+    }
+
+    public FactionPerks getPerks() {
+        if (this.perks == null) {
+            this.perks = new FactionPerks();
+        }
+        return this.perks;
     }
 
     public void setPowerBoost(double powerBoost) {
@@ -230,6 +240,9 @@ public class Faction extends Entity implements EconomyParticipator {
     }
 
     public boolean getFlag(FFlag flag) {
+        if (this.perks != null && this.perks.flag(flag, System.currentTimeMillis())) {
+            return true;
+        }
         if (flag == FFlag.OPEN) {
             return this.open;
         }
@@ -458,7 +471,7 @@ public class Faction extends Entity implements EconomyParticipator {
         if (Conf.powerFactionMax > 0 && ret > Conf.powerFactionMax) {
             ret = Conf.powerFactionMax;
         }
-        return ret + this.powerBoost;
+        return ret + this.getPowerBoost();
     }
 
     public double getPowerMax() {
@@ -473,7 +486,7 @@ public class Faction extends Entity implements EconomyParticipator {
         if (Conf.powerFactionMax > 0 && ret > Conf.powerFactionMax) {
             ret = Conf.powerFactionMax;
         }
-        return ret + this.powerBoost;
+        return ret + this.getPowerBoost();
     }
 
     public int getPowerRounded() {
@@ -864,6 +877,45 @@ public class Faction extends Entity implements EconomyParticipator {
         }
     }
 
+    public void clearMission(String id) {
+        if (id == null) {
+            return;
+        }
+        String key = id.toLowerCase(Locale.ROOT);
+        this.missionProgress.remove(key);
+        this.completedMissions.remove(key);
+    }
+
+    /**
+     * Mission reset timestamps live in the existing mission map so older data
+     * files keep loading without a new persisted field. The value is seconds
+     * since the epoch, kept as an int for Gson compatibility. Daily and weekly
+     * missions have independent clocks.
+     */
+    public long getLastMissionResetAt(FeatureConfig.MissionPeriod period) {
+        if (this.missionProgress == null || period == null) {
+            return 0L;
+        }
+        Integer seconds = this.missionProgress.get(resetKey(period));
+        return seconds == null ? 0L : seconds.longValue() * 1000L;
+    }
+
+    public void setLastMissionResetAt(FeatureConfig.MissionPeriod period, long millis) {
+        if (period == null) {
+            return;
+        }
+        if (this.missionProgress == null) {
+            this.missionProgress = new LinkedHashMap<String, Integer>();
+        }
+        long seconds = Math.max(0L, millis / 1000L);
+        this.missionProgress.put(resetKey(period),
+                (int) Math.min(Integer.MAX_VALUE, seconds));
+    }
+
+    private static String resetKey(FeatureConfig.MissionPeriod period) {
+        return "__mission_reset_" + period.name().toLowerCase(Locale.ROOT);
+    }
+
     //----------------------------------------------//
     // Audit log
     //----------------------------------------------//
@@ -902,6 +954,10 @@ public class Faction extends Entity implements EconomyParticipator {
             this.completedMissions = new HashSet<String>();
         }
         this.completedMissions.removeIf(Objects::isNull);
+        if (this.perks == null) {
+            this.perks = new FactionPerks();
+        }
+        this.perks.sanitize(System.currentTimeMillis());
 
         if (this.logs == null) {
             this.logs = new ArrayList<FactionLogEntry>();

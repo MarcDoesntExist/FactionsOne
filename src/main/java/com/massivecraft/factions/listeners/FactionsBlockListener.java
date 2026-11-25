@@ -109,6 +109,23 @@ public class FactionsBlockListener implements Listener {
 
         if (!playerCanBuildDestroyBlock(event.getPlayer(), event.getBlock(), "destroy", false)) {
             event.setCancelled(true);
+            return;
+        }
+        progressMine(event);
+    }
+
+    private void progressMine(BlockBreakEvent event) {
+        FPlayer fplayer = FPlayers.i.get(event.getPlayer());
+        if (fplayer == null || Main.main == null || Main.main.featureService == null) {
+            return;
+        }
+        Faction faction = fplayer.getFaction();
+        if (faction == null || !faction.isNormal()) {
+            return;
+        }
+        Faction owner = Board.getFactionAt(new FLocation(event.getBlock()));
+        if (owner == faction || owner.isNone()) {
+            Main.main.featureService.progress(faction, FeatureConfig.MissionType.MINE_BLOCK, 1);
         }
     }
 

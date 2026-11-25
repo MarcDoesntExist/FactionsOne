@@ -1,4 +1,6 @@
 # Faction shop paid with faction points.
+# ITEM offers use material/amount; PERK offers use perk and duration-minutes:
+#   POWER_BOOST, MONEY, POINTS or TEMP_FLAG (set perk-flag to a flag name).
 # material, amount and cost are required; name/lore are optional display text.
 offers:
   bread:
@@ -15,3 +17,13 @@ offers:
     name: "Iron bundle"
     lore:
       - "Eight iron ingots for five faction points."
+  power-surge:
+    type: PERK
+    perk: POWER_BOOST
+    perk-amount: 2.0
+    duration-minutes: 60
+    material: NETHER_STAR
+    cost: 10
+    name: "Power surge"
+    lore:
+      - "Two extra faction power for one hour."

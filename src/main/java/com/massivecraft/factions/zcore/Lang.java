@@ -54,6 +54,9 @@ public class Lang {
     public static final String shopItemName = "<gold>%s";
     public static final String shopLoreAmount = "<gray>Amount: <white>%s";
     public static final String shopLoreCost = "<gray>Cost: <white>%s points";
+    public static final String shopLorePerk = "<gray>Perk: <white>%s";
+    public static final String shopLorePerkAmount = "<gray>Amount: <white>%s";
+    public static final String shopLoreDuration = "<gray>Duration: <white>%s min";
     public static final String shopLoreClick = "<yellow>Click to buy";
     public static final String shopPurchase = "<g>Purchase complete.";
     public static final String missionTitle = "<aqua>Missions";
@@ -61,6 +64,11 @@ public class Lang {
     public static final String missionLoreDescription = "<gray>%s";
     public static final String missionLoreProgress = "<gray>Progress: <white>%s/%s";
     public static final String missionLoreReward = "<gray>Reward: <white>%s points";
+    public static final String missionLorePeriod = "<gray>Period: <white>%s";
+    public static final String missionLoreNextReset = "<gray>Next reset: <white>%s";
+    public static final String missionLoreMoney = "<gray>Money reward: <white>%s";
+    public static final String missionLoreItems = "<gray>Item reward: <white>%s";
+    public static final String missionRewardFailed = "<b>The mission reward could not be granted.";
     public static final String missionCompleted = "<g>Completed";
     public static final String missionClick = "<yellow>Click to claim";
     public static final String missionNotReady = "<gray>Not ready";

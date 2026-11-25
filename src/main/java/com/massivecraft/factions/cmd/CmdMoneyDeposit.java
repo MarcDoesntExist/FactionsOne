@@ -2,6 +2,7 @@ package com.massivecraft.factions.cmd;
 
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.FeatureConfig;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.iface.EconomyParticipator;
 import com.massivecraft.factions.integration.Econ;
@@ -45,6 +46,10 @@ public class CmdMoneyDeposit extends FCommand {
         if (!FPerm.BANK_DEPOSIT.has(fme, faction, true))
             return;
         boolean success = Econ.transferMoney(fme, fme, faction, amount);
+        if (success && amount > 0.0 && Main.main.featureService != null) {
+            Main.main.featureService.progress(faction,
+                    FeatureConfig.MissionType.BANK_DEPOSIT, (int) Math.floor(amount));
+        }
 
         if (success && Conf.logMoneyTransactions)
             Main.main.log(Main.main.txt

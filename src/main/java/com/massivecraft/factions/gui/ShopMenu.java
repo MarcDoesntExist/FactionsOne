@@ -58,7 +58,16 @@ public final class ShopMenu extends PagedMenu {
             if (meta != null) {
                 meta.displayName(Main.main.txt.parse(Lang.shopItemName, offer.name()));
                 List<Component> lore = new ArrayList<Component>();
-                lore.add(Main.main.txt.parse(Lang.shopLoreAmount, offer.amount()));
+                if (offer.type() == FeatureConfig.ShopOfferType.PERK) {
+                    lore.add(Main.main.txt.parse(Lang.shopLorePerk,
+                            offer.perk().name().toLowerCase(java.util.Locale.ROOT)));
+                    lore.add(Main.main.txt.parse(Lang.shopLorePerkAmount,
+                            String.format(java.util.Locale.ROOT, "%.2f", offer.perkAmount())));
+                    lore.add(Main.main.txt.parse(Lang.shopLoreDuration,
+                            offer.durationMinutes()));
+                } else {
+                    lore.add(Main.main.txt.parse(Lang.shopLoreAmount, offer.amount()));
+                }
                 lore.add(Main.main.txt.parse(Lang.shopLoreCost, offer.cost()));
                 for (String line : offer.lore()) {
                     lore.add(Main.main.txt.parse(line));

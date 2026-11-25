@@ -1,5 +1,8 @@
 # Faction missions are shared by all members and rewarded with faction points.
-# type: CLAIM or TNT_DEPOSIT
+# type: CLAIM, TNT_DEPOSIT, BANK_DEPOSIT, KILL_PLAYER, KILL_MOB,
+#       MINE_BLOCK or PLAYER_KILLED.
+# period: NONE, DAILY or WEEKLY; reward-money and reward-items are optional.
+# reward-items entries use MATERIAL:amount.
 missions:
   first-claim:
     name: "First claim"
@@ -13,3 +16,19 @@ missions:
     type: TNT_DEPOSIT
     target: 4
     reward-points: 10
+  bank-deposit:
+    name: "Bank deposit"
+    description: "Deposit 100 into the faction bank."
+    type: BANK_DEPOSIT
+    target: 100
+    reward-points: 15
+    period: DAILY
+  miner:
+    name: "Miner"
+    description: "Mine 64 blocks in your territory or the wilderness."
+    type: MINE_BLOCK
+    target: 64
+    reward-points: 10
+    reward-items:
+      - "COBBLESTONE:16"
+    period: WEEKLY

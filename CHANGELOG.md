@@ -8,6 +8,13 @@ the project uses semantic versioning.
 
 ### Added
 
+- Shop offers can be perks: temporary faction power, faction bank money,
+  faction points and temporary flags. Points are charged only after the perk
+  validates, and are refunded if its application fails; temporary perks expire.
+- Missions support bank deposits, player/mob kills, mining and player deaths,
+  with optional money and item rewards, daily/weekly reset periods and GUI
+  reset information. Old `missions.yml` files without the new fields keep
+  loading with period `NONE` and no extra rewards.
 - Upgrade effects for faction member and ally limits, claim limits and the
   per-player power cap. `factionAllyLimit` and `claimedLandsMaxHardCap`
   default to 0 (no limit); old `upgrades.yml` files with only `WARP_LIMIT`

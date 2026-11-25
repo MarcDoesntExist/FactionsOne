@@ -34,6 +34,7 @@ import com.massivecraft.factions.struct.TerritoryAccess;
 import com.massivecraft.factions.util.AutoLeaveTask;
 import com.massivecraft.factions.util.EconLandRewardTask;
 import com.massivecraft.factions.util.LazyLocation;
+import com.massivecraft.factions.util.MissionResetTask;
 import com.massivecraft.factions.zcore.MPlugin;
 import com.massivecraft.factions.zcore.util.DataVersionService;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -109,6 +110,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     private Integer factionTaxTaskID = null;
     private Integer bankCompensationTaskID = null;
     private Integer mailboxExpiryTaskID = null;
+    private Integer missionResetTaskID = null;
     private Integer mapAutoUpdateTask = null;
 
     public Main() {
@@ -205,6 +207,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         startFactionTaxTask(false);
         startBankCompensationTask(false);
         startMailboxExpiryTask(false);
+        startMissionResetTask(false);
 
         // Register Event Handlers
         getServer().getPluginManager().registerEvents(this.playerListener, this);
@@ -260,6 +263,10 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         if (mailboxExpiryTaskID != null) {
             this.getServer().getScheduler().cancelTask(mailboxExpiryTaskID);
             mailboxExpiryTaskID = null;
+        }
+        if (missionResetTaskID != null) {
+            this.getServer().getScheduler().cancelTask(missionResetTaskID);
+            missionResetTaskID = null;
         }
         super.onDisable();
     }
@@ -338,6 +345,23 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         long ticks = Math.min(Integer.MAX_VALUE, 20L * 60L * Conf.mailboxExpiryCheckMinutes);
         mailboxExpiryTaskID = this.getServer().getScheduler()
                 .scheduleSyncRepeatingTask(this, new MailboxExpiryTask(), ticks, ticks);
+    }
+
+    public void startMissionResetTask(boolean restartIfRunning) {
+        if (missionResetTaskID != null) {
+            if (!restartIfRunning) {
+                return;
+            }
+            this.getServer().getScheduler().cancelTask(missionResetTaskID);
+            missionResetTaskID = null;
+        }
+        if (Conf.missionResetCheckMinutes <= 0) {
+            return;
+        }
+        long ticks = Math.min(Integer.MAX_VALUE,
+                20L * 60L * Conf.missionResetCheckMinutes);
+        missionResetTaskID = this.getServer().getScheduler()
+                .scheduleSyncRepeatingTask(this, new MissionResetTask(), ticks, ticks);
     }
 
     public boolean refundMailboxClaim(FactionMailbox.Claim claim) {

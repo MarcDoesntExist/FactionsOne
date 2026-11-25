@@ -14,8 +14,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Lists missions and claims completed ones for faction points.
@@ -25,6 +28,7 @@ import java.util.List;
 public final class MissionsMenu extends PagedMenu {
 
     private final Faction faction;
+    private final SimpleDateFormat format = new SimpleDateFormat("MM-dd HH:mm");
 
     public MissionsMenu(Player player, GuiConfig config) {
         this(player, config, factionOf(player));
@@ -66,6 +70,23 @@ public final class MissionsMenu extends PagedMenu {
                         mission.target()));
                 lore.add(Main.main.txt.parse(Lang.missionLoreReward,
                         mission.rewardPoints()));
+                lore.add(Main.main.txt.parse(Lang.missionLorePeriod,
+                        mission.period().name().toLowerCase(Locale.ROOT)));
+                if (mission.period() != FeatureConfig.MissionPeriod.NONE) {
+                    long nextReset = service.nextResetAt(this.faction);
+                    if (nextReset > 0) {
+                        lore.add(Main.main.txt.parse(Lang.missionLoreNextReset,
+                                this.format.format(new Date(nextReset))));
+                    }
+                }
+                if (mission.rewardMoney() > 0.0) {
+                    lore.add(Main.main.txt.parse(Lang.missionLoreMoney,
+                            String.format(Locale.ROOT, "%.2f", mission.rewardMoney())));
+                }
+                if (!mission.rewardItems().isEmpty()) {
+                    lore.add(Main.main.txt.parse(Lang.missionLoreItems,
+                            String.join(", ", mission.rewardItems())));
+                }
                 lore.add(Main.main.txt.parse(done ? Lang.missionCompleted
                         : progress >= mission.target() ? Lang.missionClick
                         : Lang.missionNotReady));

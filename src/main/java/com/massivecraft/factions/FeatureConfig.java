@@ -32,17 +32,42 @@ public final class FeatureConfig {
                                     int amountPerLevel) {
     }
 
+    public enum ShopOfferType {
+        ITEM,
+        PERK
+    }
+
+    public enum ShopPerk {
+        POWER_BOOST,
+        MONEY,
+        POINTS,
+        TEMP_FLAG
+    }
+
     public record ShopOffer(String id, String material, int amount, int cost, String name,
-                            List<String> lore) {
+                            List<String> lore, ShopOfferType type, ShopPerk perk,
+                            double perkAmount, String perkFlag, int durationMinutes) {
     }
 
     public enum MissionType {
         CLAIM,
-        TNT_DEPOSIT
+        TNT_DEPOSIT,
+        BANK_DEPOSIT,
+        KILL_PLAYER,
+        KILL_MOB,
+        MINE_BLOCK,
+        PLAYER_KILLED
+    }
+
+    public enum MissionPeriod {
+        NONE,
+        DAILY,
+        WEEKLY
     }
 
     public record MissionDefinition(String id, String name, String description, MissionType type,
-                                    int target, int rewardPoints) {
+                                    int target, int rewardPoints, double rewardMoney,
+                                    List<String> rewardItems, MissionPeriod period) {
     }
 
     private final Main plugin;
@@ -90,13 +115,30 @@ public final class FeatureConfig {
                 if (section == null) {
                     continue;
                 }
-                this.shopOffers.put(id.toLowerCase(Locale.ROOT), new ShopOffer(
-                        id.toLowerCase(Locale.ROOT),
-                        section.getString("material", "STONE"),
-                        Math.max(1, section.getInt("amount", 1)),
-                        Math.max(1, section.getInt("cost", 1)),
-                        section.getString("name", id),
-                        section.getStringList("lore")));
+                try {
+                    ShopOfferType type = ShopOfferType.valueOf(
+                            section.getString("type", "ITEM").toUpperCase(Locale.ROOT));
+                    ShopPerk perk = type == ShopOfferType.PERK
+                            ? ShopPerk.valueOf(
+                                    section.getString("perk", "").toUpperCase(Locale.ROOT))
+                            : null;
+                    this.shopOffers.put(id.toLowerCase(Locale.ROOT), new ShopOffer(
+                            id.toLowerCase(Locale.ROOT),
+                            section.getString("material", "STONE"),
+                            Math.max(1, section.getInt("amount", 1)),
+                            Math.max(1, section.getInt("cost", 1)),
+                            section.getString("name", id),
+                            List.copyOf(section.getStringList("lore")),
+                            type,
+                            perk,
+                            Math.max(0.0, section.getDouble("perk-amount",
+                                    section.getDouble("amount", 0.0))),
+                            section.getString("perk-flag", ""),
+                            Math.max(0, section.getInt("duration-minutes", 0))));
+                } catch (IllegalArgumentException exception) {
+                    this.plugin.getLogger().warning("Invalid shop offer " + id + ": "
+                            + exception.getMessage());
+                }
             }
         }
 
@@ -111,13 +153,18 @@ public final class FeatureConfig {
                 try {
                     MissionType type = MissionType.valueOf(
                             section.getString("type", "CLAIM").toUpperCase(Locale.ROOT));
+                    MissionPeriod period = MissionPeriod.valueOf(
+                            section.getString("period", "NONE").toUpperCase(Locale.ROOT));
                     this.missions.put(id.toLowerCase(Locale.ROOT), new MissionDefinition(
                             id.toLowerCase(Locale.ROOT),
                             section.getString("name", id),
                             section.getString("description", ""),
                             type,
                             Math.max(1, section.getInt("target", 1)),
-                            Math.max(0, section.getInt("reward-points", 0))));
+                            Math.max(0, section.getInt("reward-points", 0)),
+                            Math.max(0.0, section.getDouble("reward-money", 0.0)),
+                            List.copyOf(section.getStringList("reward-items")),
+                            period));
                 } catch (IllegalArgumentException exception) {
                     this.plugin.getLogger().warning("Invalid mission definition: " + id);
                 }

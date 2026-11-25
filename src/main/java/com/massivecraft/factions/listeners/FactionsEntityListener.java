@@ -51,11 +51,19 @@ public class FactionsEntityListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onEntityDeath(EntityDeathEvent event) {
         Entity entity = event.getEntity();
-        if (!(entity instanceof Player))
+        if (!(entity instanceof Player)) {
+            if (entity instanceof LivingEntity living && living.getKiller() != null) {
+                progressKill(living.getKiller(), FeatureConfig.MissionType.KILL_MOB);
+            }
             return;
+        }
 
         Player player = (Player) entity;
         FPlayer fplayer = FPlayers.i.get(player);
+        if (player.getKiller() != null) {
+            progressKill(player.getKiller(), FeatureConfig.MissionType.KILL_PLAYER);
+        }
+        progressKill(fplayer, FeatureConfig.MissionType.PLAYER_KILLED);
         Faction faction = Board.getFactionAt(new FLocation(player.getLocation()));
 
         PowerLossEvent powerLossEvent = new PowerLossEvent(faction, fplayer);
@@ -481,6 +489,20 @@ public class FactionsEntityListener implements Listener {
         } else if (entity instanceof Wither) {
             if (!faction.getFlag(FFlag.EXPLOSIONS))
                 event.setCancelled(true);
+        }
+    }
+
+    private void progressKill(Player player, FeatureConfig.MissionType type) {
+        progressKill(player == null ? null : FPlayers.i.get(player), type);
+    }
+
+    private void progressKill(FPlayer fplayer, FeatureConfig.MissionType type) {
+        if (fplayer == null || Main.main == null || Main.main.featureService == null) {
+            return;
+        }
+        Faction faction = fplayer.getFaction();
+        if (faction != null && faction.isNormal()) {
+            Main.main.featureService.progress(faction, type, 1);
         }
     }
 }
