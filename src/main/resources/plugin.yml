@@ -3,7 +3,7 @@ version: ${version}
 main: com.massivecraft.factions.Main
 description: FactionsOne (Factions) for Paper 26.3
 authors: [ drtshock, externo6, Olof Cayorion Larsson, Brett Flannigan, Daniel Saukel, MarcDoesntExists ]
-softdepend: [ PermissionsEx, Essentials, EssentialsChat, Vault, WorldEdit, WorldGuard ]
+softdepend: [ PermissionsEx, Essentials, EssentialsChat, Vault, WorldEdit, WorldGuard, PlaceholderAPI ]
 commands:
   factions:
     description: The Factions base command

@@ -19,6 +19,7 @@ repositories {
     }
     maven("https://repo.essentialsx.net/releases/")
     maven("https://maven.enginehub.org/repo/")
+    maven("https://repo.extendedclip.com/releases/")
 }
 
 val paperApiVersion = "26.3.build.259-stable"
@@ -43,6 +44,9 @@ dependencies {
     compileOnly("net.essentialsx:EssentialsX:2.21.2") {
         isTransitive = false
     }
+    // PlaceholderAPI 2.11.7 is the latest stable release published on
+    // repo.extendedclip.com (checked against the Maven repository).
+    compileOnly("me.clip:placeholderapi:2.11.7")
     // WorldGuard/WorldEdit pin the Mojang-provided libraries with `strictly`
     // constraints that clash with paper-api. The server supplies them at runtime.
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.17") {

@@ -78,6 +78,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     // Listeners
     public final FactionsPlayerListener playerListener;
     public final FactionsChatListener chatListener;
+    private com.massivecraft.factions.integration.placeholder.FactionsPlaceholderExpansion placeholderExpansion;
     public final FactionsEntityListener entityListener;
     public final FactionsExploitListener exploitListener;
     public final FactionsBlockListener blockListener;
@@ -193,6 +194,12 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
                 root.setTabCompleter(this);
             }
         }
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            this.placeholderExpansion =
+                    new com.massivecraft.factions.integration.placeholder.FactionsPlaceholderExpansion(
+                            this);
+            this.placeholderExpansion.register();
+        }
 
         Essentials.setup();
         Econ.setup();
@@ -246,6 +253,10 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
 
     @Override
     public void onDisable() {
+        if (this.placeholderExpansion != null) {
+            this.placeholderExpansion.unregister();
+            this.placeholderExpansion = null;
+        }
         // only save data if plugin actually completely loaded successfully
         if (this.loadSuccessful) {
             Board.save();
