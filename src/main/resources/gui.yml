@@ -1,0 +1,209 @@
+# FactionsOne GUI configuration
+# Text uses the same tags as the rest of the plugin (<gold>, <aqua>, <gray>, ...).
+# Every item supports:
+#   serialized: Base64 of ItemStack#serializeAsBytes() -> any vanilla/modded-in-data item
+#   material, amount, name, lore, enchants, flags, custom-model-data, item-model,
+#   unbreakable, glint, hide-tooltip, rarity
+# A player head can use head.name, head.uuid, head.texture (base64 or URL) and
+# head.signature. Raw serialized items are the complete fallback for components,
+# books, banners, potions, armor trims and any other item type.
+menu:
+  main:
+    title: "<gold>Factions"
+    rows: 5
+    slots:
+      info: 4
+      members: 10
+      perms: 11
+      relations: 12
+      territory: 13
+      bank: 14
+      warps: 15
+      upgrades: 16
+      missions: 19
+      shop: 20
+      logs: 21
+      close: 22
+  info:
+    title: "<gold>Faction info"
+    rows: 3
+    name: "<gold>%s"
+    lore:
+      - "<gray>Description: <white>%s"
+      - "<gray>Members: <white>%s"
+      - "<gray>Online: <white>%s"
+      - "<gray>Power: <white>%s"
+      - "<gray>Claims: <white>%s"
+      - "<gray>Bank: <white>%s"
+  members:
+    title: "<aqua>Members"
+    rows: 6
+    entry-name: "<white>%s"
+    entry-lore:
+      - "<gray>Role: <white>%s"
+      - "<gray>Power: <white>%s"
+      - "<gray>Status: <white>%s"
+      - "<yellow>Click for actions"
+  member-actions:
+    title: "<aqua>Member actions"
+    rows: 3
+    denied: "<red>You cannot do that."
+  perms:
+    title: "<gold>Permissions"
+    rows: 6
+    entry-name: "<aqua>%s"
+    entry-lore:
+      - "<yellow>Click to edit this permission"
+  perm-editor:
+    title: "<gold>Permissions: <white>%s"
+    rows: 3
+    role-name: "<white>%s"
+    role-lore:
+      - "<gray>Click to toggle: <white>%s"
+  relations:
+    title: "<aqua>Relations"
+    rows: 3
+  territory:
+    title: "<aqua>Territory"
+    rows: 3
+  bank:
+    title: "<gold>Bank"
+    rows: 3
+  warps:
+    title: "<aqua>Warps"
+    rows: 6
+  upgrades:
+    title: "<gold>Upgrades"
+    rows: 6
+  missions:
+    title: "<aqua>Missions"
+    rows: 6
+  shop:
+    title: "<gold>Shop"
+    rows: 6
+  top:
+    title: "<gold>Top factions"
+    rows: 6
+    entry-name: "<gold>#%s <white>%s"
+    entry-lore:
+      - "<gray>%s: <white>%s"
+  logs:
+    title: "<gray>Faction logs"
+    rows: 6
+
+items:
+  top.entry:
+    material: GOLD_INGOT
+  main.info:
+    material: BOOK
+    name: "<gold>Faction info"
+    lore:
+      - "<gray>Tag, power and claims."
+      - "<yellow>Click to open"
+  info.card:
+    material: KNOWLEDGE_BOOK
+  main.members:
+    material: PLAYER_HEAD
+    name: "<aqua>Members"
+    lore:
+      - "<gray>View the faction roster."
+      - "<yellow>Click to open"
+    head:
+      name: "Members"
+      # Skin texture property (Base64 value from a Minecraft head database).
+      texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOThjZWQ3NGEyMjAyMWE1MzVmNmJjZTIxYzhjNjMyYjI3M2RjMmQ5NTUyYjcxYTM4ZDU3MjY5YjM1MzhjZiJ9fX0="
+  main.perms:
+    material: PAPER
+    name: "<gold>Permissions"
+    lore:
+      - "<gray>View and edit the role matrix."
+      - "<yellow>Click to open"
+  main.relations:
+    material: COMPASS
+    name: "<aqua>Relations"
+    lore:
+      - "<gray>Diplomacy menu."
+      - "<yellow>Coming in phase F5"
+  main.territory:
+    material: GRASS_BLOCK
+    name: "<aqua>Territory"
+    lore:
+      - "<gray>Claims and access."
+      - "<yellow>Coming in phase F5"
+  main.bank:
+    material: GOLD_INGOT
+    name: "<gold>Bank"
+    lore:
+      - "<gray>Faction balance and transfers."
+      - "<yellow>Coming in phase F6"
+  main.warps:
+    material: ENDER_PEARL
+    name: "<aqua>Warps"
+    lore:
+      - "<gray>Faction warp points."
+      - "<yellow>Click to open"
+  main.upgrades:
+    material: NETHER_STAR
+    name: "<gold>Upgrades"
+    lore:
+      - "<gray>Faction upgrades."
+      - "<yellow>Click to open"
+  main.missions:
+    material: WRITABLE_BOOK
+    name: "<aqua>Missions"
+    lore:
+      - "<gray>Faction missions."
+      - "<yellow>Click to open"
+  main.shop:
+    material: EMERALD
+    name: "<gold>Shop"
+    lore:
+      - "<gray>Faction shop."
+      - "<yellow>Click to open"
+  main.logs:
+    material: BOOK
+    name: "<gray>Faction logs"
+    lore:
+      - "<gray>Recent faction activity."
+      - "<yellow>Click to open"
+  main.close:
+    material: BARRIER
+    name: "<red>Close"
+    lore:
+      - "<gray>Close this menu."
+
+  navigation.previous:
+    material: ARROW
+    name: "<yellow>Previous page"
+  navigation.next:
+    material: ARROW
+    name: "<yellow>Next page"
+  navigation.back:
+    material: BARRIER
+    name: "<red>Back"
+    lore:
+      - "<gray>Return to the main menu."
+
+  member-actions.promote:
+    material: LIME_DYE
+    name: "<green>Promote"
+    lore:
+      - "<gray>Promote this member."
+  member-actions.demote:
+    material: GRAY_DYE
+    name: "<yellow>Demote"
+    lore:
+      - "<gray>Demote this member."
+  member-actions.kick:
+    material: IRON_BOOTS
+    name: "<red>Kick"
+    lore:
+      - "<gray>Kick this member."
+  member-actions.ban:
+    material: BARRIER
+    name: "<dark_red>Ban"
+    lore:
+      - "<gray>Ban this member."
+
+  perms.entry:
+    material: PAPER
