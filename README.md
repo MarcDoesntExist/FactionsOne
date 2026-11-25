@@ -27,13 +27,24 @@ Usage
 
 A default config file will be created on the first run.
 
+Optional web map
+---------
+BlueMap is supported as an optional, read-only claim overlay. It is disabled by
+default; set `mapEnabled: true` in `conf.json` and install BlueMap with its
+web resources accepted. The layer name is `mapLayerName` (default `Factions`),
+and `mapReferenceFaction` can name a faction id or tag: when set, claims are
+colored by relation to that faction instead of per-faction.
+`mapRefreshDebounceTicks` and `mapShapeY` tune refresh coalescing and marker
+height. Without BlueMap the plugin starts normally and logs that the
+integration is disabled; a failed API hook is also non-fatal.
+
 Features
 ---------
 Factions with claims, relations and raids; an atomic faction bank with a
 journal; warps, upgrades, missions and a points shop; faction shields, periodic
 taxes, TNT bank fill/siphon, audit logs and a public `SkyAPI` with cancellable
 events. Optional integrations are detected at runtime: Vault, EssentialsX,
-PlaceholderAPI and WorldGuard.
+PlaceholderAPI, WorldGuard and BlueMap.
 
 Build and verification
 ----------

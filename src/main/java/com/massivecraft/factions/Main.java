@@ -22,6 +22,7 @@ import com.massivecraft.factions.integration.Essentials;
 import com.massivecraft.factions.gui.GuiConfig;
 import com.massivecraft.factions.gui.MenuManager;
 import com.massivecraft.factions.integration.Worldguard;
+import com.massivecraft.factions.integration.map.MapIntegration;
 import com.massivecraft.factions.listeners.*;
 import com.massivecraft.factions.rank.FactionRankingService;
 import com.massivecraft.factions.shield.ShieldService;
@@ -104,6 +105,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     public BankJournal bankJournal;
     public IdempotencyStore idempotencyStore;
     public FactionMailbox mailbox;
+    public MapIntegration mapIntegration;
     // Persistance related
     private boolean locked = false;
     private Integer AutoLeaveTask = null;
@@ -245,6 +247,9 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         getServer().getPluginManager().registerEvents(this.teleportWarmupService, this);
         getServer().getPluginManager().registerEvents(this.flyService, this);
 
+        this.mapIntegration = new MapIntegration(this);
+        this.mapIntegration.start();
+
         startMapAutoUpdateTask();
 
         postEnable();
@@ -264,6 +269,10 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
 
     @Override
     public void onDisable() {
+        if (this.mapIntegration != null) {
+            this.mapIntegration.close();
+            this.mapIntegration = null;
+        }
         if (this.placeholderExpansion != null) {
             this.placeholderExpansion.unregister();
             this.placeholderExpansion = null;

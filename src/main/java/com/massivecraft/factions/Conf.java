@@ -103,6 +103,13 @@ public class Conf {
     // 1 server tick is roughly 50ms, so default max 10% of a tick
     public static boolean removePlayerDataWhenBanned = true;
     public static boolean worldGuardChecking = false;
+    // Optional BlueMap claim overlay
+    public static boolean mapEnabled = false;
+    public static String mapLayerName = "Factions";
+    // Empty = stable per-faction colors; set a faction id/tag to color by relation.
+    public static String mapReferenceFaction = "";
+    public static int mapRefreshDebounceTicks = 40;
+    public static float mapShapeY = 64.0f;
     //LWC
     public static boolean lwcIntegration = false;
     public static boolean onUnclaimResetLwcLocks = false;

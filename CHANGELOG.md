@@ -6,6 +6,14 @@ the project uses semantic versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Optional BlueMap claim overlay (`mapEnabled`, default `false`): claimed
+  chunks are merged into rectangles and refreshed after claim, unclaim and
+  relation changes. Colors follow the relation to `mapReferenceFaction` when
+  configured, otherwise a stable per-faction color. BlueMap is loaded through
+  reflection and a missing or failed API leaves the plugin running.
+
 ## [1.5.0] - 2026-11-25
 
 ### Added
