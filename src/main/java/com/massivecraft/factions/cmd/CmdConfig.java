@@ -2,6 +2,7 @@ package com.massivecraft.factions.cmd;
 
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.Main;
+import com.massivecraft.factions.config.YamlConfig;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
@@ -369,8 +370,9 @@ public class CmdConfig extends FCommand {
             } else  // using Main.main.log() instead of sendMessage if run from server console so that "[Factions v#.#.#]" is prepended in server log
                 Main.main.log(success);
         }
-        // save change to disk
+        // save change to disk; keep the YAML view in sync with /f config edits
         Conf.save();
+        YamlConfig.save(Main.main);
     }
 
 }

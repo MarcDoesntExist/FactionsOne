@@ -27,6 +27,29 @@ Usage
 
 A default config file will be created on the first run.
 
+## YAML configuration
+
+On first start FactionsOne creates `config.yml` and `messages.yml` in `plugins/Factions`:
+
+- `config.yml` mirrors every editable `Conf` setting. It is loaded after the
+  legacy `conf.json`; keys present in the YAML override the JSON value. Remove a
+  key to fall back to `conf.json`. `/f reload conf` reapplies it, and edits made
+  through `/f config` are written back to both files.
+- `messages.yml` exposes every centralized `Lang` message. Existing files keep
+  their custom values and missing keys use the compiled default, so upgrades do
+  not require deleting the file.
+- `gui.yml`, `missions.yml`, `shop.yml` and `upgrades.yml` remain the registries
+  for menus and feature content.
+
+## PlaceholderAPI
+
+When PlaceholderAPI is installed, the optional `factionsone` expansion exposes
+player, faction, relation, ranking, territory, warp, tax and shield values.
+Examples: `%factionsone_faction%`, `%factionsone_faction_power%`,
+`%factionsone_faction_bank%`, `%factionsone_faction_shield_remaining%`,
+`%factionsone_relation_enemy%`, `%factionsone_rank_power%` and
+`%factionsone_top_power_1_tag%`. The complete list is in `docs/API.md`.
+
 Optional web map
 ---------
 BlueMap is supported as an optional, read-only claim overlay. It is disabled by
@@ -42,9 +65,11 @@ Features
 ---------
 Factions with claims, relations and raids; an atomic faction bank with a
 journal; warps, upgrades, missions and a points shop; faction shields, periodic
-taxes, TNT bank fill/siphon, audit logs and a public `SkyAPI` with cancellable
+taxes, TNT bank fill/siphon, audit logs and a public `FactionsAPI` with cancellable
 events. Optional integrations are detected at runtime: Vault, EssentialsX,
-PlaceholderAPI, WorldGuard and BlueMap.
+PlaceholderAPI, WorldGuard and BlueMap. All configuration is available in YAML
+(`config.yml`, `messages.yml`, `gui.yml`, `missions.yml`, `shop.yml`,
+`upgrades.yml`); `conf.json` remains as the backward-compatible fallback.
 
 Build and verification
 ----------

@@ -3,6 +3,7 @@ package com.massivecraft.factions.cmd;
 import com.massivecraft.factions.Board;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.config.YamlConfig;
 import com.massivecraft.factions.Factions;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.Permission;
@@ -42,9 +43,11 @@ public class CmdReload extends FCommand {
         String file = this.argAsString(0, "all").toLowerCase();
         String fileName;
         boolean success = true;
+        boolean yamlGenerated = false;
 
         if (file.startsWith("c")) {
             Conf.load();
+            yamlGenerated = YamlConfig.wasGeneratedOnLoad();
             fileName = "conf.json";
         } else if (file.startsWith("b")) {
             success = Board.load();
@@ -57,6 +60,7 @@ public class CmdReload extends FCommand {
             fileName = "players.json";
         } else if (file.startsWith("a")) {
             Conf.load();
+            yamlGenerated = YamlConfig.wasGeneratedOnLoad();
             success = FPlayers.i.loadFromDisc();
             success = Factions.i.loadFromDisc() && success;
             success = Board.load() && success;
@@ -75,6 +79,9 @@ public class CmdReload extends FCommand {
 
         Conf.migrateColeaderPermissions();
         Conf.migrateExtendedPermissions();
+        if (yamlGenerated) {
+            YamlConfig.save(Main.main);
+        }
         if (Main.main.claimValueService != null) {
             // Prices or claim rules may have changed: rebuild the derived values.
             Main.main.claimValueService.requestFullScan();

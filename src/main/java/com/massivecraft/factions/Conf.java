@@ -1,14 +1,24 @@
 package com.massivecraft.factions;
 
-import de.erethon.factionsone.api.LegacyUtil;
+import com.massivecraft.factions.config.YamlConfig;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.util.Color;
+import de.erethon.factionsone.api.LegacyUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * @author drtshock
@@ -18,16 +28,16 @@ import java.util.*;
  * @author Daniel Saukel
  */
 public class Conf {
-    public final static transient List<String> baseCommandAliases = new ArrayList<String>();
-    public final transient static Set<Material> materialsEditOnInteract =
-            EnumSet.noneOf(Material.class);
-    public final transient static Set<Material> materialsEditTools = EnumSet.noneOf(Material.class);
-    public final transient static Set<Material> materialsDoor = EnumSet.noneOf(Material.class);
-    public final transient static Set<Material> materialsContainer = EnumSet.noneOf(Material.class);
+    public final static List<String> baseCommandAliases = new ArrayList<String>();
+    public final static Set<Material> materialsEditOnInteract =
+        EnumSet.noneOf(Material.class);
+    public final static Set<Material> materialsEditTools = EnumSet.noneOf(Material.class);
+    public final static Set<Material> materialsDoor = EnumSet.noneOf(Material.class);
+    public final static Set<Material> materialsContainer = EnumSet.noneOf(Material.class);
     // -------------------------------------------- //
     // Persistance
     // -------------------------------------------- //
-    private static final transient Conf i = new Conf();
+    private static final Conf i = new Conf();
     // Colors
     public static Color colorMember = Color.GREEN;
     public static Color colorAlly = Color.DARK_PURPLE;
@@ -86,13 +96,13 @@ public class Conf {
     // Configuration on the Faction tag in chat messages.
     public static boolean chatSetFormat = false;
     public static String chatSetFormatTo =
-            "<{faction_relcolor}\u00A7l{faction_roleprefix}\u00A7lr{faction_relcolor}{faction_tag_pr}"
-                    + Color.WHITE.toString() + "%s> %s";
+        "<{faction_relcolor}\u00A7l{faction_roleprefix}\u00A7lr{faction_relcolor}{faction_tag_pr}"
+            + Color.WHITE + "%s> %s";
     // This one is almost deprecated now right? or is it?
     public static boolean chatParseTags = true;
     public static boolean chatParseTagsColored = false;
     public static Map<String, String> chatSingleFormats = new HashMap<String, String>();
-    public static transient boolean chatTagHandledByAnotherPlugin = false;
+    public static boolean chatTagHandledByAnotherPlugin = false;
     // Why do we need this? (Olof asks)
     public static String chatTagFormat = "%s" + Color.WHITE;
     public static boolean broadcastDescriptionChanges = false;
@@ -179,7 +189,7 @@ public class Conf {
     //public static Set<Material> territoryDenyUseageMaterialsWhenOffline = EnumSet.noneOf(Material.class);
     public static boolean pistonProtectionThroughDenyBuild = true;
     // TODO: Rename to monsterCreatureTypes
-    public static transient Set<EntityType> monsters = EnumSet.noneOf(EntityType.class);
+    public static Set<EntityType> monsters = EnumSet.noneOf(EntityType.class);
     // Economy settings
     public static boolean econEnabled = false;
     public static String econUniverseAccount = "";
@@ -249,9 +259,9 @@ public class Conf {
     public static int claimValueChunksPerTick = 2;
     public static long claimValueRefreshMinutes = 10L;
     public static Map<String, Double> claimValueSpawners =
-            new LinkedHashMap<String, Double>();
+        new LinkedHashMap<String, Double>();
     public static Map<String, Double> claimValueContainers =
-            new LinkedHashMap<String, Double>();
+        new LinkedHashMap<String, Double>();
     public static Map<String, Double> claimValueItems = new LinkedHashMap<String, Double>();
     public static int nearDefaultRadiusChunks = 50;
     public static int nearMaxRadiusChunks = 200;
@@ -284,10 +294,10 @@ public class Conf {
     // TODO: A better solution Would be to have One wilderness faction per world.
     //public static Set<String> worldsNoWildernessProtection = new LinkedHashSet<String>();
     public static Set<String> worldsIgnorePvP = new LinkedHashSet<String>();
-    public static transient int mapHeight = 8;
-    public static transient int mapWidth = 39;
-    public static transient char[] mapKeyChrs =
-            "\\/#?$%=&^ABCDEFGHJKLMNOPQRSTUVWXYZ1234567890abcdeghjmnopqrsuvwxyz".toCharArray();
+    public static int mapHeight = 8;
+    public static int mapWidth = 39;
+    public static char[] mapKeyChrs =
+        "\\/#?$%=&^ABCDEFGHJKLMNOPQRSTUVWXYZ1234567890abcdeghjmnopqrsuvwxyz".toCharArray();
 
     static {
         baseCommandAliases.add("f");
@@ -417,6 +427,7 @@ public class Conf {
 
     public static void load() {
         Main.main.persist.loadOrSaveDefault(i, Conf.class, "conf");
+        YamlConfig.load(Main.main);
         if (claimValueSpawners == null) {
             claimValueSpawners = new LinkedHashMap<String, Double>();
         }

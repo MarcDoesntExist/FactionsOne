@@ -1,42 +1,50 @@
 package com.massivecraft.factions;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.GsonBuilder;
 import com.massivecraft.factions.adapters.FFlagTypeAdapter;
 import com.massivecraft.factions.adapters.FPermTypeAdapter;
 import com.massivecraft.factions.adapters.LocationTypeAdapter;
 import com.massivecraft.factions.adapters.RelTypeAdapter;
-import com.massivecraft.factions.cmd.CmdAutoHelp;
 import com.massivecraft.factions.bank.BankCompensationTask;
 import com.massivecraft.factions.bank.BankJournal;
 import com.massivecraft.factions.bank.BankService;
 import com.massivecraft.factions.bank.IdempotencyStore;
 import com.massivecraft.factions.bank.StorageRetention;
-import com.massivecraft.factions.mailbox.FactionMailbox;
-import com.massivecraft.factions.mailbox.MailboxExpiryTask;
+import com.massivecraft.factions.cmd.CmdAutoHelp;
 import com.massivecraft.factions.cmd.FCmdAdminRoot;
 import com.massivecraft.factions.cmd.FCmdRoot;
+import com.massivecraft.factions.config.YamlConfig;
 import com.massivecraft.factions.economy.FactionTaxService;
-import com.massivecraft.factions.economy.TaxPeriodJournal;
 import com.massivecraft.factions.economy.FactionTaxTask;
-import com.massivecraft.factions.integration.Econ;
-import com.massivecraft.factions.integration.Essentials;
+import com.massivecraft.factions.economy.TaxPeriodJournal;
 import com.massivecraft.factions.gui.GuiConfig;
 import com.massivecraft.factions.gui.MenuManager;
+import com.massivecraft.factions.integration.Econ;
+import com.massivecraft.factions.integration.Essentials;
 import com.massivecraft.factions.integration.Worldguard;
 import com.massivecraft.factions.integration.map.MapIntegration;
-import com.massivecraft.factions.listeners.*;
+import com.massivecraft.factions.listeners.FactionsBlockListener;
+import com.massivecraft.factions.listeners.FactionsChatListener;
+import com.massivecraft.factions.listeners.FactionsEntityListener;
+import com.massivecraft.factions.listeners.FactionsExploitListener;
+import com.massivecraft.factions.listeners.FactionsPlayerListener;
+import com.massivecraft.factions.listeners.FactionsServerListener;
+import com.massivecraft.factions.mailbox.FactionMailbox;
+import com.massivecraft.factions.mailbox.MailboxExpiryTask;
 import com.massivecraft.factions.rank.FactionRankingService;
 import com.massivecraft.factions.shield.ShieldService;
-import com.massivecraft.factions.util.StuckService;
-import com.massivecraft.factions.util.TeleportWarmupService;
-import com.massivecraft.factions.value.ClaimValueListener;
-import com.massivecraft.factions.value.ClaimValueService;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.struct.TerritoryAccess;
 import com.massivecraft.factions.util.AutoLeaveTask;
 import com.massivecraft.factions.util.BetrayalTracker;
+import com.massivecraft.factions.util.StuckService;
+import com.massivecraft.factions.util.TeleportWarmupService;
+import com.massivecraft.factions.value.ClaimValueListener;
+import com.massivecraft.factions.value.ClaimValueService;
 import com.massivecraft.factions.util.EconLandRewardTask;
 import com.massivecraft.factions.util.LazyLocation;
 import com.massivecraft.factions.util.MissionResetTask;
@@ -114,6 +122,22 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     public MapIntegration mapIntegration;
     public BetrayalTracker betrayalTracker;
     // Persistance related
+    /**
+     * Gson must skip static final constants such as baseCommandAliases, but it
+     * still has to persist mutable static settings and migration markers.
+     */
+    private static final ExclusionStrategy STATIC_FINAL_FIELDS = new ExclusionStrategy() {
+        @Override
+        public boolean shouldSkipField(FieldAttributes field) {
+            return field.hasModifier(Modifier.STATIC) && field.hasModifier(Modifier.FINAL);
+        }
+
+        @Override
+        public boolean shouldSkipClass(Class<?> type) {
+            return false;
+        }
+    };
+
     private boolean locked = false;
     private Integer AutoLeaveTask = null;
     private Integer econLandRewardTaskID = null;
@@ -161,15 +185,18 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         boolean factionsLoaded = Factions.i.loadFromDisc();
         if (!playersLoaded || !factionsLoaded) {
             getLogger().severe("Core player or faction data could not be read; "
-                    + "disabling FactionsOne instead of overwriting it with empty state.");
+                + "disabling FactionsOne instead of overwriting it with empty state.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
         Conf.migrateColeaderPermissions();
         Conf.migrateExtendedPermissions();
+        if (YamlConfig.wasGeneratedOnLoad()) {
+            YamlConfig.save(this);
+        }
         if (!Board.load()) {
             getLogger().severe("Core board data could not be read; "
-                    + "disabling FactionsOne instead of overwriting it with empty state.");
+                + "disabling FactionsOne instead of overwriting it with empty state.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -279,12 +306,14 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     @Override
     public GsonBuilder getGsonBuilder() {
         return new GsonBuilder().setPrettyPrinting().disableHtmlEscaping()
-                .excludeFieldsWithModifiers(Modifier.TRANSIENT, Modifier.VOLATILE)
-                .registerTypeAdapter(LazyLocation.class, new LocationTypeAdapter())
-                .registerTypeAdapter(TerritoryAccess.class, new TerritoryAccess())
-                .registerTypeAdapter(Rel.class, new RelTypeAdapter())
-                .registerTypeAdapter(FPerm.class, new FPermTypeAdapter())
-                .registerTypeAdapter(FFlag.class, new FFlagTypeAdapter());
+            .excludeFieldsWithModifiers(Modifier.TRANSIENT, Modifier.VOLATILE)
+            .addSerializationExclusionStrategy(STATIC_FINAL_FIELDS)
+            .addDeserializationExclusionStrategy(STATIC_FINAL_FIELDS)
+            .registerTypeAdapter(LazyLocation.class, new LocationTypeAdapter())
+            .registerTypeAdapter(TerritoryAccess.class, new TerritoryAccess())
+            .registerTypeAdapter(Rel.class, new RelTypeAdapter())
+            .registerTypeAdapter(FPerm.class, new FPermTypeAdapter())
+            .registerTypeAdapter(FFlag.class, new FFlagTypeAdapter());
     }
 
     @Override
