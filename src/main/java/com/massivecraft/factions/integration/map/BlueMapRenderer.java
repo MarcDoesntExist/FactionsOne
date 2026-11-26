@@ -37,12 +37,12 @@ public final class BlueMapRenderer implements MapRenderer {
     private final Method markerSetBuild;
     private final Method markerSetSetLabel;
     private final Method shapeMarkerBuilder;
+    private final Method shapeMarkerLabel;
     private final Method shapeMarkerShape;
     private final Method shapeMarkerFill;
     private final Method shapeMarkerLine;
     private final Method shapeMarkerLineWidth;
     private final Method shapeMarkerBuild;
-    private final Method markerSetLabelOnMarker;
     private final Constructor<?> colorConstructor;
     private final Set<Object> trackedMaps =
             Collections.newSetFromMap(new IdentityHashMap<>());
@@ -82,6 +82,7 @@ public final class BlueMapRenderer implements MapRenderer {
         Class<?> shapeMarkerBuilderClass = Class.forName(
                 "de.bluecolored.bluemap.api.markers.ShapeMarker$Builder");
         this.shapeMarkerBuilder = shapeMarkerClass.getMethod("builder");
+        this.shapeMarkerLabel = shapeMarkerBuilderClass.getMethod("label", String.class);
         this.shapeMarkerShape = shapeMarkerBuilderClass.getMethod("shape", shapeClass,
                 float.class);
         Class<?> colorClass = Class.forName("de.bluecolored.bluemap.api.math.Color");
@@ -91,8 +92,6 @@ public final class BlueMapRenderer implements MapRenderer {
         this.shapeMarkerBuild = shapeMarkerBuilderClass.getMethod("build");
         this.colorConstructor = colorClass.getConstructor(int.class, int.class, int.class,
                 float.class);
-        Class<?> markerClass = Class.forName("de.bluecolored.bluemap.api.markers.Marker");
-        this.markerSetLabelOnMarker = markerClass.getMethod("setLabel", String.class);
     }
 
     @Override
@@ -168,13 +167,13 @@ public final class BlueMapRenderer implements MapRenderer {
         Object fillColor = colorConstructor.newInstance(red, green, blue, 0.35F);
 
         Object builder = shapeMarkerBuilder.invoke(null);
+        // BlueMap 5.29 validates the label inside the builder's build() method.
+        shapeMarkerLabel.invoke(builder, claim.label());
         shapeMarkerShape.invoke(builder, shape, Conf.mapShapeY);
         shapeMarkerFill.invoke(builder, fillColor);
         shapeMarkerLine.invoke(builder, lineColor);
         shapeMarkerLineWidth.invoke(builder, 3);
-        Object marker = shapeMarkerBuild.invoke(builder);
-        markerSetLabelOnMarker.invoke(marker, claim.label());
-        return marker;
+        return shapeMarkerBuild.invoke(builder);
     }
 
     private void clearTrackedMaps() throws ReflectiveOperationException {

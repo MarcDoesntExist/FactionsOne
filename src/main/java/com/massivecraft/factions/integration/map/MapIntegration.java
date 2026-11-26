@@ -97,8 +97,8 @@ public final class MapIntegration {
         try {
             renderer.render(buildClaims());
         } catch (RuntimeException failure) {
-            plugin.getLogger().warning("BlueMap refresh failed; web map integration is disabled: "
-                    + failure.getClass().getSimpleName());
+            plugin.getLogger().log(java.util.logging.Level.WARNING,
+                    "BlueMap refresh failed; web map integration is disabled.", failure);
             closeRenderer();
         }
     }
