@@ -206,6 +206,14 @@ public class Faction extends Entity implements EconomyParticipator {
         this.home = new LazyLocation(home);
     }
 
+    /**
+     * Reads the home without validating or unsetting it; used by read-only
+     * integrations such as placeholders.
+     */
+    public Location getHomeLocation() {
+        return this.home != null ? this.home.getLocation() : null;
+    }
+
     public void confirmValidHome() {
         if (!Conf.homesMustBeInClaimedTerritory || this.home == null || (
                 this.home.getLocation() != null
