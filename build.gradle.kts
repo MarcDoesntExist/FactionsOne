@@ -157,6 +157,10 @@ tasks.register("smokeTest") {
             "sc", "setwarp", "sethome", "shield", "shop", "show", "status", "stuck", "coords", "near", "top", "tag", "tax", "title", "tnt", "unban",
             "unclaim", "unclaimall", "upgrade", "version", "warp", "warps"
         )
+        // The admin namespace has its own root command, so it needs its own probe.
+        val commands = commandRoots.map { root ->
+            if (root.isEmpty()) "factions" else "factions $root"
+        } + "fa"
 
         val logFile = File(workDir, "smoke.log")
         val log = StringBuilder()
@@ -202,8 +206,7 @@ tasks.register("smokeTest") {
             }
 
             val stdin = process.outputStream
-            for (root in commandRoots) {
-                val command = if (root.isEmpty()) "factions" else "factions $root"
+            for (command in commands) {
                 stdin.write((command + "\n").toByteArray(Charsets.UTF_8))
                 stdin.flush()
                 Thread.sleep(150L)
@@ -248,7 +251,7 @@ tasks.register("smokeTest") {
         }
 
         project.logger.lifecycle(
-            "smokeTest: PASSED — ${commandRoots.size} command roots, ${text.lines().size} log lines"
+            "smokeTest: PASSED — ${commands.size} command invocations, ${text.lines().size} log lines"
         )
     }
 }
