@@ -23,7 +23,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,13 +37,9 @@ import java.util.Set;
  */
 public final class ClaimValueService {
 
-    private static final double EPSILON = 0.000001;
-
     private final Main plugin;
-    private final Map<String, Double> chunkValues = new HashMap<String, Double>();
-    private final Map<String, String> chunkFactions = new HashMap<String, String>();
     private final Map<String, ChunkRef> chunkRefs = new HashMap<String, ChunkRef>();
-    private final Map<String, Double> factionValues = new HashMap<String, Double>();
+    private final ClaimValueTotals totals = new ClaimValueTotals();
     private final Deque<ChunkRef> queue = new ArrayDeque<ChunkRef>();
     private final Set<String> queued = new HashSet<String>();
     private int taskId = -1;
@@ -69,20 +64,15 @@ public final class ClaimValueService {
         }
         this.queue.clear();
         this.queued.clear();
-        this.chunkValues.clear();
-        this.chunkFactions.clear();
         this.chunkRefs.clear();
-        this.factionValues.clear();
+        this.totals.clear();
     }
 
     /**
      * @return the last fully or partially computed value for the faction
      */
     public double value(String factionId) {
-        if (factionId == null) {
-            return 0.0;
-        }
-        return this.factionValues.getOrDefault(factionId, 0.0);
+        return this.totals.value(factionId);
     }
 
     public void markDirty(Location location) {
@@ -122,19 +112,8 @@ public final class ClaimValueService {
     }
 
     public void removeFaction(String factionId) {
-        if (factionId == null) {
-            return;
-        }
-        List<String> keys = new ArrayList<String>();
-        for (Map.Entry<String, String> entry : this.chunkFactions.entrySet()) {
-            if (factionId.equals(entry.getValue())) {
-                keys.add(entry.getKey());
-            }
-        }
-        for (String key : keys) {
-            removeChunk(key);
-        }
-        this.factionValues.remove(factionId);
+        this.totals.removeFaction(factionId);
+        this.chunkRefs.keySet().removeIf(key -> this.totals.factionOf(key) == null);
     }
 
     public void requestFullScan() {
@@ -222,32 +201,14 @@ public final class ClaimValueService {
 
     private void updateChunk(ChunkRef ref, String factionId, double value) {
         String key = ref.key();
-        String oldFaction = this.chunkFactions.put(key, factionId);
-        Double oldValue = this.chunkValues.put(key, value);
+        this.totals.put(key, factionId, value);
         this.chunkRefs.put(key, ref);
-        if (oldFaction != null && oldValue != null) {
-            addToFaction(oldFaction, -oldValue);
-        }
-        addToFaction(factionId, value);
     }
 
     private void removeChunk(String key) {
-        String factionId = this.chunkFactions.remove(key);
-        Double value = this.chunkValues.remove(key);
+        this.totals.remove(key);
         this.chunkRefs.remove(key);
         this.queued.remove(key);
-        if (factionId != null && value != null) {
-            addToFaction(factionId, -value);
-        }
-    }
-
-    private void addToFaction(String factionId, double delta) {
-        double next = this.factionValues.getOrDefault(factionId, 0.0) + delta;
-        if (next <= EPSILON) {
-            this.factionValues.remove(factionId);
-        } else {
-            this.factionValues.put(factionId, next);
-        }
     }
 
     private static String key(String world, int x, int z) {
