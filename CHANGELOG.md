@@ -6,6 +6,8 @@ the project uses semantic versioning.
 
 ## [Unreleased]
 
+## [1.6.3] - 2026-11-26
+
 ### Fixed
 
 - `/f reload` schedules a fresh claim value scan so changed prices or

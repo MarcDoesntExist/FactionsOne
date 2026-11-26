@@ -1,4 +1,4 @@
-FactionsOne - 1.6.2 - Paper 26.3
+FactionsOne - 1.6.3 - Paper 26.3
 ====================
 Note from externo6:<br>
 Credit to [RenegadeEagle](https://github.com/RenegadeEagle) and [drtshock](https://github.com/drtshock) for their code
