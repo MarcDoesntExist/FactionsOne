@@ -6,6 +6,11 @@ the project uses semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- A double chest spanning two claimed chunks now counts its contents once,
+  from the left half, instead of once per chunk.
+
 ## [1.6.1] - 2026-11-26
 
 ### Fixed

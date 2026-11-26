@@ -10,19 +10,19 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Chest;
 import org.bukkit.block.Container;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.EntityType;
+import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -207,7 +207,6 @@ public final class ClaimValueService {
         }
         Chunk chunk = world.getChunkAt(ref.x(), ref.z());
         ClaimChunkData data = new ClaimChunkData();
-        Set<Inventory> seen = Collections.newSetFromMap(new IdentityHashMap<Inventory, Boolean>());
         for (BlockState state : chunk.getTileEntities()) {
             Material material = state.getType();
             if (state instanceof CreatureSpawner spawner) {
@@ -215,9 +214,10 @@ public final class ClaimValueService {
                 data.addSpawner(spawned == null ? "UNKNOWN" : spawned.name());
             } else if (state instanceof Container container) {
                 data.addContainer(material.name());
+                Inventory inventory = container.getInventory();
                 if (material != Material.ENDER_CHEST
-                        && seen.add(container.getInventory())) {
-                    for (ItemStack item : container.getInventory().getContents()) {
+                        && countsContents(container, inventory)) {
+                    for (ItemStack item : inventory.getContents()) {
                         if (item != null) {
                             data.addItem(item.getType().name(), item.getAmount());
                         }
@@ -227,6 +227,22 @@ public final class ClaimValueService {
         }
         return ClaimValueCalculator.valueOf(data, Conf.claimValueSpawners,
                 Conf.claimValueContainers, Conf.claimValueItems);
+    }
+
+    /**
+     * A double chest is one inventory but two block entities. Count its
+     * contents only from the left half so a chest spanning a chunk border is
+     * not counted twice.
+     */
+    private static boolean countsContents(Container container, Inventory inventory) {
+        if (!(inventory instanceof DoubleChestInventory doubleChest)) {
+            return true;
+        }
+        Inventory left = doubleChest.getLeftSide();
+        if (!(left.getHolder() instanceof Chest chest)) {
+            return true;
+        }
+        return chest.getLocation().equals(container.getLocation());
     }
 
     private void updateChunk(ChunkRef ref, String factionId, double value) {
