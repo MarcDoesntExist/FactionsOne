@@ -239,6 +239,10 @@ public class Faction extends Entity implements EconomyParticipator {
         this.powerBoost = powerBoost;
     }
 
+    public void addPowerBoost(double delta) {
+        this.powerBoost += delta;
+    }
+
     public boolean getFlag(FFlag flag) {
         if (this.perks != null && this.perks.flag(flag, System.currentTimeMillis())) {
             return true;

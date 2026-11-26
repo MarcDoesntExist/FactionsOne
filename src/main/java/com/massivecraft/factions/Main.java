@@ -34,6 +34,7 @@ import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.struct.TerritoryAccess;
 import com.massivecraft.factions.util.AutoLeaveTask;
+import com.massivecraft.factions.util.BetrayalTracker;
 import com.massivecraft.factions.util.EconLandRewardTask;
 import com.massivecraft.factions.util.LazyLocation;
 import com.massivecraft.factions.util.MissionResetTask;
@@ -108,6 +109,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     public IdempotencyStore idempotencyStore;
     public FactionMailbox mailbox;
     public MapIntegration mapIntegration;
+    public BetrayalTracker betrayalTracker;
     // Persistance related
     private boolean locked = false;
     private Integer AutoLeaveTask = null;
@@ -190,6 +192,8 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
                 Clock.systemUTC(), Conf.mailboxMaxPerPlayer,
                 TimeUnit.DAYS.toMillis(Math.max(1, Conf.mailboxTtlDays)), getLogger());
         compactStorage();
+
+        this.betrayalTracker = new BetrayalTracker();
 
         // Add Base Commands
         this.cmdAutoHelp = new CmdAutoHelp();

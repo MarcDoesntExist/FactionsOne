@@ -20,6 +20,10 @@ the project uses semantic versioning.
 
 ### Added
 
+- Betrayal rules for alliances: declaring war on an ally now requires setting
+  the relation to neutral first, and attacking a former ally within
+  `betrayalWindowSeconds` costs `betrayalPowerPenalty` power. Both values are
+  configurable and `betrayalRulesEnabled` turns the rules off.
 - Separate `/fa` namespace for server administration commands (`bypass`/`admin`,
   `reload`, `saveall`, `config`, `powerboost`, `disband`, `kick`, `join`), with
   its own help and tab completion; `/f` remains unchanged.

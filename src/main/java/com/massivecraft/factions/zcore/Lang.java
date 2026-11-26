@@ -44,6 +44,12 @@ public class Lang {
     public static final String upgradeMenuBought = "<g>Upgrade bought.";
     public static final String memberLimit = "<b>!<white> The faction %s is at the limit of %d members, so %s cannot currently join.";
     public static final String allyLimit = "<b>Your faction has reached its ally limit of %d.";
+    public static final String relationAllianceWar =
+            "<b>You are allied with that faction. Use <c>/f neutral<b> before declaring war.";
+    public static final String relationBetrayalPenalty =
+            "<b>Betrayal! Your faction lost <c>%s<b> power for attacking a former ally.";
+    public static final String relationBetrayalVictim =
+            "<b>%s <i>betrayed the alliance and declared war on you.";
     public static final String claimLimit = "<b>Limit reached. You can't claim more land!";
     public static final String tntUsage = "<i>Use /f tnt deposit|withdraw|balance|fill|siphon.";
     public static final String tntNoContainer = "<b>No dispenser was changed.";

@@ -143,6 +143,11 @@ public class Conf {
     //public static boolean peacefulMembersDisablePowerLoss = true;
     public static boolean homesTeleportIgnoreEnemiesIfInOwnTerritory = true;
     public static Rel friendlyFireFromRel = Rel.TRUCE;
+    // A13 betrayal rules: no direct ally-to-war, and a power penalty when a
+    // former ally is attacked inside the configured window.
+    public static boolean betrayalRulesEnabled = true;
+    public static long betrayalWindowSeconds = 600L;
+    public static double betrayalPowerPenalty = 5.0;
     public static boolean disablePVPForFactionlessPlayers = false;
     public static boolean enablePVPAgainstFactionlessInAttackersLand = false;
     public static int noPVPDamageToOthersForXSecondsAfterLogin = 3;
