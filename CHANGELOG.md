@@ -6,6 +6,8 @@ the project uses semantic versioning.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-26
+
 ### Fixed
 
 - `/f top value` refreshes immediately after a claim value scan instead of
