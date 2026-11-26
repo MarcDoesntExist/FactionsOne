@@ -40,7 +40,7 @@ public class CmdTag extends FCommand {
 
         // TODO does not first test cover selfcase?
         if (Factions.i.isTagTaken(tag) && !MiscUtil.getComparisonString(tag)
-                .equals(myFaction.getComparisonTag())) {
+            .equals(myFaction.getComparisonTag())) {
             msg("<b>That tag is already taken");
             return;
         }
@@ -64,7 +64,7 @@ public class CmdTag extends FCommand {
 
         // then make 'em pay (if applicable)
         if (!payForCommand(Conf.econCostTag, "to change the faction tag",
-                "for changing the faction tag"))
+            "for changing the faction tag"))
             return;
 
         String oldtag = myFaction.getTagPlain();
@@ -72,16 +72,16 @@ public class CmdTag extends FCommand {
 
         // Inform
         myFaction.msg("%s<i> changed your faction tag to %s", fme.describeTo(myFaction, true),
-                myFaction.getTag(myFaction));
+            myFaction.getTag(myFaction));
         for (Faction faction : Factions.i.get()) {
             if (faction == myFaction) {
                 continue;
             }
             faction.msg("<i>The faction %s<i> changed their name to %s.",
-                    net.kyori.adventure.text.Component.text(oldtag,
-                            net.kyori.adventure.text.format.Style.style(
-                                    fme.getColorTo(faction).toTextColor())),
-                    myFaction.getTag(faction));
+                net.kyori.adventure.text.Component.text(oldtag,
+                    net.kyori.adventure.text.format.Style.style(
+                        fme.getColorTo(faction).toTextColor())),
+                myFaction.getTag(faction));
         }
     }
 

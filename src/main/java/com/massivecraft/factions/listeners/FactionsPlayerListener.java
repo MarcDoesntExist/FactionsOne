@@ -1,12 +1,19 @@
 package com.massivecraft.factions.listeners;
 
-import com.massivecraft.factions.*;
-import de.erethon.factionsone.api.FactionsAPI;
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.struct.TerritoryAccess;
 import com.massivecraft.factions.util.VisualizeUtil;
+import de.erethon.factionsone.api.FactionsAPI;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -15,11 +22,22 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.util.NumberConversions;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.UUID;
 
 
 /**
@@ -32,7 +50,7 @@ import java.util.*;
 public class FactionsPlayerListener implements Listener {
     // for handling people who repeatedly spam attempts to open a door (or similar) in another faction's territory
     private final Map<UUID, InteractAttemptSpam> interactSpammers =
-            new HashMap<UUID, InteractAttemptSpam>();
+        new HashMap<UUID, InteractAttemptSpam>();
     public Main main;
 
     public FactionsPlayerListener(Main main) {
@@ -46,7 +64,7 @@ public class FactionsPlayerListener implements Listener {
         String name = player.getName();
         String uuid = player.getUniqueId().toString();
         if (Conf.playersWhoBypassAllProtection.contains(name) || Conf.playersWhoBypassAllProtection
-                .contains(uuid))
+            .contains(uuid))
             return true;
 
         FPlayer me = FPlayers.i.get(player);
@@ -59,7 +77,7 @@ public class FactionsPlayerListener implements Listener {
         String name = player.getName();
         String uuid = player.getUniqueId().toString();
         if (Conf.playersWhoBypassAllProtection.contains(name) || Conf.playersWhoBypassAllProtection
-                .contains(uuid))
+            .contains(uuid))
             return true;
 
         FPlayer me = FPlayers.i.get(player);
@@ -69,7 +87,7 @@ public class FactionsPlayerListener implements Listener {
         Material material = block.getType();
 
         if (Conf.materialsEditOnInteract.contains(material) && !FPerm.BUILD
-                .has(me, loc, !justCheck))
+            .has(me, loc, !justCheck))
             return false;
         if (Conf.materialsContainer.contains(material) && !FPerm.CONTAINER.has(me, loc, !justCheck))
             return false;
@@ -147,8 +165,8 @@ public class FactionsPlayerListener implements Listener {
 
         // quick check to make sure player is moving between chunks; good performance boost
         if (event.getFrom().getBlockX() >> 4 == event.getTo().getBlockX() >> 4
-                && event.getFrom().getBlockZ() >> 4 == event.getTo().getBlockZ() >> 4
-                && event.getFrom().getWorld() == event.getTo().getWorld())
+            && event.getFrom().getBlockZ() >> 4 == event.getTo().getBlockZ() >> 4
+            && event.getFrom().getWorld() == event.getTo().getWorld())
             return;
 
         Player player = event.getPlayer();
@@ -231,7 +249,6 @@ public class FactionsPlayerListener implements Listener {
 
         if (!playerCanUseItemHere(player, block.getLocation(), event.getMaterial(), false)) {
             event.setCancelled(true);
-            return;
         }
     }
 
@@ -242,10 +259,10 @@ public class FactionsPlayerListener implements Listener {
         me.getPower();  // update power, so they won't have gained any while dead
 
         Location home = me.getFaction()
-                .getHome(); // TODO: WARNING FOR NPE HERE THE ORIO FOR RESPAWN SHOULD BE ASSIGNABLE FROM CONFIG.
+            .getHome(); // TODO: WARNING FOR NPE HERE THE ORIO FOR RESPAWN SHOULD BE ASSIGNABLE FROM CONFIG.
         if (Conf.homesEnabled && Conf.homesTeleportToOnDeath && home != null && (
-                Conf.homesRespawnFromNoPowerLossWorlds || !Conf.worldsNoPowerLoss
-                        .contains(event.getPlayer().getWorld().getName()))) {
+            Conf.homesRespawnFromNoPowerLossWorlds || !Conf.worldsNoPowerLoss
+                .contains(event.getPlayer().getWorld().getName()))) {
             event.setRespawnLocation(home);
         }
     }
@@ -254,7 +271,7 @@ public class FactionsPlayerListener implements Listener {
     // but these separate bucket events below always fire without fail
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerBucketEmpty(
-            PlayerBucketEmptyEvent event) {
+        PlayerBucketEmptyEvent event) {
         if (event.isCancelled())
             return;
 
@@ -263,7 +280,6 @@ public class FactionsPlayerListener implements Listener {
 
         if (!playerCanUseItemHere(player, block.getLocation(), event.getBucket(), false)) {
             event.setCancelled(true);
-            return;
         }
     }
 
@@ -277,7 +293,6 @@ public class FactionsPlayerListener implements Listener {
 
         if (!playerCanUseItemHere(player, block.getLocation(), event.getBucket(), false)) {
             event.setCancelled(true);
-            return;
         }
     }
 
@@ -295,9 +310,9 @@ public class FactionsPlayerListener implements Listener {
         String fullCmd = event.getMessage().toLowerCase();
 
         if (me.hasFaction() && me.getFaction().getFlag(FFlag.PERMANENT) && isCommandInList(fullCmd,
-                Conf.permanentFactionMemberDenyCommands)) {
+            Conf.permanentFactionMemberDenyCommands)) {
             me.msg("<b>You can't use the command \"" + fullCmd
-                    + "\" because you are in a permanent faction.");
+                + "\" because you are in a permanent faction.");
             event.setCancelled(true);
             return;
         }
@@ -318,7 +333,6 @@ public class FactionsPlayerListener implements Listener {
             return;
         }
 
-        return;
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
@@ -333,7 +347,7 @@ public class FactionsPlayerListener implements Listener {
 
         // if player was banned (not just kicked), get rid of their stored info
         if (Conf.removePlayerDataWhenBanned && PlainTextComponentSerializer.plainText()
-                .serialize(event.reason()).equals("Banned by admin.")) {
+            .serialize(event.reason()).equals("Banned by admin.")) {
             if (badGuy.getRole() == Rel.LEADER)
                 badGuy.getFaction().promoteNewLeader();
             badGuy.leave(false);

@@ -21,22 +21,38 @@ import java.util.function.Supplier;
  */
 public final class FactionRankingService {
 
-    public record Snapshot(List<FactionRankEntry> entries, long builtAt) {
-        public Snapshot {
-            entries = List.copyOf(entries);
-        }
-    }
-
     private final Clock clock;
     private final long ttlMillis;
     private final Supplier<List<FactionRankEntry>> provider;
     private volatile Snapshot snapshot;
-
     public FactionRankingService(Clock clock, int cacheSeconds,
                                  Supplier<List<FactionRankEntry>> provider) {
         this.clock = clock;
         this.ttlMillis = Math.max(0, cacheSeconds) * 1000L;
         this.provider = provider;
+    }
+
+    /**
+     * Live provider used by the plugin; separated so tests can inject rows.
+     */
+    public static List<FactionRankEntry> collectLive() {
+        ClaimValueService values = Main.main == null ? null : Main.main.claimValueService;
+        List<FactionRankEntry> entries = new ArrayList<>();
+        for (Faction faction : Factions.i.get()) {
+            if (!faction.isNormal() || faction.getFlag(FFlag.PERMANENT)) {
+                continue;
+            }
+            entries.add(new FactionRankEntry(
+                faction.getId(),
+                faction.getTagPlain(),
+                faction.getPower(),
+                faction.getLandRounded(),
+                faction.getFPlayers().size(),
+                BankService.get().balance(faction),
+                faction.getFactionPoints(),
+                values == null ? 0.0 : values.value(faction.getId())));
+        }
+        return entries;
     }
 
     public Snapshot snapshot() {
@@ -68,24 +84,9 @@ public final class FactionRankingService {
         this.snapshot = null;
     }
 
-    /** Live provider used by the plugin; separated so tests can inject rows. */
-    public static List<FactionRankEntry> collectLive() {
-        ClaimValueService values = Main.main == null ? null : Main.main.claimValueService;
-        List<FactionRankEntry> entries = new ArrayList<>();
-        for (Faction faction : Factions.i.get()) {
-            if (!faction.isNormal() || faction.getFlag(FFlag.PERMANENT)) {
-                continue;
-            }
-            entries.add(new FactionRankEntry(
-                    faction.getId(),
-                    faction.getTagPlain(),
-                    faction.getPower(),
-                    faction.getLandRounded(),
-                    faction.getFPlayers().size(),
-                    BankService.get().balance(faction),
-                    faction.getFactionPoints(),
-                    values == null ? 0.0 : values.value(faction.getId())));
+    public record Snapshot(List<FactionRankEntry> entries, long builtAt) {
+        public Snapshot {
+            entries = List.copyOf(entries);
         }
-        return entries;
     }
 }

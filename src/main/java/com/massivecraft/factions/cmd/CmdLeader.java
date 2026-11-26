@@ -48,13 +48,13 @@ public class CmdLeader extends FCommand {
 
         // We now have fplayer and the target faction
         if (this.senderIsConsole || fme.hasAdminMode() || Permission.LEADER_ANY
-                .has(sender, false)) {
+            .has(sender, false)) {
             // Do whatever you wish
         } else {
             // Follow the standard rules
             if (fme.getRole() != Rel.LEADER || targetFaction != myFaction) {
                 sender.sendMessage(p.txt
-                        .parse("<b>You must be leader of the faction to %s.", this.getHelpShort()));
+                    .parse("<b>You must be leader of the faction to %s.", this.getHelpShort()));
                 return;
             }
 
@@ -72,7 +72,7 @@ public class CmdLeader extends FCommand {
         // only perform a FPlayerJoinEvent when newLeader isn't actually in the faction
         if (newLeader.getFaction() != targetFaction) {
             FPlayerJoinEvent event = new FPlayerJoinEvent(FPlayers.i.get(me), targetFaction,
-                    FPlayerJoinEvent.PlayerJoinReason.LEADER);
+                FPlayerJoinEvent.PlayerJoinReason.LEADER);
             Bukkit.getServer().getPluginManager().callEvent(event);
             if (event.isCancelled())
                 return;
@@ -82,9 +82,9 @@ public class CmdLeader extends FCommand {
         if (targetFactionCurrentLeader == newLeader) {
             targetFaction.promoteNewLeader();
             msg("<i>You have demoted %s<i> from the position of faction leader.",
-                    newLeader.describeTo(fme, true));
+                newLeader.describeTo(fme, true));
             newLeader.msg("<i>You have been demoted from the position of faction leader by %s<i>.",
-                    senderIsConsole ? "a server admin" : fme.describeTo(newLeader, true));
+                senderIsConsole ? "a server admin" : fme.describeTo(newLeader, true));
             return;
         }
 
@@ -96,14 +96,14 @@ public class CmdLeader extends FCommand {
         newLeader.setRole(Rel.LEADER);
         targetFaction.addLog(actorName(), "ROLE", newLeader.getName() + " -> " + Rel.LEADER);
         msg("<i>You have promoted %s<i> to the position of faction leader.",
-                newLeader.describeTo(fme, true));
+            newLeader.describeTo(fme, true));
 
         // Inform all players
         for (FPlayer fplayer : FPlayers.i.getOnline()) {
             fplayer.msg("%s<i> gave %s<i> the leadership of %s<i>.", senderIsConsole ?
-                            "A server admin" :
-                            RelationUtil.describeThatToMe(fme, fplayer, true), newLeader.describeTo(fplayer),
-                    targetFaction.describeTo(fplayer));
+                    "A server admin" :
+                    RelationUtil.describeThatToMe(fme, fplayer, true), newLeader.describeTo(fplayer),
+                targetFaction.describeTo(fplayer));
         }
     }
 }

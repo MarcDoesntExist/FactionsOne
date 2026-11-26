@@ -56,7 +56,7 @@ public final class UpgradeMath {
 
     public static int cost(double baseCost, double multiplier, int level) {
         double cost = Math.max(0.0, baseCost)
-                * Math.pow(Math.max(1.0, multiplier), Math.max(0, level));
+            * Math.pow(Math.max(1.0, multiplier), Math.max(0, level));
         return (int) Math.min(Integer.MAX_VALUE, Math.ceil(cost));
     }
 }

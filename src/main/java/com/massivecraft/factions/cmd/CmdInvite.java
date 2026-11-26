@@ -59,7 +59,7 @@ public class CmdInvite extends FCommand {
 
         you.msg("%s<i> invited you to %s", fme.describeTo(you, true), myFaction.describeTo(you));
         myFaction.msg("%s<i> invited %s<i> to your faction.", fme.describeTo(myFaction, true),
-                you.describeTo(myFaction));
+            you.describeTo(myFaction));
     }
 
 }

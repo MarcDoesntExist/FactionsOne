@@ -11,9 +11,6 @@ import java.util.List;
  */
 public final class MissionRewardParser {
 
-    public record Reward(String material, int amount) {
-    }
-
     private MissionRewardParser() {
     }
 
@@ -38,5 +35,8 @@ public final class MissionRewardParser {
             result.add(new Reward(material, amount));
         }
         return result;
+    }
+
+    public record Reward(String material, int amount) {
     }
 }

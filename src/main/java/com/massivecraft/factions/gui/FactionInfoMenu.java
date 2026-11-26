@@ -22,12 +22,12 @@ public final class FactionInfoMenu extends Menu {
 
     public FactionInfoMenu(Player player, GuiConfig config) {
         super(player, config.title("menu.info.title", "<gold>Faction info"),
-                config.rows("menu.info.rows", 3), ignored -> true);
+            config.rows("menu.info.rows", 3), ignored -> true);
         FPlayer fplayer = FPlayers.i.get(player);
         Faction faction = fplayer == null ? null : fplayer.getFaction();
         if (faction == null) {
             this.setItem(22, config.item("navigation.back", player),
-                    clicker -> new MainMenu(clicker, config).open());
+                clicker -> new MainMenu(clicker, config).open());
             return;
         }
 
@@ -35,15 +35,15 @@ public final class FactionInfoMenu extends Menu {
         ItemMeta meta = icon.getItemMeta();
         if (meta != null) {
             meta.displayName(Main.main.txt.parse(
-                    config.text("menu.info.name", "<gold>%s"), faction.getTagPlain()));
+                config.text("menu.info.name", "<gold>%s"), faction.getTagPlain()));
             List<String> configured = config.list("menu.info.lore");
             String[] values = {
-                    String.valueOf(faction.getDescription()),
-                    String.valueOf(faction.getFPlayers().size()),
-                    String.valueOf(faction.getFPlayersWhereOnline(true).size()),
-                    faction.getPowerRounded() + "/" + faction.getPowerMaxRounded(),
-                    String.valueOf(faction.getLandRounded()),
-                    Econ.moneyString(Econ.getBalance(faction.getAccountId()))
+                String.valueOf(faction.getDescription()),
+                String.valueOf(faction.getFPlayers().size()),
+                String.valueOf(faction.getFPlayersWhereOnline(true).size()),
+                faction.getPowerRounded() + "/" + faction.getPowerMaxRounded(),
+                String.valueOf(faction.getLandRounded()),
+                Econ.moneyString(Econ.getBalance(faction.getAccountId()))
             };
             List<Component> lore = new ArrayList<Component>();
             for (int i = 0; i < configured.size(); i++) {
@@ -54,6 +54,6 @@ public final class FactionInfoMenu extends Menu {
         }
         this.setItem(13, icon, null);
         this.setItem(22, config.item("navigation.back", player),
-                clicker -> new MainMenu(clicker, config).open());
+            clicker -> new MainMenu(clicker, config).open());
     }
 }

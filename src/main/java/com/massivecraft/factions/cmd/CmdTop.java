@@ -57,7 +57,7 @@ public class CmdTop extends FCommand {
                 return;
             }
             new TopMenu(this.me, Main.main.guiConfig, menuMetric,
-                    Main.main.rankingService.top(menuMetric, 50)).open();
+                Main.main.rankingService.top(menuMetric, 50)).open();
             return;
         }
 

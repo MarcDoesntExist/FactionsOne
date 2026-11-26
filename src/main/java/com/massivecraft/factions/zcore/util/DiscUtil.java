@@ -1,6 +1,10 @@
 package com.massivecraft.factions.zcore.util;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -61,7 +65,7 @@ public class DiscUtil {
             Files.write(temp, bytes);
             try {
                 Files.move(temp, target, StandardCopyOption.ATOMIC_MOVE,
-                        StandardCopyOption.REPLACE_EXISTING);
+                    StandardCopyOption.REPLACE_EXISTING);
             } catch (AtomicMoveNotSupportedException | UnsupportedOperationException ex) {
                 // Some file systems cannot move atomically; fall back to a replace.
                 Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);

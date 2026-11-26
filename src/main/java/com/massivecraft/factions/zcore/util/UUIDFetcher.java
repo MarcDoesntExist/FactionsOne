@@ -1,6 +1,10 @@
 package com.massivecraft.factions.zcore.util;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -8,7 +12,12 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 
 /**
@@ -34,7 +43,7 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
 
     private static HttpURLConnection createConnection() throws Exception {
         HttpURLConnection connection =
-                (HttpURLConnection) URI.create(PROFILE_URL).toURL().openConnection();
+            (HttpURLConnection) URI.create(PROFILE_URL).toURL().openConnection();
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setUseCaches(false);
@@ -47,8 +56,8 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
 
     private static UUID getUUID(String id) {
         return UUID.fromString(
-                id.substring(0, 8) + "-" + id.substring(8, 12) + "-" + id.substring(12, 16) + "-" + id
-                        .substring(16, 20) + "-" + id.substring(20, 32));
+            id.substring(0, 8) + "-" + id.substring(8, 12) + "-" + id.substring(12, 16) + "-" + id
+                .substring(16, 20) + "-" + id.substring(20, 32));
     }
 
     public static byte[] toBytes(UUID uuid) {
@@ -69,7 +78,7 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
     }
 
     public static UUID getUUIDOf(String name) throws Exception {
-        return new UUIDFetcher(Arrays.asList(name)).call().get(name);
+        return new UUIDFetcher(Collections.singletonList(name)).call().get(name);
     }
 
     public Map<String, UUID> call() throws Exception {
@@ -79,19 +88,19 @@ public class UUIDFetcher implements Callable<Map<String, UUID>> {
             HttpURLConnection connection = createConnection();
             try {
                 String body = gson
-                        .toJson(names.subList(i * PROFILES_PER_REQUEST,
-                                Math.min((i + 1) * PROFILES_PER_REQUEST, names.size())));
+                    .toJson(names.subList(i * PROFILES_PER_REQUEST,
+                        Math.min((i + 1) * PROFILES_PER_REQUEST, names.size())));
                 writeBody(connection, body);
 
                 int responseCode = connection.getResponseCode();
                 if (responseCode != HttpURLConnection.HTTP_OK) {
                     throw new IllegalStateException(
-                            "Mojang profile lookup failed with HTTP " + responseCode);
+                        "Mojang profile lookup failed with HTTP " + responseCode);
                 }
 
                 JsonArray array;
                 try (InputStreamReader reader = new InputStreamReader(connection.getInputStream(),
-                        StandardCharsets.UTF_8)) {
+                    StandardCharsets.UTF_8)) {
                     JsonElement parsed = JsonParser.parseReader(reader);
                     if (!parsed.isJsonArray())
                         return uuidMap;

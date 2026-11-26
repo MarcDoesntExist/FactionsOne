@@ -45,7 +45,7 @@ public final class BlueMapRenderer implements MapRenderer {
     private final Method shapeMarkerBuild;
     private final Constructor<?> colorConstructor;
     private final Set<Object> trackedMaps =
-            Collections.newSetFromMap(new IdentityHashMap<>());
+        Collections.newSetFromMap(new IdentityHashMap<>());
 
     public BlueMapRenderer() throws ReflectiveOperationException {
         Class<?> apiClass = Class.forName("de.bluecolored.bluemap.api.BlueMapAPI");
@@ -61,37 +61,37 @@ public final class BlueMapRenderer implements MapRenderer {
         Class<?> mapClass = Class.forName("de.bluecolored.bluemap.api.BlueMapMap");
         this.getMarkerSets = mapClass.getMethod("getMarkerSets");
         Class<?> markerSetClass = Class.forName(
-                "de.bluecolored.bluemap.api.markers.MarkerSet");
+            "de.bluecolored.bluemap.api.markers.MarkerSet");
         this.getMarkers = markerSetClass.getMethod("getMarkers");
         this.markerSetSetLabel = markerSetClass.getMethod("setLabel", String.class);
         Class<?> markerSetBuilderClass = Class.forName(
-                "de.bluecolored.bluemap.api.markers.MarkerSet$Builder");
+            "de.bluecolored.bluemap.api.markers.MarkerSet$Builder");
         this.markerSetBuilder = markerSetClass.getMethod("builder");
         this.markerSetLabel = markerSetBuilderClass.getMethod("label", String.class);
         this.markerSetToggleable = markerSetBuilderClass.getMethod("toggleable", Boolean.class);
         this.markerSetDefaultHidden = markerSetBuilderClass.getMethod("defaultHidden",
-                Boolean.class);
+            Boolean.class);
         this.markerSetSorting = markerSetBuilderClass.getMethod("sorting", Integer.class);
         this.markerSetBuild = markerSetBuilderClass.getMethod("build");
 
         Class<?> shapeClass = Class.forName("de.bluecolored.bluemap.api.math.Shape");
         this.createRect = shapeClass.getMethod("createRect", double.class, double.class,
-                double.class, double.class);
+            double.class, double.class);
         Class<?> shapeMarkerClass = Class.forName(
-                "de.bluecolored.bluemap.api.markers.ShapeMarker");
+            "de.bluecolored.bluemap.api.markers.ShapeMarker");
         Class<?> shapeMarkerBuilderClass = Class.forName(
-                "de.bluecolored.bluemap.api.markers.ShapeMarker$Builder");
+            "de.bluecolored.bluemap.api.markers.ShapeMarker$Builder");
         this.shapeMarkerBuilder = shapeMarkerClass.getMethod("builder");
         this.shapeMarkerLabel = shapeMarkerBuilderClass.getMethod("label", String.class);
         this.shapeMarkerShape = shapeMarkerBuilderClass.getMethod("shape", shapeClass,
-                float.class);
+            float.class);
         Class<?> colorClass = Class.forName("de.bluecolored.bluemap.api.math.Color");
         this.shapeMarkerFill = shapeMarkerBuilderClass.getMethod("fillColor", colorClass);
         this.shapeMarkerLine = shapeMarkerBuilderClass.getMethod("lineColor", colorClass);
         this.shapeMarkerLineWidth = shapeMarkerBuilderClass.getMethod("lineWidth", int.class);
         this.shapeMarkerBuild = shapeMarkerBuilderClass.getMethod("build");
         this.colorConstructor = colorClass.getConstructor(int.class, int.class, int.class,
-                float.class);
+            float.class);
     }
 
     @Override
@@ -108,7 +108,7 @@ public final class BlueMapRenderer implements MapRenderer {
             }
 
             String label = Conf.mapLayerName == null || Conf.mapLayerName.isBlank()
-                    ? "Factions" : Conf.mapLayerName;
+                ? "Factions" : Conf.mapLayerName;
             for (MapClaim claim : claims) {
                 Optional<?> world = (Optional<?>) getWorld.invoke(api, claim.world());
                 if (world.isEmpty()) {
@@ -124,7 +124,7 @@ public final class BlueMapRenderer implements MapRenderer {
     }
 
     private void renderOnMap(Object map, MapClaim claim, String label)
-            throws ReflectiveOperationException {
+        throws ReflectiveOperationException {
         @SuppressWarnings("unchecked")
         Map<String, Object> markerSets = (Map<String, Object>) getMarkerSets.invoke(map);
         Object markerSet = markerSets.get(SET_ID);
@@ -138,8 +138,8 @@ public final class BlueMapRenderer implements MapRenderer {
         @SuppressWarnings("unchecked")
         Map<String, Object> markers = (Map<String, Object>) getMarkers.invoke(markerSet);
         String id = claim.label().replaceAll("[^A-Za-z0-9_-]", "_") + "_"
-                + Integer.toHexString(claim.world().hashCode()) + "_"
-                + claim.minX() + "_" + claim.minZ();
+            + Integer.toHexString(claim.world().hashCode()) + "_"
+            + claim.minX() + "_" + claim.minZ();
         markers.put(id, createMarker(claim));
         trackedMaps.add(map);
     }
@@ -181,7 +181,7 @@ public final class BlueMapRenderer implements MapRenderer {
             try {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> markerSets =
-                        (Map<String, Object>) getMarkerSets.invoke(map);
+                    (Map<String, Object>) getMarkerSets.invoke(map);
                 markerSets.remove(SET_ID);
             } catch (InvocationTargetException | IllegalAccessException ignored) {
                 // The map can disappear during a BlueMap reload.

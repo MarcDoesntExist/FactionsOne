@@ -10,8 +10,8 @@ import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.zcore.Lang;
-import net.kyori.adventure.text.Component;
 import com.massivecraft.factions.zcore.util.TextUtil;
+import net.kyori.adventure.text.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,7 +53,7 @@ public class CmdShow extends FCommand {
 
         // if economy is enabled, they're not on the bypass list, and this command has a cost set, make 'em pay
         if (!payForCommand(Conf.econCostShow, "to show faction information",
-                "for showing faction information"))
+            "for showing faction information"))
             return;
 
         Collection<FPlayer> admins = faction.getFPlayersWhereRole(Rel.LEADER);
@@ -76,8 +76,8 @@ public class CmdShow extends FCommand {
         }
 
         msg("<a>Joining: <i>" + (faction.getOpen() ?
-                "no invitation is needed" :
-                "invitation is required"));
+            "no invitation is needed" :
+            "invitation is required"));
 
         if (faction.isNormal()) {
             ShieldService shields = Main.main.shieldService;
@@ -86,21 +86,21 @@ public class CmdShow extends FCommand {
                 shield = Lang.shieldInactive;
             } else {
                 shield = String.format(Lang.shieldState,
-                        shields.isGrace(faction) ? Lang.shieldGrace : Lang.shieldActive,
-                        shields.remainingMinutes(faction));
+                    shields.isGrace(faction) ? Lang.shieldGrace : Lang.shieldActive,
+                    shields.remainingMinutes(faction));
             }
             String raid = faction.hasLandInflation() ? Lang.showRaidable : Lang.showSafe;
             String war = faction.getRelationTo(fme) == Rel.ENEMY
-                    ? Lang.showAtWar : Lang.showNotAtWar;
+                ? Lang.showAtWar : Lang.showNotAtWar;
             msg(Lang.showState, shield, raid, war);
         }
 
         double powerBoost = faction.getPowerBoost();
         String boost = (powerBoost == 0.0) ?
-                "" :
-                (powerBoost > 0.0 ? " (bonus: " : " (penalty: ") + powerBoost + ")";
+            "" :
+            (powerBoost > 0.0 ? " (bonus: " : " (penalty: ") + powerBoost + ")";
         msg("<a>Land / Power / Maxpower: <i> %d/%d/%d %s", faction.getLandRounded(),
-                faction.getPowerRounded(), faction.getPowerMaxRounded(), boost);
+            faction.getPowerRounded(), faction.getPowerMaxRounded(), boost);
 
         // show the land value
         if (Econ.shouldBeUsed()) {
@@ -109,14 +109,14 @@ public class CmdShow extends FCommand {
             if (value > 0) {
                 String stringValue = Econ.moneyString(value);
                 String stringRefund =
-                        (refund > 0.0) ? (" (" + Econ.moneyString(refund) + " depreciated)") : "";
+                    (refund > 0.0) ? (" (" + Econ.moneyString(refund) + " depreciated)") : "";
                 msg("<a>Total land value: <i>" + stringValue + stringRefund);
             }
 
             //Show bank contents
             if (Conf.bankEnabled) {
                 msg("<a>Bank contains: <i>" + Econ
-                        .moneyString(Econ.getBalance(faction.getAccountId())));
+                    .moneyString(Econ.getBalance(faction.getAccountId())));
             }
         }
 
@@ -129,13 +129,13 @@ public class CmdShow extends FCommand {
             sendMessage(p.txt.parse("<a>In Truce with:<i> *everyone*"));
         } else {
             sendMessage(p.txt.parse("<a>In Truce with: ").append(TextUtil
-                    .implodeComponents(relationTags.get(Rel.TRUCE), sepparator)));
+                .implodeComponents(relationTags.get(Rel.TRUCE), sepparator)));
         }
 
         sendMessage(p.txt.parse("<a>Allied to: ").append(TextUtil
-                .implodeComponents(relationTags.get(Rel.ALLY), sepparator)));
+            .implodeComponents(relationTags.get(Rel.ALLY), sepparator)));
         sendMessage(p.txt.parse("<a>Enemies: ").append(TextUtil
-                .implodeComponents(relationTags.get(Rel.ENEMY), sepparator)));
+            .implodeComponents(relationTags.get(Rel.ENEMY), sepparator)));
 
         // List the members...
         List<Component> memberOnlineNames = new ArrayList<Component>();
@@ -181,11 +181,11 @@ public class CmdShow extends FCommand {
             }
         }
         sendMessage(
-                p.txt.parse("<a>Members online: ")
-                        .append(TextUtil.implodeComponents(memberOnlineNames, sepparator)));
+            p.txt.parse("<a>Members online: ")
+                .append(TextUtil.implodeComponents(memberOnlineNames, sepparator)));
         sendMessage(
-                p.txt.parse("<a>Members offline: ")
-                        .append(TextUtil.implodeComponents(memberOfflineNames, sepparator)));
+            p.txt.parse("<a>Members offline: ")
+                .append(TextUtil.implodeComponents(memberOfflineNames, sepparator)));
     }
 
 }

@@ -1,6 +1,11 @@
 package com.massivecraft.factions.cmd;
 
-import com.massivecraft.factions.*;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Factions;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
@@ -34,7 +39,7 @@ public abstract class FCommand extends MCommand<Main> {
     private static final List<String> BOOLEAN_VALUES = List.of("yes", "no");
     private static final List<String> TOGGLE_VALUES = List.of("on", "off");
     private static final List<String> RELOAD_VALUES =
-            List.of("all", "conf", "board", "factions", "players");
+        List.of("all", "conf", "board", "factions", "players");
 
     public boolean disableOnLock;
 
@@ -113,7 +118,7 @@ public abstract class FCommand extends MCommand<Main> {
 
         if (this.senderMustBeOfficer && !fplayer.getRole().isAtLeast(Rel.OFFICER)) {
             sender.sendMessage(
-                    p.txt.parse("<b>Only faction moderators can %s.", this.getHelpShort()));
+                p.txt.parse("<b>Only faction moderators can %s.", this.getHelpShort()));
             return false;
         }
 
@@ -448,7 +453,7 @@ public abstract class FCommand extends MCommand<Main> {
         Set<String> values = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         for (Field field : Conf.class.getDeclaredFields()) {
             if (Modifier.isPublic(field.getModifiers())
-                    && Modifier.isStatic(field.getModifiers()) && !field.isSynthetic()) {
+                && Modifier.isStatic(field.getModifiers()) && !field.isSynthetic()) {
                 values.add(field.getName());
             }
         }
@@ -462,7 +467,7 @@ public abstract class FCommand extends MCommand<Main> {
     public boolean canIAdministerYou(FPlayer i, FPlayer you) {
         if (!i.getFaction().equals(you.getFaction())) {
             i.sendMessage(
-                    p.txt.parse("%s <b>is not in the same faction as you.", you.describeTo(i, true)));
+                p.txt.parse("%s <b>is not in the same faction as you.", you.describeTo(i, true)));
             return false;
         }
 

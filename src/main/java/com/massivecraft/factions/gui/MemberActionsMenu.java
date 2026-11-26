@@ -18,20 +18,20 @@ public final class MemberActionsMenu extends Menu {
 
     public MemberActionsMenu(Player player, GuiConfig config, FPlayer target) {
         super(player, config.title("menu.member-actions.title", "<aqua>Member"),
-                config.rows("menu.member-actions.rows", 3), ignored -> true);
+            config.rows("menu.member-actions.rows", 3), ignored -> true);
         this.config = config;
         this.target = target;
 
         this.setItem(10, config.item("member-actions.promote", player),
-                clicker -> this.command(clicker, "promote", Permission.PROMOTE.has(clicker)));
+            clicker -> this.command(clicker, "promote", Permission.PROMOTE.has(clicker)));
         this.setItem(12, config.item("member-actions.demote", player),
-                clicker -> this.command(clicker, "demote", Permission.DEMOTE.has(clicker)));
+            clicker -> this.command(clicker, "demote", Permission.DEMOTE.has(clicker)));
         this.setItem(14, config.item("member-actions.kick", player),
-                clicker -> this.command(clicker, "kick", FPerm.KICK.has(clicker, this.faction(), false)));
+            clicker -> this.command(clicker, "kick", FPerm.KICK.has(clicker, this.faction(), false)));
         this.setItem(16, config.item("member-actions.ban", player),
-                clicker -> this.command(clicker, "ban", FPerm.BAN.has(clicker, this.faction(), false)));
+            clicker -> this.command(clicker, "ban", FPerm.BAN.has(clicker, this.faction(), false)));
         this.setItem(22, config.item("navigation.back", player),
-                clicker -> new MembersMenu(clicker, this.config).open());
+            clicker -> new MembersMenu(clicker, this.config).open());
     }
 
     private com.massivecraft.factions.Faction faction() {
@@ -41,7 +41,7 @@ public final class MemberActionsMenu extends Menu {
     private void command(Player player, String command, boolean allowed) {
         if (!allowed) {
             player.sendMessage(this.config.title("menu.member-actions.denied",
-                    "<red>You cannot do that."));
+                "<red>You cannot do that."));
             return;
         }
         player.closeInventory();

@@ -6,8 +6,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.massivecraft.factions.zcore.util.VersionedFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,6 +39,19 @@ final class MailboxStore {
         this.logger = logger;
     }
 
+    private static boolean removable(FactionMailbox.Claim claim, long cutoff) {
+        if (claim.state() == FactionMailbox.State.DELIVERED) {
+            return completedAt(claim) <= cutoff;
+        }
+        return claim.state() == FactionMailbox.State.EXPIRED && claim.refunded()
+            && completedAt(claim) <= cutoff;
+    }
+
+    private static long completedAt(FactionMailbox.Claim claim) {
+        return claim.completedAt() > 0L ? claim.completedAt()
+            : Math.max(claim.createdAt(), claim.expiresAt());
+    }
+
     synchronized Map<String, FactionMailbox.Claim> load() {
         Map<String, FactionMailbox.Claim> claims = new LinkedHashMap<>();
         JsonElement element = VersionedFile.read(this.file, this.logger);
@@ -56,8 +67,8 @@ final class MailboxStore {
         int version = VersionedFile.version(root);
         if (version > CURRENT_VERSION) {
             this.logger.severe("Mailbox " + this.file + " uses version " + version
-                    + " but this build supports " + CURRENT_VERSION
-                    + "; leaving it untouched.");
+                + " but this build supports " + CURRENT_VERSION
+                + "; leaving it untouched.");
             return claims;
         }
 
@@ -82,10 +93,10 @@ final class MailboxStore {
             VersionedFile.backup(this.file);
             if (save(claims.values())) {
                 this.logger.info("Migrated mailbox " + this.file + " from version "
-                        + version + " to " + CURRENT_VERSION);
+                    + version + " to " + CURRENT_VERSION);
             } else {
                 this.logger.warning("Could not migrate mailbox " + this.file
-                        + " to version " + CURRENT_VERSION);
+                    + " to version " + CURRENT_VERSION);
             }
         }
         return claims;
@@ -115,19 +126,6 @@ final class MailboxStore {
             save(claims.values());
         }
         return removed;
-    }
-
-    private static boolean removable(FactionMailbox.Claim claim, long cutoff) {
-        if (claim.state() == FactionMailbox.State.DELIVERED) {
-            return completedAt(claim) <= cutoff;
-        }
-        return claim.state() == FactionMailbox.State.EXPIRED && claim.refunded()
-                && completedAt(claim) <= cutoff;
-    }
-
-    private static long completedAt(FactionMailbox.Claim claim) {
-        return claim.completedAt() > 0L ? claim.completedAt()
-                : Math.max(claim.createdAt(), claim.expiresAt());
     }
 
     Path file() {
@@ -168,9 +166,13 @@ final class MailboxStore {
             return data;
         }
 
+        private static String nullToEmpty(String value) {
+            return value == null ? "" : value;
+        }
+
         FactionMailbox.Claim toClaim() {
             if (this.id == null || this.id.isBlank() || this.playerId == null
-                    || this.playerId.isBlank() || this.state == null) {
+                || this.playerId.isBlank() || this.state == null) {
                 return null;
             }
             FactionMailbox.State parsed;
@@ -180,12 +182,8 @@ final class MailboxStore {
                 return null;
             }
             return new FactionMailbox.Claim(this.id, this.playerId, this.amount,
-                    nullToEmpty(this.sourceAccount), nullToEmpty(this.source), nullToEmpty(this.reason),
-                    this.createdAt, this.expiresAt, parsed, this.refunded, this.completedAt);
-        }
-
-        private static String nullToEmpty(String value) {
-            return value == null ? "" : value;
+                nullToEmpty(this.sourceAccount), nullToEmpty(this.source), nullToEmpty(this.reason),
+                this.createdAt, this.expiresAt, parsed, this.refunded, this.completedAt);
         }
     }
 }

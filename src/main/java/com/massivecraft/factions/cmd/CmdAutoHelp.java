@@ -42,13 +42,13 @@ public class CmdAutoHelp extends FCommand {
 
         for (MCommand<?> scmd : pcmd.subCommands) {
             if (scmd.visibility == CommandVisibility.VISIBLE || (
-                    scmd.visibility == CommandVisibility.SECRET && scmd
-                            .validSenderPermissions(sender, false))) {
+                scmd.visibility == CommandVisibility.SECRET && scmd
+                    .validSenderPermissions(sender, false))) {
                 lines.add(scmd.getUseageTemplate(this.commandChain, true));
             }
         }
 
         sendMessage(p.txt.getPage(lines, this.argAsInt(0, 1),
-                "Help for command \"" + pcmd.aliases.get(0) + "\""));
+            "Help for command \"" + pcmd.aliases.get(0) + "\""));
     }
 }

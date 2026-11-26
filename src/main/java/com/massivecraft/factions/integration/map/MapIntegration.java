@@ -47,7 +47,7 @@ public final class MapIntegration {
         }
         // BlueMap registers its API after it has finished loading resources.
         retryTaskId = plugin.getServer().getScheduler()
-                .runTaskLater(plugin, this::tryStart, API_RETRY_TICKS).getTaskId();
+            .runTaskLater(plugin, this::tryStart, API_RETRY_TICKS).getTaskId();
     }
 
     private void tryStart() {
@@ -61,15 +61,15 @@ public final class MapIntegration {
             retryAttempts++;
             if (retryAttempts < API_MAX_ATTEMPTS) {
                 retryTaskId = plugin.getServer().getScheduler()
-                        .runTaskLater(plugin, this::tryStart, API_RETRY_TICKS).getTaskId();
+                    .runTaskLater(plugin, this::tryStart, API_RETRY_TICKS).getTaskId();
             } else {
                 plugin.getLogger().info("BlueMap API did not become ready; web map integration "
-                        + "is disabled.");
+                    + "is disabled.");
             }
             return;
         } catch (Throwable failure) {
             plugin.getLogger().info("Could not hook to BlueMap; web map integration is disabled: "
-                    + failure.getClass().getSimpleName());
+                + failure.getClass().getSimpleName());
             return;
         }
         plugin.getServer().getPluginManager().registerEvents(new MapRefreshListener(this), plugin);
@@ -86,7 +86,7 @@ public final class MapIntegration {
         }
         long delay = Math.max(1, Math.min(1200, Conf.mapRefreshDebounceTicks));
         refreshTaskId = plugin.getServer().getScheduler()
-                .runTaskLater(plugin, this::refreshNow, delay).getTaskId();
+            .runTaskLater(plugin, this::refreshNow, delay).getTaskId();
     }
 
     private void refreshNow() {
@@ -98,7 +98,7 @@ public final class MapIntegration {
             renderer.render(buildClaims());
         } catch (RuntimeException failure) {
             plugin.getLogger().log(java.util.logging.Level.WARNING,
-                    "BlueMap refresh failed; web map integration is disabled.", failure);
+                "BlueMap refresh failed; web map integration is disabled.", failure);
             closeRenderer();
         }
     }
@@ -114,8 +114,8 @@ public final class MapIntegration {
                 continue;
             }
             byFaction.computeIfAbsent(factionId, ignored -> new ArrayList<>())
-                    .add(new ClaimKey(location.getWorldName(), (int) location.getX(),
-                            (int) location.getZ()));
+                .add(new ClaimKey(location.getWorldName(), (int) location.getX(),
+                    (int) location.getZ()));
         }
 
         List<MapClaim> claims = new ArrayList<>();
@@ -126,11 +126,11 @@ public final class MapIntegration {
             }
             Rel relation = relationMode ? faction.getRelationTo(reference) : null;
             int rgb = MapColor.colorFor(faction.getId(), faction.getTagPlain(), relation,
-                    relationMode);
+                relationMode);
             String label = faction.getTagPlain();
             for (ClaimRect rect : ClaimAreaMerger.merge(entry.getValue())) {
                 claims.add(new MapClaim(rect.world(), rect.minX(), rect.minZ(), rect.maxX(),
-                        rect.maxZ(), label, rgb));
+                    rect.maxZ(), label, rgb));
             }
         }
         return claims;
@@ -153,7 +153,7 @@ public final class MapIntegration {
         if (reference == null) {
             if (!invalidReferenceLogged) {
                 plugin.getLogger().warning("Unknown map-reference-faction '" + configured
-                        + "'; faction colors will be used.");
+                    + "'; faction colors will be used.");
                 invalidReferenceLogged = true;
             }
             return null;

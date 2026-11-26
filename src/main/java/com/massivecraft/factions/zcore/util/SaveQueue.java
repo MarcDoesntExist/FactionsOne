@@ -78,7 +78,7 @@ public final class SaveQueue {
                     DiscUtil.write(next.getKey(), next.getValue());
                 } catch (Exception ex) {
                     Bukkit.getLogger().log(Level.WARNING,
-                            "[Factions] Could not save \"" + next.getKey() + "\": " + ex.getMessage());
+                        "[Factions] Could not save \"" + next.getKey() + "\": " + ex.getMessage());
                 }
             }
         } finally {
@@ -96,7 +96,7 @@ public final class SaveQueue {
     public void flush(long timeoutMillis) {
         long deadline = System.currentTimeMillis() + Math.max(0L, timeoutMillis);
         while ((!this.pending.isEmpty() || this.inFlight.get() > 0)
-                && System.currentTimeMillis() < deadline) {
+            && System.currentTimeMillis() < deadline) {
             try {
                 Thread.sleep(10L);
             } catch (InterruptedException ex) {

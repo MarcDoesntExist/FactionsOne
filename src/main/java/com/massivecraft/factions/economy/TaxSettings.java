@@ -9,22 +9,6 @@ package com.massivecraft.factions.economy;
 public record TaxSettings(boolean enabled, double base, double perMember, double perChunk,
                           double cap, double percent, Mode mode) {
 
-    public enum Mode {
-        FLAT,
-        PERCENT;
-
-        public static Mode parse(String value) {
-            if (value == null) {
-                return FLAT;
-            }
-            try {
-                return valueOf(value.trim().toUpperCase(java.util.Locale.ROOT));
-            } catch (IllegalArgumentException exception) {
-                return FLAT;
-            }
-        }
-    }
-
     /**
      * Backwards-compatible flat constructor used by existing callers and tests.
      */
@@ -48,5 +32,21 @@ public record TaxSettings(boolean enabled, double base, double perMember, double
 
     private static double sanitize(double value) {
         return Double.isFinite(value) && value > 0.0 ? value : 0.0;
+    }
+
+    public enum Mode {
+        FLAT,
+        PERCENT;
+
+        public static Mode parse(String value) {
+            if (value == null) {
+                return FLAT;
+            }
+            try {
+                return valueOf(value.trim().toUpperCase(java.util.Locale.ROOT));
+            } catch (IllegalArgumentException exception) {
+                return FLAT;
+            }
+        }
     }
 }

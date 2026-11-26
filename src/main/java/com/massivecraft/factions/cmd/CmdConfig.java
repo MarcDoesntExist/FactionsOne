@@ -98,7 +98,7 @@ public class CmdConfig extends FCommand {
                     success = "\"" + fieldName + "\" option set to " + intVal + ".";
                 } catch (NumberFormatException ex) {
                     sendMessage(
-                            "Cannot set \"" + fieldName + "\": integer (whole number) value required.");
+                        "Cannot set \"" + fieldName + "\": integer (whole number) value required.");
                     return;
                 }
             }
@@ -111,7 +111,7 @@ public class CmdConfig extends FCommand {
                     success = "\"" + fieldName + "\" option set to " + longVal + ".";
                 } catch (NumberFormatException ex) {
                     sendMessage("Cannot set \"" + fieldName
-                            + "\": long integer (whole number) value required.");
+                        + "\": long integer (whole number) value required.");
                     return;
                 }
             }
@@ -124,7 +124,7 @@ public class CmdConfig extends FCommand {
                     success = "\"" + fieldName + "\" option set to " + doubleVal + ".";
                 } catch (NumberFormatException ex) {
                     sendMessage(
-                            "Cannot set \"" + fieldName + "\": double (numeric) value required.");
+                        "Cannot set \"" + fieldName + "\": double (numeric) value required.");
                     return;
                 }
             }
@@ -137,7 +137,7 @@ public class CmdConfig extends FCommand {
                     success = "\"" + fieldName + "\" option set to " + floatVal + ".";
                 } catch (NumberFormatException ex) {
                     sendMessage(
-                            "Cannot set \"" + fieldName + "\": float (numeric) value required.");
+                        "Cannot set \"" + fieldName + "\": float (numeric) value required.");
                     return;
                 }
             }
@@ -158,17 +158,16 @@ public class CmdConfig extends FCommand {
                 }
                 if (newColor == null) {
                     sendMessage("Cannot set \"" + fieldName + "\": \"" + value.toUpperCase()
-                            + "\" is not a valid color.");
+                        + "\" is not a valid color.");
                     return;
                 }
                 target.set(null, newColor);
                 success =
-                        "\"" + fieldName + "\" color option set to \"" + value.toUpperCase() + "\".";
+                    "\"" + fieldName + "\" color option set to \"" + value.toUpperCase() + "\".";
             }
 
             // Set<?> or other parameterized collection
-            else if (target.getGenericType() instanceof ParameterizedType) {
-                ParameterizedType targSet = (ParameterizedType) target.getGenericType();
+            else if (target.getGenericType() instanceof final ParameterizedType targSet) {
                 Type innerType = targSet.getActualTypeArguments()[0];
 
                 // Set<?>
@@ -183,34 +182,34 @@ public class CmdConfig extends FCommand {
                         }
                         if (newMat == null) {
                             sendMessage(
-                                    "Cannot change \"" + fieldName + "\" set: \"" + value.toUpperCase()
-                                            + "\" is not a valid material.");
+                                "Cannot change \"" + fieldName + "\" set: \"" + value.toUpperCase()
+                                    + "\" is not a valid material.");
                             return;
                         }
 
                         @SuppressWarnings("unchecked") Set<Material> matSet =
-                                (Set<Material>) target.get(null);
+                            (Set<Material>) target.get(null);
 
                         // Material already present, so remove it
                         if (matSet.contains(newMat)) {
                             matSet.remove(newMat);
                             target.set(null, matSet);
                             success = "\"" + fieldName + "\" set: Material \"" + value.toUpperCase()
-                                    + "\" removed.";
+                                + "\" removed.";
                         }
                         // Material not present yet, add it
                         else {
                             matSet.add(newMat);
                             target.set(null, matSet);
                             success = "\"" + fieldName + "\" set: Material \"" + value.toUpperCase()
-                                    + "\" added.";
+                                + "\" added.";
                         }
                     }
 
                     // Set<String>
                     else if (innerType == String.class) {
                         @SuppressWarnings("unchecked") Set<String> stringSet =
-                                (Set<String>) target.get(null);
+                            (Set<String>) target.get(null);
 
                         // String already present, so remove it
                         if (stringSet.contains(value)) {
@@ -228,7 +227,7 @@ public class CmdConfig extends FCommand {
                     // Set of unknown type
                     else {
                         sendMessage("\"" + fieldName
-                                + "\" is not a data type set which can be modified with this command.");
+                            + "\" is not a data type set which can be modified with this command.");
                         return;
                     }
                 }
@@ -237,7 +236,7 @@ public class CmdConfig extends FCommand {
                 else if (targSet.getRawType() == Map.class) {
                     if (args.size() < 3) {
                         sendMessage("Cannot change \"" + fieldName
-                                + "\" map: not enough arguments passed.");
+                            + "\" map: not enough arguments passed.");
                         return;
                     }
                     Type innerType2 = targSet.getActualTypeArguments()[1];
@@ -255,12 +254,12 @@ public class CmdConfig extends FCommand {
 
                         if (newFlag == null) {
                             sendMessage("Cannot change \"" + fieldName + "\" map: \"" + value1
-                                    + "\" is not a valid FFlag.");
+                                + "\" is not a valid FFlag.");
                             return;
                         }
 
                         @SuppressWarnings("unchecked") Map<FFlag, Boolean> map =
-                                (Map<FFlag, Boolean>) target.get(null);
+                            (Map<FFlag, Boolean>) target.get(null);
 
                         Boolean targetValue = this.strAsBool(value2);
 
@@ -269,17 +268,17 @@ public class CmdConfig extends FCommand {
 
                         if (targetValue)
                             success = "\"" + fieldName + "\" flag \"" + value1
-                                    + "\" set to true (enabled).";
+                                + "\" set to true (enabled).";
                         else
                             success = "\"" + fieldName + "\" flag \"" + value1
-                                    + "\" set to false (disabled).";
+                                + "\" set to false (disabled).";
                     }
 
                     // Map<FPerm, Set<Rel>>
                     else if (innerType == FPerm.class && innerType2 instanceof ParameterizedType) {
                         if (((ParameterizedType) innerType2).getRawType() != Set.class) {
                             sendMessage("\"" + fieldName
-                                    + "\" is not a data type map which can be modified with this command, due to the inner collection type.");
+                                + "\" is not a data type map which can be modified with this command, due to the inner collection type.");
                             return;
                         }
 
@@ -296,17 +295,17 @@ public class CmdConfig extends FCommand {
 
                         if (newPerm == null) {
                             sendMessage("Cannot change \"" + fieldName + "\" map: \"" + value1
-                                    + "\" is not a valid FPerm.");
+                                + "\" is not a valid FPerm.");
                             return;
                         }
                         if (newRel == null) {
                             sendMessage("Cannot change \"" + fieldName + "\" map: \"" + value2
-                                    + "\" is not a valid Rel.");
+                                + "\" is not a valid Rel.");
                             return;
                         }
 
                         @SuppressWarnings("unchecked") Map<FPerm, Set<Rel>> map =
-                                (Map<FPerm, Set<Rel>>) target.get(null);
+                            (Map<FPerm, Set<Rel>>) target.get(null);
 
                         Set<Rel> relSet = map.get(newPerm);
                         if (relSet == null)
@@ -316,15 +315,15 @@ public class CmdConfig extends FCommand {
                         if (relSet.contains(newRel)) {
                             relSet.remove(newRel);
                             success =
-                                    "\"" + fieldName + "\" permission \"" + value1 + "\": relation \""
-                                            + value2 + "\" removed.";
+                                "\"" + fieldName + "\" permission \"" + value1 + "\": relation \""
+                                    + value2 + "\" removed.";
                         }
                         // Rel not present yet, add it
                         else {
                             relSet.add(newRel);
                             success =
-                                    "\"" + fieldName + "\" permission \"" + value1 + "\": relation \""
-                                            + value2 + "\" added.";
+                                "\"" + fieldName + "\" permission \"" + value1 + "\": relation \""
+                                    + value2 + "\" added.";
                         }
 
                         map.put(newPerm, relSet);
@@ -334,7 +333,7 @@ public class CmdConfig extends FCommand {
                     // Map of unknown type
                     else {
                         sendMessage("\"" + fieldName
-                                + "\" is not a data type map which can be modified with this command.");
+                            + "\" is not a data type map which can be modified with this command.");
                         return;
                     }
                 }
@@ -342,7 +341,7 @@ public class CmdConfig extends FCommand {
                 // not a Set or Map?
                 else {
                     sendMessage("\"" + fieldName
-                            + "\" is not a data collection type which can be modified with this command.");
+                        + "\" is not a data collection type which can be modified with this command.");
                     return;
                 }
             }
@@ -350,16 +349,16 @@ public class CmdConfig extends FCommand {
             // unknown type
             else {
                 sendMessage("\"" + fieldName
-                        + "\" is not a data type which can be modified with this command.");
+                    + "\" is not a data type which can be modified with this command.");
                 return;
             }
         } catch (NoSuchFieldException ex) {
             sendMessage("Configuration setting \"" + fieldName
-                    + "\" couldn't be matched, though it should be... please report this error.");
+                + "\" couldn't be matched, though it should be... please report this error.");
             return;
         } catch (IllegalAccessException ex) {
             sendMessage(
-                    "Error setting configuration setting \"" + fieldName + "\" to \"" + value + "\".");
+                "Error setting configuration setting \"" + fieldName + "\" to \"" + value + "\".");
             return;
         }
 

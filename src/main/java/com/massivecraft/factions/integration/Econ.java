@@ -1,6 +1,10 @@
 package com.massivecraft.factions.integration;
 
-import com.massivecraft.factions.*;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Factions;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.bank.BankAccess;
 import com.massivecraft.factions.bank.BankNotifier;
 import com.massivecraft.factions.bank.BankService;
@@ -30,8 +34,8 @@ public class Econ {
             return;
 
         String integrationFail =
-                "Economy integration is " + (Conf.econEnabled ? "enabled, but" : "disabled, and")
-                        + " the plugin \"Vault\" ";
+            "Economy integration is " + (Conf.econEnabled ? "enabled, but" : "disabled, and")
+                + " the plugin \"Vault\" ";
 
         if (Bukkit.getServer().getPluginManager().getPlugin("Vault") == null) {
             Main.main.log(integrationFail + "is not installed.");
@@ -39,7 +43,7 @@ public class Econ {
         }
 
         RegisteredServiceProvider<Economy> rsp =
-                Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
+            Bukkit.getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
             Main.main.log(integrationFail + "is not hooked into an economy plugin.");
             return;
@@ -48,13 +52,13 @@ public class Econ {
 
         // Every movement goes through the atomic bank service from here on.
         BankService.install(new VaultBankGateway(econ), Econ::shouldBeUsed,
-                Econ::modifyUniverseMoney, Main.main.bankJournal);
+            Econ::modifyUniverseMoney, Main.main.bankJournal);
 
         Main.main.log("Economy integration through Vault plugin successful.");
 
         if (!Conf.econEnabled)
             Main.main.log(
-                    "NOTE: Economy is disabled. You can enable it with the command: f config econEnabled true");
+                "NOTE: Economy is disabled. You can enable it with the command: f config econEnabled true");
 
         oldMoneyDoTransfer();
     }
@@ -82,11 +86,11 @@ public class Econ {
     public static void sendBalanceInfo(FPlayer to, EconomyParticipator about) {
         if (!shouldBeUsed()) {
             Main.main
-                    .log(Level.WARNING, "Vault does not appear to be hooked into an economy plugin.");
+                .log(Level.WARNING, "Vault does not appear to be hooked into an economy plugin.");
             return;
         }
         to.msg("<a>%s's<i> balance is <h>%s<i>.", about.describeTo(to, true),
-                BankService.get().format(BankService.get().balance(about)));
+            BankService.get().format(BankService.get().balance(about)));
     }
 
     public static boolean canIControllYou(EconomyParticipator i, EconomyParticipator you) {
@@ -101,7 +105,7 @@ public class Econ {
     public static boolean transferMoney(EconomyParticipator invoker, EconomyParticipator from,
                                         EconomyParticipator to, double amount, boolean notify) {
         return BankService.get().transfer(invoker, from, to, amount, notify)
-                == BankService.Result.SUCCESS;
+            == BankService.Result.SUCCESS;
     }
 
     public static Set<FPlayer> getFplayers(EconomyParticipator ep) {
@@ -148,9 +152,9 @@ public class Econ {
 
         // basic claim cost, plus land inflation cost, minus the potential bonus given for claiming from another faction
         return Conf.econCostClaimWilderness + (Conf.econCostClaimWilderness
-                * Conf.econClaimAdditionalMultiplier * ownedLand) - (takingFromAnotherFaction ?
-                Conf.econCostClaimFromFactionBonus :
-                0);
+            * Conf.econClaimAdditionalMultiplier * ownedLand) - (takingFromAnotherFaction ?
+            Conf.econCostClaimFromFactionBonus :
+            0);
     }
 
     // calculate refund amount for unclaiming land

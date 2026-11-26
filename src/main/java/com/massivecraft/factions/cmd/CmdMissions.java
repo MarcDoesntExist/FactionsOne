@@ -32,11 +32,11 @@ public final class CmdMissions extends FCommand {
         FeatureService service = Main.main.featureService;
         if (!this.argIsSet(0)) {
             msg("<gold>Faction missions <gray>(points: <white>%s<gray>)",
-                    this.myFaction.getFactionPoints());
+                this.myFaction.getFactionPoints());
             for (FeatureConfig.MissionDefinition mission : service.getConfig().missions()) {
                 msg("<aqua>%s <gray>%s/%s%s", mission.name(),
-                        this.myFaction.getMissionProgress(mission.id()), mission.target(),
-                        this.myFaction.isMissionCompleted(mission.id()) ? " (done)" : "");
+                    this.myFaction.getMissionProgress(mission.id()), mission.target(),
+                    this.myFaction.isMissionCompleted(mission.id()) ? " (done)" : "");
             }
             return;
         }
@@ -48,7 +48,7 @@ public final class CmdMissions extends FCommand {
         FeatureService.Result result = service.claimMission(this.fme, this.myFaction, mission.id());
         if (result == FeatureService.Result.SUCCESS) {
             msg("<g>Mission completed: <h>%s<g> (+%s points).",
-                    mission.name(), mission.rewardPoints());
+                mission.name(), mission.rewardPoints());
         } else {
             msg(FeatureService.message(result));
         }

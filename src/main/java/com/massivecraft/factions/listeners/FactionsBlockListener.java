@@ -1,6 +1,13 @@
 package com.massivecraft.factions.listeners;
 
-import com.massivecraft.factions.*;
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.FeatureConfig;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.shield.ShieldService;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
@@ -13,7 +20,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.*;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
+import org.bukkit.event.block.BlockDamageEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.block.SpongeAbsorbEvent;
 
 
 /**
@@ -40,7 +54,7 @@ public class FactionsBlockListener implements Listener {
         String name = player.getName();
         String uuid = player.getUniqueId().toString();
         if (Conf.playersWhoBypassAllProtection.contains(name) || Conf.playersWhoBypassAllProtection
-                .contains(uuid))
+            .contains(uuid))
             return true;
 
         FPlayer me = FPlayers.i.get(uuid);
@@ -61,7 +75,7 @@ public class FactionsBlockListener implements Listener {
         if (!FPerm.BUILD.has(me, location) && FPerm.PAINBUILD.has(me, location)) {
             if (!justCheck) {
                 me.msg("<b>It is painful to %s in the territory of %s<b>.", action,
-                        factionHere.describeTo(me));
+                    factionHere.describeTo(me));
                 player.damage(Conf.actionDeniedPainAmount);
             }
             return true;
@@ -77,7 +91,7 @@ public class FactionsBlockListener implements Listener {
         if (event.getSource().getType() != Material.FIRE)
             return; // Must be Fire
         Faction faction = Board.getFactionAt(event.getBlock());
-        if (faction.getFlag(FFlag.FIRESPREAD) == false) {
+        if (!faction.getFlag(FFlag.FIRESPREAD)) {
             event.setCancelled(true);
         }
     }
@@ -87,7 +101,7 @@ public class FactionsBlockListener implements Listener {
         if (event.isCancelled())
             return;
         Faction faction = Board.getFactionAt(event.getBlock());
-        if (faction.getFlag(FFlag.FIRESPREAD) == false) {
+        if (!faction.getFlag(FFlag.FIRESPREAD)) {
             event.setCancelled(true);
         }
     }
@@ -167,7 +181,7 @@ public class FactionsBlockListener implements Listener {
 
         // target end-of-the-line empty (air) block which is being pushed into, including if piston itself would extend into air
         Block targetBlock = event.getBlock()
-                .getRelative(event.getDirection(), event.getBlocks().size() + 1);
+            .getRelative(event.getDirection(), event.getBlocks().size() + 1);
 
         // members of faction might not have build rights in their own territory, but pistons should still work regardless; so, address that corner case
         Faction targetFaction = Board.getFactionAt(new FLocation(targetBlock));
@@ -176,7 +190,7 @@ public class FactionsBlockListener implements Listener {
 
         // if potentially pushing into air/water/lava in another territory, we need to check it out
         if ((targetBlock.isEmpty() || targetBlock.isLiquid()) && !FPerm.BUILD
-                .has(pistonFaction, targetBlock.getLocation())) {
+            .has(pistonFaction, targetBlock.getLocation())) {
             event.setCancelled(true);
         }
 

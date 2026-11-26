@@ -4,8 +4,8 @@ import com.google.gson.reflect.TypeToken;
 import com.massivecraft.factions.iface.RelationParticipator;
 import com.massivecraft.factions.struct.TerritoryAccess;
 import com.massivecraft.factions.util.AsciiCompass;
-import com.massivecraft.factions.zcore.util.DiscUtil;
 import com.massivecraft.factions.util.Color;
+import com.massivecraft.factions.zcore.util.DiscUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
@@ -14,8 +14,12 @@ import org.bukkit.block.Block;
 
 import java.io.File;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 
 /**
@@ -26,9 +30,9 @@ import java.util.Map.Entry;
  * @author Daniel Saukel
  */
 public class Board {
-    private static final transient File file = new File(Main.main.getDataFolder(), "board.json");
-    public static transient HashMap<FLocation, TerritoryAccess> flocationIds =
-            new HashMap<FLocation, TerritoryAccess>();
+    private static final File file = new File(Main.main.getDataFolder(), "board.json");
+    public static HashMap<FLocation, TerritoryAccess> flocationIds =
+        new HashMap<FLocation, TerritoryAccess>();
 
     //----------------------------------------------//
     // Get and Set
@@ -104,7 +108,7 @@ public class Board {
         FLocation c = flocation.getRelative(0, 1);
         FLocation d = flocation.getRelative(0, -1);
         return faction != getFactionAt(a) || faction != getFactionAt(b) || faction != getFactionAt(
-                c) || faction != getFactionAt(d);
+            c) || faction != getFactionAt(d);
     }
 
     // Is this coord connected to any coord claimed by the specified faction?
@@ -114,7 +118,7 @@ public class Board {
         FLocation c = flocation.getRelative(0, 1);
         FLocation d = flocation.getRelative(0, -1);
         return faction == getFactionAt(a) || faction == getFactionAt(b) || faction == getFactionAt(
-                c) || faction == getFactionAt(d);
+            c) || faction == getFactionAt(d);
     }
 
 
@@ -128,8 +132,8 @@ public class Board {
             Entry<FLocation, TerritoryAccess> entry = iter.next();
             if (!Factions.i.exists(entry.getValue().getHostFactionID())) {
                 Main.main.log(
-                        "Board cleaner removed " + entry.getValue().getHostFactionID() + " from "
-                                + entry.getKey());
+                    "Board cleaner removed " + entry.getValue().getHostFactionID() + " from "
+                        + entry.getKey());
                 iter.remove();
             }
         }
@@ -160,7 +164,7 @@ public class Board {
         while (iter.hasNext()) {
             Entry<FLocation, TerritoryAccess> entry = iter.next();
             if (entry.getValue().getHostFactionID().equals(factionId) && entry.getKey()
-                    .getWorldName().equals(worldName)) {
+                .getWorldName().equals(worldName)) {
                 ret += 1;
             }
         }
@@ -181,7 +185,7 @@ public class Board {
         ArrayList<Component> ret = new ArrayList<Component>();
         Faction factionLoc = getFactionAt(flocation);
         Component header = Component.text("(" + flocation.getCoordString() + ") ")
-                .append(factionLoc.getTag(observer));
+            .append(factionLoc.getTag(observer));
         ret.add(Main.main.txt.titleize(header));
 
         int halfWidth = Conf.mapWidth / 2;
@@ -200,12 +204,12 @@ public class Board {
         // For each row
         for (int dz = 0; dz < height; dz++) {
             rows.add(getMapRow(observer, topLeft.getRelative(0, dz), width,
-                    dz == halfHeight, fList));
+                dz == halfHeight, fList));
         }
 
         // Get the compass
         ArrayList<String> asciiCompass =
-                AsciiCompass.getAsciiCompass(inDegrees, Color.RED, Color.GOLD.toString());
+            AsciiCompass.getAsciiCompass(inDegrees, Color.RED, Color.GOLD.toString());
 
         // Add the compass to the first map rows
         rows.set(0, asciiCompass.get(0) + rows.get(0).substring(3 * 3));
@@ -219,10 +223,10 @@ public class Board {
         Component legend = Component.empty();
         for (Faction keyfaction : fList.keySet()) {
             legend = legend
-                    .append(Component.text(fList.get(keyfaction) + ": ",
-                            Style.style(keyfaction.getColorTo(observer).toTextColor())))
-                    .append(keyfaction.getTag(observer))
-                    .append(Component.text(" "));
+                .append(Component.text(fList.get(keyfaction) + ": ",
+                    Style.style(keyfaction.getColorTo(observer).toTextColor())))
+                .append(keyfaction.getTag(observer))
+                .append(Component.text(" "));
         }
         ret.add(legend);
 
@@ -273,12 +277,12 @@ public class Board {
         int width = halfWidth * 2 + 1;
         FLocation rowStart = flocation.getRelative(-halfWidth, 0);
         String row = getMapRow(observer, rowStart, width, true,
-                new HashMap<Faction, Character>());
+            new HashMap<Faction, Character>());
         return Component.text("(" + flocation.getCoordString() + ") ",
-                        Style.style(NamedTextColor.GRAY))
-                .append(getFactionAt(flocation).getTag(observer))
-                .append(Component.text(" "))
-                .append(Main.main.txt.parse(row));
+                Style.style(NamedTextColor.GRAY))
+            .append(getFactionAt(flocation).getTag(observer))
+            .append(Component.text(" "))
+            .append(Main.main.txt.parse(row));
     }
 
     // -------------------------------------------- //
@@ -287,7 +291,7 @@ public class Board {
 
     public static Map<String, Map<String, TerritoryAccess>> dumpAsSaveFormat() {
         Map<String, Map<String, TerritoryAccess>> worldCoordIds =
-                new HashMap<String, Map<String, TerritoryAccess>>();
+            new HashMap<String, Map<String, TerritoryAccess>>();
 
         String worldName, coords;
         TerritoryAccess data;
@@ -358,7 +362,7 @@ public class Board {
             Type type = new TypeToken<Map<String, Map<String, TerritoryAccess>>>() {
             }.getType();
             Map<String, Map<String, TerritoryAccess>> worldCoordIds =
-                    Main.main.gson.fromJson(DiscUtil.read(file), type);
+                Main.main.gson.fromJson(DiscUtil.read(file), type);
             loadFromSaveFormat(worldCoordIds);
         } catch (Exception e) {
             e.printStackTrace();

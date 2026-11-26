@@ -70,7 +70,7 @@ public class CmdOfficer extends FCommand {
                 return;
             }
             targetFaction.msg("%s<i> is no longer co-leader in your faction.",
-                    you.describeTo(targetFaction, true));
+                you.describeTo(targetFaction, true));
             msg("<i>You have demoted %s<i> to officer.", you.describeTo(fme, true));
             return;
         }
@@ -82,7 +82,7 @@ public class CmdOfficer extends FCommand {
                 return;
             }
             targetFaction.msg("%s<i> is no longer officer in your faction.",
-                    you.describeTo(targetFaction, true));
+                you.describeTo(targetFaction, true));
             msg("<i>You have removed officer status from %s<i>.", you.describeTo(fme, true));
         } else {
             // Give
@@ -91,7 +91,7 @@ public class CmdOfficer extends FCommand {
                 return;
             }
             targetFaction.msg("%s<i> was promoted to officer in your faction.",
-                    you.describeTo(targetFaction, true));
+                you.describeTo(targetFaction, true));
             msg("<i>You have promoted %s<i> to officer.", you.describeTo(fme, true));
         }
     }

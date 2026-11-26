@@ -68,11 +68,24 @@ public abstract class MCommand<T extends MPlugin> {
         this.visibility = CommandVisibility.VISIBLE;
     }
 
+    protected static List<String> filterStartingWith(Collection<String> values, String prefix) {
+        String lowerPrefix = prefix.toLowerCase(Locale.ROOT);
+        Set<String> matches = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+        for (String value : values) {
+            if (value != null && !value.isEmpty()
+                && value.toLowerCase(Locale.ROOT).startsWith(lowerPrefix)) {
+                matches.add(value);
+            }
+        }
+        return new ArrayList<>(matches);
+    }
+
     public void addSubCommand(MCommand<?> subCommand) {
         subCommand.commandChain.addAll(this.commandChain);
         subCommand.commandChain.add(this);
         this.subCommands.add(subCommand);
     }
+    // The command chain used to execute this command
 
     public String getHelpShort() {
         if (this.helpShort == null) {
@@ -84,7 +97,6 @@ public abstract class MCommand<T extends MPlugin> {
         }
         return this.helpShort;
     }
-    // The command chain used to execute this command
 
     public void setHelpShort(String val) {
         this.helpShort = val;
@@ -124,13 +136,13 @@ public abstract class MCommand<T extends MPlugin> {
         perform();
     }
 
-    public void execute(CommandSender sender, List<String> args) {
-        execute(sender, args, new ArrayList<MCommand<?>>());
-    }
-
     // -------------------------------------------- //
     // Tab completion
     // -------------------------------------------- //
+
+    public void execute(CommandSender sender, List<String> args) {
+        execute(sender, args, new ArrayList<MCommand<?>>());
+    }
 
     /**
      * Finds a direct sub command by alias. Execution and completion share this
@@ -189,7 +201,7 @@ public abstract class MCommand<T extends MPlugin> {
             return false;
         }
         if (this.visibility == CommandVisibility.SECRET
-                && !this.validSenderPermissions(sender, false)) {
+            && !this.validSenderPermissions(sender, false)) {
             return false;
         }
         return !this.senderMustBePlayer || sender instanceof Player;
@@ -235,18 +247,6 @@ public abstract class MCommand<T extends MPlugin> {
             }
         }
         return ret;
-    }
-
-    protected static List<String> filterStartingWith(Collection<String> values, String prefix) {
-        String lowerPrefix = prefix.toLowerCase(Locale.ROOT);
-        Set<String> matches = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        for (String value : values) {
-            if (value != null && !value.isEmpty()
-                    && value.toLowerCase(Locale.ROOT).startsWith(lowerPrefix)) {
-                matches.add(value);
-            }
-        }
-        return new ArrayList<>(matches);
     }
 
     // This is where the command action is performed.
@@ -303,11 +303,11 @@ public abstract class MCommand<T extends MPlugin> {
         }
 
         if (args.size() > this.requiredArgs.size() + this.optionalArgs.size()
-                && this.errorOnToManyArgs) {
+            && this.errorOnToManyArgs) {
             if (sender != null) {
                 // Get the to many string slice
                 List<String> theToMany =
-                        args.subList(this.requiredArgs.size() + this.optionalArgs.size(), args.size());
+                    args.subList(this.requiredArgs.size() + this.optionalArgs.size(), args.size());
                 msg(Lang.commandToManyArgs, TextUtil.implode(theToMany, " "));
                 sender.sendMessage(this.getUseageTemplate());
             }
@@ -464,7 +464,7 @@ public abstract class MCommand<T extends MPlugin> {
     public Boolean strAsBool(String str) {
         str = str.toLowerCase();
         return str.startsWith("y") || str.startsWith("t") || str.startsWith("on") || str
-                .startsWith("+") || str.startsWith("1");
+            .startsWith("+") || str.startsWith("1");
     }
 
     public Boolean argAsBool(int idx, Boolean def) {

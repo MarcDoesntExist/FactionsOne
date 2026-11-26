@@ -18,19 +18,19 @@ import com.massivecraft.factions.Conf;
 public enum FFlag {
     // Faction flags
     PERMANENT("permanent", "<i>A permanent faction will never be deleted.", false), PEACEFUL(
-            "peaceful", "<i>Allways in truce with other factions.", false), INFPOWER("infpower",
-            "<i>This flag gives the faction infinite power.", false),
+        "peaceful", "<i>Allways in truce with other factions.", false), INFPOWER("infpower",
+        "<i>This flag gives the faction infinite power.", false),
     // This faction has infinite power: TODO: Add faction has enough method. Replace the permanentpower level
 
     // (Faction) Territory flags
     // If a faction later could have many different territories this would probably be in another enum
     POWERLOSS("powerloss", "<i>Is power lost on death in this territory?", true), PVP("pvp",
-            "<i>Can you PVP in territory?", true), FRIENDLYFIRE("friendlyfire",
-            "<i>Can friends hurt eachother here?", false), MONSTERS("monsters",
-            "<i>Can monsters spawn in this territory?", true), EXPLOSIONS("explosions",
-            "<i>Can explosions occur in this territory?", true), FIRESPREAD("firespread",
-            "<i>Can fire spread in territory?",
-            true), //LIGHTNING("lightning", "<i>Can lightning strike in this territory?", true), Possible to add later.
+        "<i>Can you PVP in territory?", true), FRIENDLYFIRE("friendlyfire",
+        "<i>Can friends hurt eachother here?", false), MONSTERS("monsters",
+        "<i>Can monsters spawn in this territory?", true), EXPLOSIONS("explosions",
+        "<i>Can explosions occur in this territory?", true), FIRESPREAD("firespread",
+        "<i>Can fire spread in territory?",
+        true), //LIGHTNING("lightning", "<i>Can lightning strike in this territory?", true), Possible to add later.
     ENDERGRIEF("endergrief", "<i>Can endermen grief in this territory?", false),
     SPAWNERS("spawners", "<i>Can mob spawners spawn mobs in this territory?", true),
     TNT("tnt", "<i>Can TNT explode in this territory?", true),
@@ -59,7 +59,7 @@ public enum FFlag {
         }
         for (FFlag flag : FFlag.values()) {
             if (flag.name().toLowerCase(java.util.Locale.ROOT).equals(str)
-                    || flag.nicename.equals(str)) {
+                || flag.nicename.equals(str)) {
                 return flag;
             }
         }

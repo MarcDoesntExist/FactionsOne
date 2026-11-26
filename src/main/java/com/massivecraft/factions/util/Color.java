@@ -49,6 +49,19 @@ public enum Color {
     }
 
     /**
+     * Removes all legacy color codes from a string.
+     *
+     * @param input the string to clean
+     * @return the input without color codes, or {@code null} if the input was null
+     */
+    public static String strip(String input) {
+        if (input == null) {
+            return null;
+        }
+        return STRIP_COLOR_PATTERN.matcher(input).replaceAll("");
+    }
+
+    /**
      * @return the legacy section-sign color code, e.g. {@code "§a"}
      */
     @Override
@@ -93,19 +106,6 @@ public enum Color {
             case ITALIC -> TextDecoration.ITALIC;
             default -> null;
         };
-    }
-
-    /**
-     * Removes all legacy color codes from a string.
-     *
-     * @param input the string to clean
-     * @return the input without color codes, or {@code null} if the input was null
-     */
-    public static String strip(String input) {
-        if (input == null) {
-            return null;
-        }
-        return STRIP_COLOR_PATTERN.matcher(input).replaceAll("");
     }
 
 }

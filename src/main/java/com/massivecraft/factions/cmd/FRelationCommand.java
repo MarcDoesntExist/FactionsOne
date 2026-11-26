@@ -56,7 +56,7 @@ public abstract class FRelationCommand extends FCommand {
         }
 
         if (targetRelation == Rel.ENEMY && Main.main.shieldService != null
-                && Main.main.shieldService.isProtected(myFaction)) {
+            && Main.main.shieldService.isProtected(myFaction)) {
             msg(Lang.shieldCannotAttack);
             return;
         }
@@ -71,10 +71,10 @@ public abstract class FRelationCommand extends FCommand {
         long betrayalWindowMillis = Math.max(0L, Conf.betrayalWindowSeconds) * 1000L;
         BetrayalTracker betrayalTracker = Main.main.betrayalTracker;
         boolean recentBreak = betrayalTracker != null
-                && betrayalTracker.hasRecentBreak(myFaction.getId(), them.getId(), now,
-                        betrayalWindowMillis);
+            && betrayalTracker.hasRecentBreak(myFaction.getId(), them.getId(), now,
+            betrayalWindowMillis);
         BetrayalRules.Outcome betrayalOutcome = BetrayalRules.classify(oldRelation,
-                targetRelation, recentBreak, Conf.betrayalRulesEnabled);
+            targetRelation, recentBreak, Conf.betrayalRulesEnabled);
         if (betrayalOutcome == BetrayalRules.Outcome.BLOCK_DIRECT_WAR) {
             msg(Lang.relationAllianceWar);
             return;
@@ -82,7 +82,7 @@ public abstract class FRelationCommand extends FCommand {
 
         if (targetRelation == Rel.ALLY && myFaction.getRelationTo(them, true) != Rel.ALLY) {
             int limit = Main.main.featureService == null
-                    ? Conf.factionAllyLimit : Main.main.featureService.allyLimit(myFaction);
+                ? Conf.factionAllyLimit : Main.main.featureService.allyLimit(myFaction);
             if (limit > 0 && countAllies(myFaction) >= limit) {
                 msg(Lang.allyLimit, limit);
                 return;
@@ -91,7 +91,7 @@ public abstract class FRelationCommand extends FCommand {
 
         // if economy is enabled, they're not on the bypass list, and this command has a cost set, make 'em pay
         if (!payForCommand(targetRelation.getRelationCost(), "to change a relation wish",
-                "for changing a relation wish"))
+            "for changing a relation wish"))
             return;
 
         // try to set the new relation
@@ -104,23 +104,23 @@ public abstract class FRelationCommand extends FCommand {
             applyBetrayal(betrayalOutcome, myFaction, them, now, betrayalWindowMillis);
             // trigger the faction relation event
             FactionRelationEvent relationEvent =
-                    new FactionRelationEvent(myFaction, them, oldRelation, currentRelation);
+                new FactionRelationEvent(myFaction, them, oldRelation, currentRelation);
             Bukkit.getServer().getPluginManager().callEvent(relationEvent);
 
             them.msg("%s<i> is now %s.", myFaction.describeTo(them, true),
-                    targetRelation.getDescFactionOne());
+                targetRelation.getDescFactionOne());
             myFaction.msg("%s<i> is now %s.", them.describeTo(myFaction, true),
-                    targetRelation.getDescFactionOne());
+                targetRelation.getDescFactionOne());
         }
         // inform the other faction of your request
         else {
             them.msg("%s<i> wishes to be %s.", myFaction.describeTo(them, true),
-                    targetRelation.getColor() + targetRelation.getDescFactionOne());
+                targetRelation.getColor() + targetRelation.getDescFactionOne());
             them.msg("<i>Type <c>/" + Conf.baseCommandAliases.get(0) + " " + targetRelation + " "
-                    + myFaction.getTagPlain() + "<i> to accept.");
+                + myFaction.getTagPlain() + "<i> to accept.");
             myFaction.msg("%s<i> were informed that you wish to be %s<i>.",
-                    them.describeTo(myFaction, true),
-                    targetRelation.getColor() + targetRelation.getDescFactionOne());
+                them.describeTo(myFaction, true),
+                targetRelation.getColor() + targetRelation.getDescFactionOne());
         }
 
         // TODO: The ally case should work!!
@@ -172,7 +172,7 @@ public abstract class FRelationCommand extends FCommand {
         traitor.msg(Lang.relationBetrayalPenalty, amount);
         victim.msg(Lang.relationBetrayalVictim, traitor.getTagPlain());
         traitor.addLog(fme == null ? "server" : fme.getName(), "BETRAYAL",
-                victim.getTagPlain() + " -" + amount);
+            victim.getTagPlain() + " -" + amount);
     }
 
     private int countAllies(Faction faction) {

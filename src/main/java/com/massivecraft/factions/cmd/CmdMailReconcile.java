@@ -72,7 +72,7 @@ public class CmdMailReconcile extends FCommand {
             return;
         }
         msg(completed ? Lang.mailboxReconciledRefunded : Lang.mailboxReconciledRefundRetry,
-                claimId);
+            claimId);
     }
 
     private void showUnknown() {
@@ -95,7 +95,7 @@ public class CmdMailReconcile extends FCommand {
     private void print(List<FactionMailbox.Claim> claims) {
         for (FactionMailbox.Claim claim : claims) {
             msg(Lang.mailboxLine, claim.id(), BankService.get().format(claim.amount()),
-                    claim.reason().isBlank() ? claim.source() : claim.reason());
+                claim.reason().isBlank() ? claim.source() : claim.reason());
         }
     }
 }

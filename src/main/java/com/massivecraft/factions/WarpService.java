@@ -4,8 +4,8 @@ import com.massivecraft.factions.event.WarpTeleportEvent;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.util.LazyLocation;
-import com.massivecraft.factions.zcore.Lang;
 import com.massivecraft.factions.util.TeleportWarmupService;
+import com.massivecraft.factions.zcore.Lang;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -34,6 +34,14 @@ public final class WarpService {
         this.warmup = warmup;
     }
 
+    private static String normalize(String name) {
+        if (name == null) {
+            return null;
+        }
+        String normalized = name.toLowerCase(Locale.ROOT);
+        return normalized.matches(NAME_PATTERN) ? normalized : null;
+    }
+
     public boolean setWarp(FPlayer fplayer, String name, String password) {
         if (!Conf.warpsEnabled) {
             fplayer.msg("<b>Faction warps are disabled.");
@@ -48,13 +56,13 @@ public final class WarpService {
             return false;
         }
         if (Conf.warpMustBeInTerritory
-                && Board.getFactionAt(new FLocation(fplayer.getPlayer())) != fplayer.getFaction()) {
+            && Board.getFactionAt(new FLocation(fplayer.getPlayer())) != fplayer.getFaction()) {
             fplayer.msg("<b>You must be in your own territory to set a warp.");
             return false;
         }
         Faction faction = fplayer.getFaction();
         if (faction.getWarp(normalized) == null
-                && faction.getWarps().size() >= this.features.warpLimit(faction)) {
+            && faction.getWarps().size() >= this.features.warpLimit(faction)) {
             fplayer.msg("<b>Your faction has reached its warp limit.");
             return false;
         }
@@ -65,7 +73,7 @@ public final class WarpService {
 
         Location location = fplayer.getPlayer().getLocation();
         faction.putWarp(normalized, new FactionWarp(normalized, new LazyLocation(location),
-                FactionWarp.hash(password)));
+            FactionWarp.hash(password)));
         faction.addLog(fplayer.getName(), "WARP_SET", normalized);
         fplayer.msg("<g>Warp <h>%s<g> saved.", normalized);
         return true;
@@ -97,7 +105,7 @@ public final class WarpService {
         Faction faction = fplayer.getFaction();
         FactionWarp warp = faction.getWarp(normalize(name));
         if (warp == null || warp.getLocation() == null
-                || warp.getLocation().getLocation() == null) {
+            || warp.getLocation().getLocation() == null) {
             fplayer.msg("<b>That warp does not exist.");
             return false;
         }
@@ -126,7 +134,7 @@ public final class WarpService {
         }
         double cost = Math.max(0.0, Conf.warpCost);
         if (cost > 0.0 && !Econ.modifyMoney(fplayer, -cost, "to use a warp",
-                "for using a warp")) {
+            "for using a warp")) {
             fplayer.msg(Lang.warpCostFailed);
             return false;
         }
@@ -134,8 +142,8 @@ public final class WarpService {
             fplayer.msg("<i>Warping in <h>%s<i> seconds. Do not move.", seconds);
         }
         this.warmup.start(player, seconds,
-                () -> this.finish(fplayer, faction, warp, destination, cost),
-                () -> this.refund(fplayer, cost));
+            () -> this.finish(fplayer, faction, warp, destination, cost),
+            () -> this.refund(fplayer, cost));
         return true;
     }
 
@@ -152,12 +160,12 @@ public final class WarpService {
             player.teleport(destination);
         } catch (RuntimeException exception) {
             this.plugin.getLogger().warning("Warp teleport failed for " + player.getName() + ": "
-                    + exception.getMessage());
+                + exception.getMessage());
             return this.refund(fplayer, cost);
         }
         player.setFallDistance(0);
         this.cooldowns.put(player.getUniqueId(),
-                System.currentTimeMillis() + Math.max(0, Conf.warpCooldownSeconds) * 1000L);
+            System.currentTimeMillis() + Math.max(0, Conf.warpCooldownSeconds) * 1000L);
         faction.addLog(fplayer.getName(), "WARP_USE", warp.getName());
         fplayer.msg("<g>Warped to <h>%s<g>.", warp.getName());
         return true;
@@ -168,14 +176,6 @@ public final class WarpService {
             Econ.modifyMoney(fplayer, cost, null, "warp refund");
         }
         return false;
-    }
-
-    private static String normalize(String name) {
-        if (name == null) {
-            return null;
-        }
-        String normalized = name.toLowerCase(Locale.ROOT);
-        return normalized.matches(NAME_PATTERN) ? normalized : null;
     }
 
 }

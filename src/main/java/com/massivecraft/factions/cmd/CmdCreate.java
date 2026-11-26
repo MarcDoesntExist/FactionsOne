@@ -1,6 +1,11 @@
 package com.massivecraft.factions.cmd;
 
-import com.massivecraft.factions.*;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Factions;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.event.FPlayerJoinEvent;
 import com.massivecraft.factions.event.FactionCreateEvent;
 import com.massivecraft.factions.struct.Permission;
@@ -65,7 +70,7 @@ public class CmdCreate extends FCommand {
 
         // then make 'em pay (if applicable)
         if (!payForCommand(Conf.econCostCreate, "to create a new faction",
-                "for creating a new faction"))
+            "for creating a new faction"))
             return;
 
         Faction faction = Factions.i.create();
@@ -81,7 +86,7 @@ public class CmdCreate extends FCommand {
 
         // trigger the faction join event for the creator
         FPlayerJoinEvent joinEvent = new FPlayerJoinEvent(FPlayers.i.get(me), faction,
-                FPlayerJoinEvent.PlayerJoinReason.CREATE);
+            FPlayerJoinEvent.PlayerJoinReason.CREATE);
         Bukkit.getServer().getPluginManager().callEvent(joinEvent);
         // join event cannot be cancelled or you'll have an empty faction
 
@@ -91,7 +96,7 @@ public class CmdCreate extends FCommand {
 
         for (FPlayer follower : FPlayers.i.getOnline()) {
             follower.msg("%s<i> created a new faction %s", fme.describeTo(follower, true),
-                    faction.getTag(follower));
+                faction.getTag(follower));
         }
 
         msg("<i>You should now: %s", p.cmdBase.cmdDescription.getUseageTemplate());

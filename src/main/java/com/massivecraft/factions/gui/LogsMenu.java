@@ -35,12 +35,12 @@ public final class LogsMenu extends PagedMenu {
 
     private LogsMenu(Player player, GuiConfig config, Faction faction) {
         super(player, config, config.title("menu.logs.title", Lang.logsMenuTitle),
-                config.rows("menu.logs.rows", 6),
-                clicker -> {
-                    FPlayer fplayer = FPlayers.i.get(clicker);
-                    return fplayer != null && fplayer.getFaction() == faction
-                            && FPerm.LOGS.has(clicker, faction, false);
-                });
+            config.rows("menu.logs.rows", 6),
+            clicker -> {
+                FPlayer fplayer = FPlayers.i.get(clicker);
+                return fplayer != null && fplayer.getFaction() == faction
+                    && FPerm.LOGS.has(clicker, faction, false);
+            });
         this.faction = faction;
         this.build();
     }
@@ -61,10 +61,10 @@ public final class LogsMenu extends PagedMenu {
             ItemMeta meta = icon.getItemMeta();
             if (meta != null) {
                 meta.displayName(Main.main.txt.parse(Lang.logsMenuEntry, entry.getActor(),
-                        entry.getAction()));
+                    entry.getAction()));
                 List<Component> lore = new ArrayList<Component>();
                 lore.add(Main.main.txt.parse(Lang.logsMenuTime, this.format.format(
-                        new Date(entry.getTimestamp()))));
+                    new Date(entry.getTimestamp()))));
                 if (entry.getDetail() != null) {
                     lore.add(Main.main.txt.parse(Lang.logsMenuDetail, entry.getDetail()));
                 }

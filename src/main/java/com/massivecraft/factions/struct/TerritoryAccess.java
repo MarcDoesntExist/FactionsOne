@@ -1,7 +1,19 @@
 package com.massivecraft.factions.struct;
 
-import com.google.gson.*;
-import com.massivecraft.factions.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Factions;
+import com.massivecraft.factions.Main;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Type;
@@ -19,7 +31,7 @@ import java.util.logging.Level;
  * @author Daniel Saukel
  */
 public class TerritoryAccess
-        implements JsonDeserializer<TerritoryAccess>, JsonSerializer<TerritoryAccess> {
+    implements JsonDeserializer<TerritoryAccess>, JsonSerializer<TerritoryAccess> {
     private final Set<String> factionIDs = new LinkedHashSet<String>();
     private final Set<String> fplayerIDs = new LinkedHashSet<String>();
     private String hostFactionID;
@@ -187,7 +199,7 @@ public class TerritoryAccess
     // this should normally only be checked after running subjectHasAccess() or fPlayerHasAccess() above to see if they have access explicitly granted
     public boolean subjectAccessIsRestricted(Object testSubject) {
         return (!this.isHostFactionAllowed() && this.doesHostFactionMatch(testSubject)
-                && !FPerm.ACCESS.has(testSubject, this.getHostFaction()));
+            && !FPerm.ACCESS.has(testSubject, this.getHostFaction()));
     }
 
 
@@ -233,7 +245,7 @@ public class TerritoryAccess
         } catch (Exception ex) {
             ex.printStackTrace();
             Main.main
-                    .log(Level.WARNING, "Error encountered while deserializing TerritoryAccess data.");
+                .log(Level.WARNING, "Error encountered while deserializing TerritoryAccess data.");
             return null;
         }
     }
@@ -280,7 +292,7 @@ public class TerritoryAccess
         } catch (Exception ex) {
             ex.printStackTrace();
             Main.main
-                    .log(Level.WARNING, "Error encountered while serializing TerritoryAccess data.");
+                .log(Level.WARNING, "Error encountered while serializing TerritoryAccess data.");
             return null;
         }
     }
@@ -299,12 +311,11 @@ public class TerritoryAccess
     public boolean equals(Object obj) {
         if (obj == this)
             return true;
-        if (!(obj instanceof TerritoryAccess))
+        if (!(obj instanceof final TerritoryAccess that))
             return false;
 
-        TerritoryAccess that = (TerritoryAccess) obj;
         return this.hostFactionID.equals(that.hostFactionID)
-                && this.hostFactionAllowed == that.hostFactionAllowed
-                && this.factionIDs == that.factionIDs && this.fplayerIDs == that.fplayerIDs;
+            && this.hostFactionAllowed == that.hostFactionAllowed
+            && this.factionIDs == that.factionIDs && this.fplayerIDs == that.fplayerIDs;
     }
 }

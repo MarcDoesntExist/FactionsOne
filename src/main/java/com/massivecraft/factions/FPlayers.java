@@ -23,8 +23,8 @@ public class FPlayers extends PlayerEntityCollection<FPlayer> {
 
     private FPlayers() {
         super(FPlayer.class, new CopyOnWriteArrayList<FPlayer>(),
-                new ConcurrentSkipListMap<String, FPlayer>(String.CASE_INSENSITIVE_ORDER),
-                new File(Main.main.getDataFolder(), "players.json"), Main.main.gson);
+            new ConcurrentSkipListMap<String, FPlayer>(String.CASE_INSENSITIVE_ORDER),
+            new File(Main.main.getDataFolder(), "players.json"), Main.main.gson);
 
         this.setCreative(true);
     }

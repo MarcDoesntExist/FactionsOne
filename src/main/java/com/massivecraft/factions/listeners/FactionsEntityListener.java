@@ -1,21 +1,44 @@
 package com.massivecraft.factions.listeners;
 
-import com.massivecraft.factions.*;
-import de.erethon.factionsone.api.LegacyUtil;
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.FeatureConfig;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.event.PowerLossEvent;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.util.MiscUtil;
 import com.massivecraft.factions.zcore.Lang;
+import de.erethon.factionsone.api.LegacyUtil;
 import io.papermc.paper.event.entity.EntityMoveEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Animals;
+import org.bukkit.entity.Enderman;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.Wither;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.*;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityCombustByEntityEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.PotionSplashEvent;
+import org.bukkit.event.entity.SpawnerSpawnEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingBreakEvent.RemoveCause;
@@ -24,7 +47,13 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -36,12 +65,12 @@ import java.util.*;
  */
 public class FactionsEntityListener implements Listener {
     private static final Set<PotionEffectType> badPotionEffects =
-            new LinkedHashSet<PotionEffectType>(Arrays
-                    .asList(PotionEffectType.BLINDNESS, PotionEffectType.NAUSEA,
-                            PotionEffectType.INSTANT_DAMAGE, PotionEffectType.HUNGER,
-                            PotionEffectType.POISON, PotionEffectType.SLOWNESS,
-                            PotionEffectType.MINING_FATIGUE, PotionEffectType.WEAKNESS,
-                            PotionEffectType.WITHER));
+        new LinkedHashSet<PotionEffectType>(Arrays
+            .asList(PotionEffectType.BLINDNESS, PotionEffectType.NAUSEA,
+                PotionEffectType.INSTANT_DAMAGE, PotionEffectType.HUNGER,
+                PotionEffectType.POISON, PotionEffectType.SLOWNESS,
+                PotionEffectType.MINING_FATIGUE, PotionEffectType.WEAKNESS,
+                PotionEffectType.WITHER));
     public Main main;
 
 
@@ -52,14 +81,13 @@ public class FactionsEntityListener implements Listener {
     @EventHandler(priority = EventPriority.NORMAL)
     public void onEntityDeath(EntityDeathEvent event) {
         Entity entity = event.getEntity();
-        if (!(entity instanceof Player)) {
+        if (!(entity instanceof final Player player)) {
             if (entity instanceof LivingEntity living && living.getKiller() != null) {
                 progressKill(living.getKiller(), FeatureConfig.MissionType.KILL_MOB);
             }
             return;
         }
 
-        Player player = (Player) entity;
         FPlayer fplayer = FPlayers.i.get(player);
         if (player.getKiller() != null) {
             progressKill(player.getKiller(), FeatureConfig.MissionType.KILL_PLAYER);
@@ -71,7 +99,7 @@ public class FactionsEntityListener implements Listener {
         // Check for no power loss conditions
         if (!faction.getFlag(FFlag.POWERLOSS)) {
             powerLossEvent.setMessage(
-                    "<i>You didn't lose any power since the territory you died in works that way.");
+                "<i>You didn't lose any power since the territory you died in works that way.");
             powerLossEvent.setCancelled(true);
         } else if (Conf.worldsNoPowerLoss.contains(player.getWorld().getName())) {
             powerLossEvent.setMessage("<i>You didn't lose any power due to the world you died in.");
@@ -108,8 +136,8 @@ public class FactionsEntityListener implements Listener {
         }
 
         if (event.getEntity() instanceof Player && event.getCause() != null
-                && (event.getCause() == EntityDamageEvent.DamageCause.FIRE
-                || event.getCause() == EntityDamageEvent.DamageCause.FIRE_TICK)) {
+            && (event.getCause() == EntityDamageEvent.DamageCause.FIRE
+            || event.getCause() == EntityDamageEvent.DamageCause.FIRE_TICK)) {
             Faction fireFaction = Board.getFactionAt(new FLocation(event.getEntity().getLocation()));
             if (!fireFaction.getFlag(FFlag.FIRE_FRIENDLY)) {
                 event.setCancelled(true);
@@ -117,8 +145,7 @@ public class FactionsEntityListener implements Listener {
             }
         }
 
-        if (event instanceof EntityDamageByEntityEvent) {
-            EntityDamageByEntityEvent sub = (EntityDamageByEntityEvent) event;
+        if (event instanceof final EntityDamageByEntityEvent sub) {
             if (!this.canDamagerHurtDamagee(sub, true)) {
                 event.setCancelled(true);
             }
@@ -155,7 +182,7 @@ public class FactionsEntityListener implements Listener {
         // and makes cheap (non-obsidian) TNT cannons require minor maintenance between shots
         Block center = event.getLocation().getBlock();
         if (event.getEntity() instanceof TNTPrimed && Conf.handleExploitTNTWaterlog && center
-                .isLiquid()) {
+            .isLiquid()) {
             // a single surrounding block in all 6 directions is broken if the material is weak enough
             List<Block> targets = new ArrayList<Block>();
             targets.add(center.getRelative(0, 0, 1));
@@ -186,8 +213,8 @@ public class FactionsEntityListener implements Listener {
             return true;
         if (this.main.shieldService != null) {
             boolean bypass = igniter != null && (igniter.hasAdminMode()
-                    || Conf.playersWhoBypassAllProtection.contains(igniter.getName())
-                    || Conf.playersWhoBypassAllProtection.contains(igniter.getId()));
+                || Conf.playersWhoBypassAllProtection.contains(igniter.getName())
+                || Conf.playersWhoBypassAllProtection.contains(igniter.getId()));
             if (!bypass && !this.main.shieldService.canAttack(faction, igniter))
                 return false;
         }
@@ -230,7 +257,7 @@ public class FactionsEntityListener implements Listener {
     // mainly for flaming arrows; don't want allies or people in safe zones to be ignited even after damage event is cancelled
     @EventHandler(priority = EventPriority.NORMAL)
     public void onEntityCombustByEntity(
-            EntityCombustByEntityEvent event) {
+        EntityCombustByEntityEvent event) {
         if (event.isCancelled())
             return;
 
@@ -258,8 +285,7 @@ public class FactionsEntityListener implements Listener {
         if (!(thrower instanceof Entity)) {
             return;
         }
-        if (thrower instanceof Player) {
-            Player player = (Player) thrower;
+        if (thrower instanceof final Player player) {
             FPlayer fPlayer = FPlayers.i.get(player);
             if (badjuju && fPlayer.getFaction().getFlag(FFlag.PEACEFUL)) {
                 event.setCancelled(true);
@@ -272,7 +298,7 @@ public class FactionsEntityListener implements Listener {
             LivingEntity target = iter.next();
             if (!this.canDamagerHurtDamagee((Entity) thrower, target, 0, true))
                 event.setIntensity(target,
-                        0.0);  // affected entity list doesn't accept modification (iter.remove() is a no-go), but this works
+                    0.0);  // affected entity list doesn't accept modification (iter.remove() is a no-go), but this works
         }
     }
 
@@ -312,7 +338,7 @@ public class FactionsEntityListener implements Listener {
 
         // Players can not take attack damage in a SafeZone, or possibly peaceful territory
 
-        if (defLocFaction.getFlag(FFlag.PVP) == false) {
+        if (!defLocFaction.getFlag(FFlag.PVP)) {
             if (damager instanceof Player) {
                 if (notify) {
                     FPlayer attacker = FPlayers.i.get((Player) damager);
@@ -334,7 +360,7 @@ public class FactionsEntityListener implements Listener {
         String name = damager.getName();
         String uuid = damager.getUniqueId().toString();
         if (Conf.playersWhoBypassAllProtection.contains(name) || Conf.playersWhoBypassAllProtection
-                .contains(uuid))
+            .contains(uuid))
             return true;
 
         if (this.main.shieldService != null && !this.main.shieldService.canAttack(defLocFaction, attacker)) {
@@ -347,14 +373,14 @@ public class FactionsEntityListener implements Listener {
         if (attacker.hasLoginPvpDisabled()) {
             if (notify)
                 attacker.msg("<i>You can't hurt other players for "
-                        + Conf.noPVPDamageToOthersForXSecondsAfterLogin + " seconds after logging in.");
+                    + Conf.noPVPDamageToOthersForXSecondsAfterLogin + " seconds after logging in.");
             return false;
         }
 
         Faction locFaction = Board.getFactionAt(new FLocation(attacker));
 
         // so we know from above that the defender isn't in a safezone... what about the attacker, sneaky dog that he might be?
-        if (locFaction.getFlag(FFlag.PVP) == false) {
+        if (!locFaction.getFlag(FFlag.PVP)) {
             if (notify)
                 attacker.msg("<i>PVP is disabled in %s.", locFaction.describeTo(attacker));
             return false;
@@ -385,7 +411,7 @@ public class FactionsEntityListener implements Listener {
 
         // Check the relation
         if (defender.hasFaction() && relation.isAtLeast(Conf.friendlyFireFromRel)
-                && defLocFaction.getFlag(FFlag.FRIENDLYFIRE) == false) {
+            && !defLocFaction.getFlag(FFlag.FRIENDLYFIRE)) {
             if (notify)
                 attacker.msg("<i>You can't hurt %s<i>.", relation.getDescPlayerMany());
             return false;
@@ -396,8 +422,8 @@ public class FactionsEntityListener implements Listener {
         if (defender.hasFaction() && ownTerritory && relation == Rel.NEUTRAL) {
             if (notify) {
                 attacker.msg(
-                        "<i>You can't hurt %s<i> in their own territory unless you declare them as an enemy.",
-                        defender.describeTo(attacker));
+                    "<i>You can't hurt %s<i> in their own territory unless you declare them as an enemy.",
+                    defender.describeTo(attacker));
                 defender.msg("%s<i> tried to hurt you.", attacker.describeTo(defender, true));
             }
             return false;
@@ -468,7 +494,7 @@ public class FactionsEntityListener implements Listener {
 
         if (event.getCause() == RemoveCause.EXPLOSION) {
             Faction faction = Board.getFactionAt(new FLocation(event.getEntity().getLocation()));
-            if (faction.getFlag(FFlag.EXPLOSIONS) == false) {  // faction has explosions disabled
+            if (!faction.getFlag(FFlag.EXPLOSIONS)) {  // faction has explosions disabled
                 event.setCancelled(true);
                 return;
             }
@@ -484,7 +510,7 @@ public class FactionsEntityListener implements Listener {
         }
 
         if (!FactionsBlockListener.playerCanBuildDestroyBlock((Player) breaker,
-                event.getEntity().getLocation().getBlock(), "remove paintings", false)) {
+            event.getEntity().getLocation().getBlock(), "remove paintings", false)) {
             event.setCancelled(true);
         }
     }
@@ -495,7 +521,7 @@ public class FactionsEntityListener implements Listener {
             return;
 
         if (!FactionsBlockListener.playerCanBuildDestroyBlock(event.getPlayer(),
-                event.getBlock().getLocation().getBlock(), "place paintings", false)) {
+            event.getBlock().getLocation().getBlock(), "place paintings", false)) {
             event.setCancelled(true);
         }
     }

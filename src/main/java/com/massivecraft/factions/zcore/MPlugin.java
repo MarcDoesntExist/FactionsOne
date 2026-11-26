@@ -87,9 +87,9 @@ public abstract class MPlugin extends JavaPlugin {
         // Register recurring tasks
         if (saveTask == null && Conf.saveToFileEveryXMinutes > 0.0) {
             long saveTicks = (long) (20 * 60
-                    * Conf.saveToFileEveryXMinutes); // Approximately every 30 min by default
+                * Conf.saveToFileEveryXMinutes); // Approximately every 30 min by default
             saveTask = Bukkit.getServer().getScheduler()
-                    .scheduleSyncRepeatingTask(this, new SaveTask(this), saveTicks, saveTicks);
+                .scheduleSyncRepeatingTask(this, new SaveTask(this), saveTicks, saveTicks);
         }
 
         loadSuccessful = true;
@@ -139,7 +139,7 @@ public abstract class MPlugin extends JavaPlugin {
 
     public GsonBuilder getGsonBuilder() {
         return new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().serializeNulls()
-                .excludeFieldsWithModifiers(Modifier.TRANSIENT, Modifier.VOLATILE);
+            .excludeFieldsWithModifiers(Modifier.TRANSIENT, Modifier.VOLATILE);
     }
 
     public void addRawTags() {
@@ -200,6 +200,6 @@ public abstract class MPlugin extends JavaPlugin {
     public void log(Level level, Object msg) {
         String text = msg instanceof Component ? TextUtil.plain((Component) msg) : String.valueOf(msg);
         Bukkit.getLogger().log(level, "[" + this.getPluginMeta().getName() + " v"
-                + this.getPluginMeta().getVersion() + "] " + text);
+            + this.getPluginMeta().getVersion() + "] " + text);
     }
 }

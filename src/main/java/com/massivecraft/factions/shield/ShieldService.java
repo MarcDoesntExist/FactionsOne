@@ -29,7 +29,7 @@ public final class ShieldService {
 
     public boolean isProtected(Faction faction) {
         if (!Conf.shieldEnabled || faction == null || !faction.isNormal()
-                || faction.getFlag(FFlag.PERMANENT)) {
+            || faction.getFlag(FFlag.PERMANENT)) {
             return false;
         }
         long now = this.clock.millis();
@@ -38,7 +38,7 @@ public final class ShieldService {
 
     public boolean isGrace(Faction faction) {
         return Conf.shieldEnabled && faction != null
-                && ShieldPolicy.active(faction.getGraceUntil(), this.clock.millis());
+            && ShieldPolicy.active(faction.getGraceUntil(), this.clock.millis());
     }
 
     public boolean canAct(Faction territory, FPlayer actor) {
@@ -77,7 +77,7 @@ public final class ShieldService {
             return false;
         }
         return !this.isProtected(territory)
-                || territory.getRelationTo(actorFaction).isAtLeast(Rel.ALLY);
+            || territory.getRelationTo(actorFaction).isAtLeast(Rel.ALLY);
     }
 
     public long remainingMinutes(Faction faction) {
@@ -86,7 +86,7 @@ public final class ShieldService {
         }
         long now = this.clock.millis();
         return Math.max(ShieldPolicy.remainingMinutes(faction.getGraceUntil(), now),
-                ShieldPolicy.remainingMinutes(faction.getShieldUntil(), now));
+            ShieldPolicy.remainingMinutes(faction.getShieldUntil(), now));
     }
 
     /**
@@ -100,7 +100,7 @@ public final class ShieldService {
         long until = ShieldPolicy.addHours(this.clock.millis(), applied);
         long oldUntil = faction.getShieldUntil();
         ShieldChangeEvent event = new ShieldChangeEvent(faction, oldUntil,
-                Math.max(oldUntil, until), applied);
+            Math.max(oldUntil, until), applied);
         if (org.bukkit.Bukkit.getServer() != null) {
             org.bukkit.Bukkit.getServer().getPluginManager().callEvent(event);
             if (event.isCancelled()) {

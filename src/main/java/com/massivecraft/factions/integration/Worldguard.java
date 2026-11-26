@@ -31,8 +31,8 @@ public class Worldguard {
 
         try {
             Class<?> hookClass = Class
-                    .forName("com.massivecraft.factions.integration.WorldguardHook", true,
-                            Worldguard.class.getClassLoader());
+                .forName("com.massivecraft.factions.integration.WorldguardHook", true,
+                    Worldguard.class.getClassLoader());
             hook = (Hook) hookClass.getDeclaredConstructor().newInstance();
             enabled = true;
             Main.main.log("Successfully hooked to WorldGuard.");
@@ -40,7 +40,7 @@ public class Worldguard {
             enabled = false;
             hook = null;
             Main.main.log("Could not hook to WorldGuard. WorldGuard checks are disabled: "
-                    + failure.getClass().getSimpleName());
+                + failure.getClass().getSimpleName());
         }
     }
 

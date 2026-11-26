@@ -22,11 +22,11 @@ public final class CmdTntBalance extends FCommand {
     @Override
     public void perform() {
         if (!FPerm.TNT_DEPOSIT.has(this.fme, this.myFaction, false)
-                && !FPerm.TNT_WITHDRAW.has(this.fme, this.myFaction, false)) {
+            && !FPerm.TNT_WITHDRAW.has(this.fme, this.myFaction, false)) {
             this.fme.msg("<b>Your faction does not allow you to view the TNT bank.");
             return;
         }
         msg("<gold>TNT bank: <white>%s/%s", this.myFaction.getTntBank(),
-                Main.main.featureService.tntLimit(this.myFaction));
+            Main.main.featureService.tntLimit(this.myFaction));
     }
 }

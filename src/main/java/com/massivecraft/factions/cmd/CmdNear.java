@@ -62,8 +62,8 @@ public class CmdNear extends FCommand {
                 continue;
             }
             Rel relation = this.myFaction == null
-                    ? Rel.NEUTRAL
-                    : this.myFaction.getRelationTo(faction);
+                ? Rel.NEUTRAL
+                : this.myFaction.getRelationTo(faction);
             if (relation != Rel.ENEMY && relation != Rel.NEUTRAL) {
                 continue;
             }
@@ -88,10 +88,10 @@ public class CmdNear extends FCommand {
             }
             Faction faction = factions.get(id);
             Rel relation = this.myFaction == null
-                    ? Rel.NEUTRAL
-                    : this.myFaction.getRelationTo(faction);
+                ? Rel.NEUTRAL
+                : this.myFaction.getRelationTo(faction);
             msg(Lang.nearLine, faction.getTagPlain(), Math.round(distances.get(id)),
-                    relation.name().toLowerCase(java.util.Locale.ROOT));
+                relation.name().toLowerCase(java.util.Locale.ROOT));
         }
     }
 }

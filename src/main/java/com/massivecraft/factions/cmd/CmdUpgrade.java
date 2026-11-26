@@ -36,7 +36,7 @@ public final class CmdUpgrade extends FCommand {
             for (FeatureConfig.UpgradeDefinition definition : service.getConfig().upgrades()) {
                 int level = this.myFaction.getUpgradeLevel(definition.id());
                 msg(Lang.upgradeLine, definition.name(), level, definition.maxLevel(),
-                        service.upgradeCost(this.myFaction, definition));
+                    service.upgradeCost(this.myFaction, definition));
             }
             return;
         }

@@ -45,8 +45,8 @@ public class CmdUnban extends FCommand {
         myFaction.unban(target);
         msg("<i>%s<i> is no longer banned from your faction.", target.describeTo(fme, true));
         target.msg("%s<i> unbanned you from %s.", fme.describeTo(target, true),
-                myFaction.describeTo(target));
+            myFaction.describeTo(target));
         myFaction.msg("%s<i> unbanned %s<i>.", fme.describeTo(myFaction, true),
-                target.describeTo(myFaction));
+            target.describeTo(myFaction));
     }
 }

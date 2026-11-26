@@ -5,13 +5,13 @@ import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.Main;
-import de.erethon.factionsone.api.FactionsAPI;
 import com.massivecraft.factions.zcore.Lang;
+import de.erethon.factionsone.api.FactionsAPI;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.Chunk;
 
 /**
  * Resolves {@code /f stuck} in this order: faction home, the nearest own claim
@@ -27,6 +27,14 @@ public final class StuckService {
     public StuckService(Main plugin, TeleportWarmupService warmup) {
         this.plugin = plugin;
         this.warmup = warmup;
+    }
+
+    private static Location safeSpot(Chunk chunk) {
+        World world = chunk.getWorld();
+        int x = (chunk.getX() << 4) + 8;
+        int z = (chunk.getZ() << 4) + 8;
+        Block highest = world.getHighestBlockAt(x, z);
+        return new Location(world, x + 0.5, highest.getY() + 1.0, z + 0.5);
     }
 
     public void teleport(FPlayer fplayer) {
@@ -59,11 +67,11 @@ public final class StuckService {
 
         fplayer.msg(Lang.stuckSearching);
         world.getChunkAtAsync((int) nearest.getX(), (int) nearest.getZ()).thenAccept(chunk ->
-                this.plugin.getServer().getScheduler().runTask(this.plugin, () -> {
-                    if (player.isOnline()) {
-                        this.start(fplayer, faction, safeSpot(chunk));
-                    }
-                }));
+            this.plugin.getServer().getScheduler().runTask(this.plugin, () -> {
+                if (player.isOnline()) {
+                    this.start(fplayer, faction, safeSpot(chunk));
+                }
+            }));
     }
 
     private void start(FPlayer fplayer, Faction faction, Location destination) {
@@ -79,8 +87,8 @@ public final class StuckService {
             player.teleport(destination);
             player.setFallDistance(0);
             faction.addLog(fplayer.getName(), "STUCK", destination.getWorld().getName()
-                    + " " + destination.getBlockX() + " " + destination.getBlockY()
-                    + " " + destination.getBlockZ());
+                + " " + destination.getBlockX() + " " + destination.getBlockY()
+                + " " + destination.getBlockZ());
             fplayer.msg(Lang.stuckTeleported);
         });
     }
@@ -103,13 +111,5 @@ public final class StuckService {
             }
         }
         return best != null ? best : fallback;
-    }
-
-    private static Location safeSpot(Chunk chunk) {
-        World world = chunk.getWorld();
-        int x = (chunk.getX() << 4) + 8;
-        int z = (chunk.getZ() << 4) + 8;
-        Block highest = world.getHighestBlockAt(x, z);
-        return new Location(world, x + 0.5, highest.getY() + 1.0, z + 0.5);
     }
 }

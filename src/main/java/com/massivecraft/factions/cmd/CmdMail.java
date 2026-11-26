@@ -49,7 +49,7 @@ public class CmdMail extends FCommand {
         msg(Lang.mailboxHeader, pending.size());
         for (FactionMailbox.Claim claim : pending) {
             msg(Lang.mailboxLine, claim.id(), BankService.get().format(claim.amount()),
-                    claim.reason().isBlank() ? claim.source() : claim.reason());
+                claim.reason().isBlank() ? claim.source() : claim.reason());
         }
     }
 }

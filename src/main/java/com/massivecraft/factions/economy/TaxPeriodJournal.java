@@ -29,19 +29,10 @@ import java.util.logging.Logger;
  */
 public final class TaxPeriodJournal {
 
-    public enum State {
-        PENDING, SETTLED, ABORTED, TAX_UNKNOWN
-    }
-
-    public record Entry(String key, String factionId, double amount, long at, State state,
-                        String detail) {
-    }
-
     private final Path file;
     private final Logger logger;
     private final Gson gson = new GsonBuilder().create();
     private final Map<String, Entry> latest = new LinkedHashMap<>();
-
     public TaxPeriodJournal(Path file, Logger logger) {
         this.file = file;
         this.logger = logger;
@@ -107,8 +98,8 @@ public final class TaxPeriodJournal {
             if (idempotency != null && idempotency.isClaimed(entry.key())) {
                 transition(entry.key(), State.TAX_UNKNOWN, "claimed without a settled record");
                 this.logger.warning("Tax period " + entry.key() + " for faction "
-                        + entry.factionId() + " has an unknown charge; check the bank and run "
-                        + "/f tax run " + entry.factionId() + " retry.");
+                    + entry.factionId() + " has an unknown charge; check the bank and run "
+                    + "/f tax run " + entry.factionId() + " retry.");
                 ambiguous++;
             } else {
                 transition(entry.key(), State.ABORTED, "interrupted before the claim");
@@ -123,7 +114,7 @@ public final class TaxPeriodJournal {
             return false;
         }
         return append(new Entry(current.key(), current.factionId(), current.amount(),
-                current.at(), state, detail == null ? "" : detail));
+            current.at(), state, detail == null ? "" : detail));
     }
 
     private boolean append(Entry entry) {
@@ -133,13 +124,13 @@ public final class TaxPeriodJournal {
                 Files.createDirectories(parent);
             }
             Files.writeString(this.file, this.gson.toJson(Stored.from(entry)) + "\n",
-                    StandardCharsets.UTF_8, StandardOpenOption.CREATE,
-                    StandardOpenOption.APPEND);
+                StandardCharsets.UTF_8, StandardOpenOption.CREATE,
+                StandardOpenOption.APPEND);
             this.latest.put(entry.key(), entry);
             return true;
         } catch (IOException exception) {
             this.logger.log(Level.SEVERE, "Could not append to tax journal " + this.file,
-                    exception);
+                exception);
             return false;
         }
     }
@@ -161,12 +152,20 @@ public final class TaxPeriodJournal {
                     }
                 } catch (RuntimeException malformed) {
                     this.logger.log(Level.WARNING,
-                            "Ignoring a malformed tax journal line in " + this.file, malformed);
+                        "Ignoring a malformed tax journal line in " + this.file, malformed);
                 }
             }
         } catch (IOException exception) {
             this.logger.log(Level.SEVERE, "Could not read tax journal " + this.file, exception);
         }
+    }
+
+    public enum State {
+        PENDING, SETTLED, ABORTED, TAX_UNKNOWN
+    }
+
+    public record Entry(String key, String factionId, double amount, long at, State state,
+                        String detail) {
     }
 
     /**
@@ -193,7 +192,7 @@ public final class TaxPeriodJournal {
 
         Entry toEntry() {
             if (this.key == null || this.key.isBlank() || this.factionId == null
-                    || this.factionId.isBlank() || this.state == null) {
+                || this.factionId.isBlank() || this.state == null) {
                 return null;
             }
             State parsed;
@@ -203,7 +202,7 @@ public final class TaxPeriodJournal {
                 return null;
             }
             return new Entry(this.key, this.factionId, this.amount, this.at, parsed,
-                    this.detail == null ? "" : this.detail);
+                this.detail == null ? "" : this.detail);
         }
     }
 }

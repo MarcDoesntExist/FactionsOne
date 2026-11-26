@@ -1,8 +1,6 @@
 package com.massivecraft.factions.cmd;
 
-import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.FactionWarp;
-import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
 
@@ -34,8 +32,8 @@ public final class CmdWarps extends FCommand {
         msg("<gold>Faction warps:");
         for (FactionWarp warp : this.myFaction.getWarps().values()) {
             msg("<aqua>%s <gray>(%s%s)", warp.getName(),
-                    warp.getLocation().getWorldName(),
-                    warp.hasPassword() ? ", password" : "");
+                warp.getLocation().getWorldName(),
+                warp.hasPassword() ? ", password" : "");
         }
     }
 }

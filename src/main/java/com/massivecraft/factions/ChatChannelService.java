@@ -15,7 +15,7 @@ public final class ChatChannelService {
 
     public static int send(FPlayer sender, ChatChannel channel, String message) {
         if (sender == null || channel == null || channel == ChatChannel.PUBLIC
-                || sender.getFaction() == null || message == null || message.isBlank()) {
+            || sender.getFaction() == null || message == null || message.isBlank()) {
             return 0;
         }
         Faction faction = sender.getFaction();
@@ -24,10 +24,10 @@ public final class ChatChannelService {
         for (FPlayer other : FPlayers.i.getOnline()) {
             Faction otherFaction = other.getFaction();
             String relation = otherFaction == null
-                    ? null
-                    : faction.getRelationTo(otherFaction).name();
+                ? null
+                : faction.getRelationTo(otherFaction).name();
             boolean recipient = ChatChannelResolver.accepts(channel, faction.getId(),
-                    otherFaction == null ? null : otherFaction.getId(), relation);
+                otherFaction == null ? null : otherFaction.getId(), relation);
             if (recipient) {
                 other.msg(format, sender.getName(), message);
                 recipients++;
@@ -35,7 +35,7 @@ public final class ChatChannelService {
         }
         FactionsChatListener.spy(sender, channel, message);
         faction.addLog(sender.getName(),
-                channel == ChatChannel.ALLY ? "ALLY_CHAT" : "FACTION_CHAT", message);
+            channel == ChatChannel.ALLY ? "ALLY_CHAT" : "FACTION_CHAT", message);
         return recipients;
     }
 }

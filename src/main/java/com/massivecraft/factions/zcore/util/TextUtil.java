@@ -10,7 +10,12 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -96,10 +101,6 @@ public class TextUtil {
         LEGACY_DECORATIONS.put('o', TextDecoration.ITALIC);
     }
 
-    private static void addBuiltInTag(String name, TextColor color) {
-        BUILT_IN_TAGS.put(name, Style.style(color));
-    }
-
     /**
      * Legacy tag values, kept for the chat format parser (config).
      */
@@ -109,37 +110,17 @@ public class TextUtil {
      */
     public final Map<String, Style> tagStyles = new HashMap<>();
 
+    private static void addBuiltInTag(String name, TextColor color) {
+        BUILT_IN_TAGS.put(name, Style.style(color));
+    }
+
     // -------------------------------------------- //
     // COMPONENT PARSING
     // -------------------------------------------- //
 
-    public Component parse(String str, Object... args) {
-        if (str == null) {
-            return Component.empty();
-        }
-        Renderer renderer = new Renderer(str, args);
-        return renderer.render();
-    }
-
-    public Component parse(String str) {
-        return parse(str, new Object[0]);
-    }
-
-    public List<Component> parseLines(Collection<String> lines) {
-        List<Component> ret = new ArrayList<>(lines.size());
-        for (String line : lines) {
-            ret.add(parse(line));
-        }
-        return ret;
-    }
-
     public static String plain(Component component) {
         return component == null ? "" : PlainTextComponentSerializer.plainText().serialize(component);
     }
-
-    // -------------------------------------------- //
-    // CONFIG HELPERS (legacy is allowed here only)
-    // -------------------------------------------- //
 
     /**
      * Converts a value from conf.json/tags.json into the style used by the parser.
@@ -154,10 +135,6 @@ public class TextUtil {
         }
         return LegacyComponentSerializer.legacySection().deserialize(legacy).style();
     }
-
-    // -------------------------------------------- //
-    // CONFIG STRING PARSING (no components)
-    // -------------------------------------------- //
 
     public static String replaceTags(String str, Map<String, String> tags) {
         StringBuffer ret = new StringBuffer();
@@ -182,6 +159,10 @@ public class TextUtil {
         return string;
     }
 
+    // -------------------------------------------- //
+    // CONFIG HELPERS (legacy is allowed here only)
+    // -------------------------------------------- //
+
     public static String parseColorAmp(String string) {
         string = string.replaceAll("(\u00A7l([a-z0-9]))", "\u00A7$2");
         string = string.replaceAll("(&([a-z0-9]))", "\u00A7$2");
@@ -189,85 +170,33 @@ public class TextUtil {
         return string;
     }
 
+    // -------------------------------------------- //
+    // CONFIG STRING PARSING (no components)
+    // -------------------------------------------- //
+
     public static String parseColorAcc(String string) {
         return string.replace("`e", "").replace("`r", Color.RED.toString())
-                .replace("`R", Color.DARK_RED.toString()).replace("`y", Color.YELLOW.toString())
-                .replace("`Y", Color.GOLD.toString()).replace("`g", Color.GREEN.toString())
-                .replace("`G", Color.DARK_GREEN.toString()).replace("`a", Color.AQUA.toString())
-                .replace("`A", Color.DARK_AQUA.toString()).replace("`b", Color.BLUE.toString())
-                .replace("`B", Color.DARK_BLUE.toString())
-                .replace("`main", Color.LIGHT_PURPLE.toString())
-                .replace("`Main", Color.DARK_PURPLE.toString())
-                .replace("`k", Color.BLACK.toString()).replace("`s", Color.GRAY.toString())
-                .replace("`S", Color.DARK_GRAY.toString())
-                .replace("`w", Color.WHITE.toString());
+            .replace("`R", Color.DARK_RED.toString()).replace("`y", Color.YELLOW.toString())
+            .replace("`Y", Color.GOLD.toString()).replace("`g", Color.GREEN.toString())
+            .replace("`G", Color.DARK_GREEN.toString()).replace("`a", Color.AQUA.toString())
+            .replace("`A", Color.DARK_AQUA.toString()).replace("`b", Color.BLUE.toString())
+            .replace("`B", Color.DARK_BLUE.toString())
+            .replace("`main", Color.LIGHT_PURPLE.toString())
+            .replace("`Main", Color.DARK_PURPLE.toString())
+            .replace("`k", Color.BLACK.toString()).replace("`s", Color.GRAY.toString())
+            .replace("`S", Color.DARK_GRAY.toString())
+            .replace("`w", Color.WHITE.toString());
     }
 
     public static String parseColorTags(String string) {
         return string.replace("<empty>", "").replace("<black>", "\u00A70")
-                .replace("<navy>", "\u00A71").replace("<green>", "\u00A72").replace("<teal>", "\u00A73")
-                .replace("<red>", "\u00A74").replace("<purple>", "\u00A75").replace("<gold>", "\u00A76")
-                .replace("<silver>", "\u00A77").replace("<gray>", "\u00A78")
-                .replace("<blue>", "\u00A79").replace("<lime>", "\u00A7a").replace("<aqua>", "\u00A7b")
-                .replace("<rose>", "\u00A7c").replace("<pink>", "\u00A7d")
-                .replace("<yellow>", "\u00A7e").replace("<white>", "\u00A7f");
+            .replace("<navy>", "\u00A71").replace("<green>", "\u00A72").replace("<teal>", "\u00A73")
+            .replace("<red>", "\u00A74").replace("<purple>", "\u00A75").replace("<gold>", "\u00A76")
+            .replace("<silver>", "\u00A77").replace("<gray>", "\u00A78")
+            .replace("<blue>", "\u00A79").replace("<lime>", "\u00A7a").replace("<aqua>", "\u00A7b")
+            .replace("<rose>", "\u00A7c").replace("<pink>", "\u00A7d")
+            .replace("<yellow>", "\u00A7e").replace("<white>", "\u00A7f");
     }
-
-    public String parseTags(String str) {
-        return replaceTags(str, this.tags);
-    }
-
-    // -------------------------------------------- //
-    // TITLE / PAGES
-    // -------------------------------------------- //
-
-    public Component titleize(String str) {
-        return this.titleize(this.parse(str));
-    }
-
-    public Component titleize(Component content) {
-        Style artStyle = this.getTagStyle("a");
-        Style logoStyle = this.getTagStyle("l");
-        Component title = Component.text("", logoStyle).append(content);
-        Component center = Component.text(".[ ", artStyle)
-                .append(title)
-                .append(Component.text(" ]. ", artStyle));
-
-        int centerlen = 7 + plain(content).length();
-        int pivot = titleizeLine.length() / 2;
-        int eatLeft = (centerlen / 2) - titleizeBalance;
-        int eatRight = (centerlen - eatLeft) + titleizeBalance;
-
-        if (eatLeft < pivot) {
-            return Component.text(titleizeLine.substring(0, pivot - eatLeft), artStyle)
-                    .append(center)
-                    .append(Component.text(titleizeLine.substring(pivot + eatRight), artStyle));
-        }
-        return center;
-    }
-
-    public ArrayList<Component> getPage(List<Component> lines, int pageHumanBased, String title) {
-        ArrayList<Component> ret = new ArrayList<>();
-        int pageZeroBased = pageHumanBased - 1;
-        int pageheight = 9;
-        int pagecount = (lines.size() / pageheight) + 1;
-
-        ret.add(this.titleize(title + " " + pageHumanBased + "/" + pagecount));
-
-        if (pageZeroBased < 0 || pageHumanBased > pagecount) {
-            ret.add(this.parse("<i>Invalid page. Must be between 1 and " + pagecount));
-            return ret;
-        }
-
-        int from = pageZeroBased * pageheight;
-        int to = Math.min(from + pageheight, lines.size());
-        ret.addAll(lines.subList(from, to));
-        return ret;
-    }
-
-    // -------------------------------------------- //
-    // STANDARD UTILS
-    // -------------------------------------------- //
 
     public static String upperCaseFirst(String string) {
         if (string == null || string.isEmpty()) {
@@ -308,6 +237,10 @@ public class TextUtil {
         return ret;
     }
 
+    // -------------------------------------------- //
+    // TITLE / PAGES
+    // -------------------------------------------- //
+
     public static String implodeCommaAnd(List<String> list, String comma, String and) {
         if (list.isEmpty()) {
             return "";
@@ -332,6 +265,10 @@ public class TextUtil {
     public static String getMaterialName(Material material) {
         return material.toString().replace('_', ' ').toLowerCase();
     }
+
+    // -------------------------------------------- //
+    // STANDARD UTILS
+    // -------------------------------------------- //
 
     public static String getTimeDeltaDescriptionRelNow(long millis) {
         String ret = "";
@@ -386,33 +323,6 @@ public class TextUtil {
         return ret;
     }
 
-    // -------------------------------------------- //
-    // RENDERER
-    // -------------------------------------------- //
-
-    /**
-     * @return the style configured for a tag, for building components that start with a tag.
-     */
-    public Style getTagStyle(String name) {
-        Style style = this.resolveTagStyle(name);
-        return style == null ? Style.empty() : style;
-    }
-
-    private Style resolveTagStyle(String name) {
-        Style custom = this.tagStyles.get(name);
-        if (custom != null) {
-            return custom;
-        }
-        Style builtIn = BUILT_IN_TAGS.get(name);
-        if (builtIn != null) {
-            return builtIn;
-        }
-        if ("empty".equals(name)) {
-            return Style.empty();
-        }
-        return null;
-    }
-
     private static Style applyStyle(Style current, Style next) {
         if (next.color() != null) {
             // A color resets the previous decorations, like a legacy color code.
@@ -455,13 +365,108 @@ public class TextUtil {
         return -1;
     }
 
+    public Component parse(String str, Object... args) {
+        if (str == null) {
+            return Component.empty();
+        }
+        Renderer renderer = new Renderer(str, args);
+        return renderer.render();
+    }
+
+    public Component parse(String str) {
+        return parse(str, new Object[0]);
+    }
+
+    public List<Component> parseLines(Collection<String> lines) {
+        List<Component> ret = new ArrayList<>(lines.size());
+        for (String line : lines) {
+            ret.add(parse(line));
+        }
+        return ret;
+    }
+
+    public String parseTags(String str) {
+        return replaceTags(str, this.tags);
+    }
+
+    // -------------------------------------------- //
+    // RENDERER
+    // -------------------------------------------- //
+
+    public Component titleize(String str) {
+        return this.titleize(this.parse(str));
+    }
+
+    public Component titleize(Component content) {
+        Style artStyle = this.getTagStyle("a");
+        Style logoStyle = this.getTagStyle("l");
+        Component title = Component.text("", logoStyle).append(content);
+        Component center = Component.text(".[ ", artStyle)
+            .append(title)
+            .append(Component.text(" ]. ", artStyle));
+
+        int centerlen = 7 + plain(content).length();
+        int pivot = titleizeLine.length() / 2;
+        int eatLeft = (centerlen / 2) - titleizeBalance;
+        int eatRight = (centerlen - eatLeft) + titleizeBalance;
+
+        if (eatLeft < pivot) {
+            return Component.text(titleizeLine.substring(0, pivot - eatLeft), artStyle)
+                .append(center)
+                .append(Component.text(titleizeLine.substring(pivot + eatRight), artStyle));
+        }
+        return center;
+    }
+
+    public ArrayList<Component> getPage(List<Component> lines, int pageHumanBased, String title) {
+        ArrayList<Component> ret = new ArrayList<>();
+        int pageZeroBased = pageHumanBased - 1;
+        int pageheight = 9;
+        int pagecount = (lines.size() / pageheight) + 1;
+
+        ret.add(this.titleize(title + " " + pageHumanBased + "/" + pagecount));
+
+        if (pageZeroBased < 0 || pageHumanBased > pagecount) {
+            ret.add(this.parse("<i>Invalid page. Must be between 1 and " + pagecount));
+            return ret;
+        }
+
+        int from = pageZeroBased * pageheight;
+        int to = Math.min(from + pageheight, lines.size());
+        ret.addAll(lines.subList(from, to));
+        return ret;
+    }
+
+    /**
+     * @return the style configured for a tag, for building components that start with a tag.
+     */
+    public Style getTagStyle(String name) {
+        Style style = this.resolveTagStyle(name);
+        return style == null ? Style.empty() : style;
+    }
+
+    private Style resolveTagStyle(String name) {
+        Style custom = this.tagStyles.get(name);
+        if (custom != null) {
+            return custom;
+        }
+        Style builtIn = BUILT_IN_TAGS.get(name);
+        if (builtIn != null) {
+            return builtIn;
+        }
+        if ("empty".equals(name)) {
+            return Style.empty();
+        }
+        return null;
+    }
+
     private final class Renderer {
         private final String template;
         private final Object[] args;
+        private final StringBuilder literal = new StringBuilder();
         private int index;
         private int argIndex;
         private Style style = Style.empty();
-        private final StringBuilder literal = new StringBuilder();
         private Component result = Component.empty();
 
         private Renderer(String template, Object[] args) {
@@ -514,7 +519,7 @@ public class TextUtil {
             char c = this.template.charAt(this.index);
 
             if (c == '&' && this.index + 1 < this.template.length()
-                    && this.template.charAt(this.index + 1) == '&') {
+                && this.template.charAt(this.index + 1) == '&') {
                 this.literal.append('&');
                 this.index += 2;
                 return true;
@@ -534,7 +539,7 @@ public class TextUtil {
             }
 
             if (c == '`' && this.index + 1 < this.template.length()
-                    && "e".equals(String.valueOf(this.template.charAt(this.index + 1)))) {
+                && "e".equals(String.valueOf(this.template.charAt(this.index + 1)))) {
                 this.index += 2;
                 return true;
             }

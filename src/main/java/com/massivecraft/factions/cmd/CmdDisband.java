@@ -1,6 +1,10 @@
 package com.massivecraft.factions.cmd;
 
-import com.massivecraft.factions.*;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.event.FPlayerLeaveEvent;
 import com.massivecraft.factions.event.FactionDisbandEvent;
 import com.massivecraft.factions.integration.Econ;
@@ -56,14 +60,14 @@ public class CmdDisband extends FCommand {
         // Send FPlayerLeaveEvent for each player in the faction
         for (FPlayer fplayer : faction.getFPlayers()) {
             Bukkit.getServer().getPluginManager().callEvent(new FPlayerLeaveEvent(fplayer, faction,
-                    FPlayerLeaveEvent.PlayerLeaveReason.DISBAND));
+                FPlayerLeaveEvent.PlayerLeaveReason.DISBAND));
         }
 
         // Inform all players
         for (FPlayer fplayer : FPlayers.i.getOnline()) {
             net.kyori.adventure.text.Component who = senderIsConsole
-                    ? net.kyori.adventure.text.Component.text("A server admin")
-                    : fme.describeTo(fplayer);
+                ? net.kyori.adventure.text.Component.text("A server admin")
+                : fme.describeTo(fplayer);
             if (fplayer.getFaction() == faction) {
                 fplayer.msg("<h>%s<i> disbanded your faction.", who);
             } else {
@@ -72,8 +76,8 @@ public class CmdDisband extends FCommand {
         }
         if (Conf.logFactionDisband)
             Main.main.log(
-                    "The faction " + faction.getTagPlain() + " (" + faction.getId() + ") was disbanded by "
-                            + (senderIsConsole ? "console command" : fme.getName()) + ".");
+                "The faction " + faction.getTagPlain() + " (" + faction.getId() + ") was disbanded by "
+                    + (senderIsConsole ? "console command" : fme.getName()) + ".");
 
         if (Econ.shouldBeUsed() && !senderIsConsole) {
             //Give all the faction's money to the disbander
@@ -83,9 +87,9 @@ public class CmdDisband extends FCommand {
             if (amount > 0.0) {
                 String amountString = Econ.moneyString(amount);
                 msg("<i>You have been given the disbanded faction's bank, totaling %s.",
-                        amountString);
+                    amountString);
                 Main.main.log(fme.getName() + " has been given bank holdings of " + amountString
-                        + " from disbanding " + faction.getTagPlain() + ".");
+                    + " from disbanding " + faction.getTagPlain() + ".");
             }
         }
 

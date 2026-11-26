@@ -32,12 +32,12 @@ public final class UpgradesMenu extends PagedMenu {
 
     private UpgradesMenu(Player player, GuiConfig config, Faction faction) {
         super(player, config, config.title("menu.upgrades.title", Lang.upgradeMenuTitle),
-                config.rows("menu.upgrades.rows", 6),
-                clicker -> {
-                    FPlayer fplayer = FPlayers.i.get(clicker);
-                    return fplayer != null && fplayer.getFaction() == faction
-                            && FPerm.UPGRADE.has(clicker, faction, false);
-                });
+            config.rows("menu.upgrades.rows", 6),
+            clicker -> {
+                FPlayer fplayer = FPlayers.i.get(clicker);
+                return fplayer != null && fplayer.getFaction() == faction
+                    && FPerm.UPGRADE.has(clicker, faction, false);
+            });
         this.faction = faction;
         this.build();
     }
@@ -62,7 +62,7 @@ public final class UpgradesMenu extends PagedMenu {
                 meta.displayName(Main.main.txt.parse(Lang.upgradeMenuName, definition.name()));
                 List<Component> lore = new ArrayList<Component>();
                 lore.add(Main.main.txt.parse(Lang.upgradeMenuLevel,
-                        level, definition.maxLevel()));
+                    level, definition.maxLevel()));
                 lore.add(Main.main.txt.parse(Lang.upgradeMenuCost, cost));
                 lore.add(Main.main.txt.parse(Lang.upgradeMenuClick));
                 meta.lore(lore);
@@ -71,7 +71,7 @@ public final class UpgradesMenu extends PagedMenu {
             entries.add(new MenuItem(icon, clicker -> {
                 FPlayer fplayer = FPlayers.i.get(clicker);
                 FeatureService.Result result = service.buyUpgrade(fplayer, this.faction,
-                        definition.id());
+                    definition.id());
                 if (result == FeatureService.Result.SUCCESS) {
                     clicker.sendMessage(Main.main.txt.parse(Lang.upgradeMenuBought));
                     new UpgradesMenu(clicker, this.config).open();

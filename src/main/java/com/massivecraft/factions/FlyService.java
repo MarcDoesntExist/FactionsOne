@@ -77,7 +77,7 @@ public final class FlyService implements Listener {
         if (Board.getFactionAt(new FLocation(player)) != faction) {
             this.disable(player);
             player.sendMessage(com.massivecraft.factions.Main.main.txt.parse(
-                    "<i>Faction flight disabled: you left your territory."));
+                "<i>Faction flight disabled: you left your territory."));
         }
     }
 

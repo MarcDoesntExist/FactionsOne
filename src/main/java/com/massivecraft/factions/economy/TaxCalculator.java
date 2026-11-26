@@ -39,8 +39,8 @@ public final class TaxCalculator {
             raw = Math.max(0.0, balance) * settings.percent() / 100.0;
         } else {
             raw = settings.base()
-                    + settings.perMember() * Math.max(0, members)
-                    + settings.perChunk() * Math.max(0, land);
+                + settings.perMember() * Math.max(0, members)
+                + settings.perChunk() * Math.max(0, land);
         }
         if (!Double.isFinite(raw) || raw <= 0.0) {
             return 0.0;

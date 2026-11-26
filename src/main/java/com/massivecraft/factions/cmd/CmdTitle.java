@@ -42,14 +42,14 @@ public class CmdTitle extends FCommand {
 
         // if economy is enabled, they're not on the bypass list, and this command has a cost set, make 'em pay
         if (!payForCommand(Conf.econCostTitle, "to change a players title",
-                "for changing a players title"))
+            "for changing a players title"))
             return;
 
         you.setTitle(title);
 
         // Inform
         myFaction.msg("%s<i> changed a title: %s", fme.describeTo(myFaction, true),
-                you.describeTo(myFaction, true));
+            you.describeTo(myFaction, true));
 
     }
 

@@ -42,7 +42,7 @@ public final class FactionPerks {
             this.expiries = new LinkedHashMap<String, Long>();
         }
         this.expiries.entrySet().removeIf(entry -> entry.getKey() == null
-                || entry.getValue() == null || entry.getValue() <= now);
+            || entry.getValue() == null || entry.getValue() <= now);
         this.amounts.keySet().removeIf(key -> key == null || !this.expiries.containsKey(key));
     }
 

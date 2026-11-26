@@ -58,8 +58,8 @@ public final class CmdLogs extends FCommand {
         for (int i = start; i < end; i++) {
             FactionLogEntry entry = entries.get(i);
             msg(Lang.logsLine,
-                    format.format(new Date(entry.getTimestamp())),
-                    entry.getActor(), entry.getAction(), entry.getDetail());
+                format.format(new Date(entry.getTimestamp())),
+                entry.getActor(), entry.getAction(), entry.getDetail());
         }
         if (entries.isEmpty()) {
             msg(Lang.logsEmpty);

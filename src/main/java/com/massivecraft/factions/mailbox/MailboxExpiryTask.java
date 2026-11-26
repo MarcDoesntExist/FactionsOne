@@ -25,7 +25,7 @@ public final class MailboxExpiryTask implements Runnable {
             int unknown = main.mailbox.unknownClaims().size();
             if (unknown > 0) {
                 main.log(unknown + " mailbox payout(s) have an unknown delivery; "
-                        + "run /f mail reconcile to resolve them.");
+                    + "run /f mail reconcile to resolve them.");
             }
         }
         main.compactStorage();

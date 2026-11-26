@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -37,9 +36,8 @@ import java.util.Set;
  */
 public final class ClaimValueService {
 
-    private final Main plugin;
     private static final long DIRTY_THROTTLE_MS = 1000L;
-
+    private final Main plugin;
     private final Map<String, ChunkRef> chunkRefs = new HashMap<String, ChunkRef>();
     private final DirtyThrottle dirtyThrottle = new DirtyThrottle(DIRTY_THROTTLE_MS);
     private final ClaimValueTotals totals = new ClaimValueTotals();
@@ -52,12 +50,32 @@ public final class ClaimValueService {
         this.plugin = plugin;
     }
 
+    /**
+     * A double chest is one inventory but two block entities. Count its
+     * contents only from the left half so a chest spanning a chunk border is
+     * not counted twice.
+     */
+    private static boolean countsContents(Container container, Inventory inventory) {
+        if (!(inventory instanceof DoubleChestInventory doubleChest)) {
+            return true;
+        }
+        Inventory left = doubleChest.getLeftSide();
+        if (!(left.getHolder() instanceof Chest chest)) {
+            return true;
+        }
+        return chest.getLocation().equals(container.getLocation());
+    }
+
+    private static String key(String world, int x, int z) {
+        return world + ":" + x + ":" + z;
+    }
+
     public void start() {
         if (this.taskId != -1) {
             return;
         }
         this.taskId = this.plugin.getServer().getScheduler()
-                .runTaskTimer(this.plugin, this::tick, 1L, 1L).getTaskId();
+            .runTaskTimer(this.plugin, this::tick, 1L, 1L).getTaskId();
     }
 
     public void close() {
@@ -84,7 +102,7 @@ public final class ClaimValueService {
             return;
         }
         markDirty(location.getWorld().getName(), location.getBlockX() >> 4,
-                location.getBlockZ() >> 4);
+            location.getBlockZ() >> 4);
     }
 
     /**
@@ -176,7 +194,7 @@ public final class ClaimValueService {
         }
         for (FLocation location : Board.flocationIds.keySet()) {
             enqueue(new ChunkRef(location.getWorldName(), (int) location.getX(),
-                    (int) location.getZ()));
+                (int) location.getZ()));
         }
     }
 
@@ -216,7 +234,7 @@ public final class ClaimValueService {
                 data.addContainer(material.name());
                 Inventory inventory = container.getInventory();
                 if (material != Material.ENDER_CHEST
-                        && countsContents(container, inventory)) {
+                    && countsContents(container, inventory)) {
                     for (ItemStack item : inventory.getContents()) {
                         if (item != null) {
                             data.addItem(item.getType().name(), item.getAmount());
@@ -226,23 +244,7 @@ public final class ClaimValueService {
             }
         }
         return ClaimValueCalculator.valueOf(data, Conf.claimValueSpawners,
-                Conf.claimValueContainers, Conf.claimValueItems);
-    }
-
-    /**
-     * A double chest is one inventory but two block entities. Count its
-     * contents only from the left half so a chest spanning a chunk border is
-     * not counted twice.
-     */
-    private static boolean countsContents(Container container, Inventory inventory) {
-        if (!(inventory instanceof DoubleChestInventory doubleChest)) {
-            return true;
-        }
-        Inventory left = doubleChest.getLeftSide();
-        if (!(left.getHolder() instanceof Chest chest)) {
-            return true;
-        }
-        return chest.getLocation().equals(container.getLocation());
+            Conf.claimValueContainers, Conf.claimValueItems);
     }
 
     private void updateChunk(ChunkRef ref, String factionId, double value) {
@@ -261,10 +263,6 @@ public final class ClaimValueService {
         if (this.plugin.rankingService != null) {
             this.plugin.rankingService.invalidate();
         }
-    }
-
-    private static String key(String world, int x, int z) {
-        return world + ":" + x + ":" + z;
     }
 
     private record ChunkRef(String world, int x, int z) {

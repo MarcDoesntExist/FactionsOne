@@ -1,6 +1,12 @@
 package com.massivecraft.factions.adapters;
 
-import com.google.gson.*;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.util.LazyLocation;
 
@@ -16,7 +22,7 @@ import java.util.logging.Level;
  * @author Daniel Saukel
  */
 public class LocationTypeAdapter
-        implements JsonDeserializer<LazyLocation>, JsonSerializer<LazyLocation> {
+    implements JsonDeserializer<LazyLocation>, JsonSerializer<LazyLocation> {
     private static final String WORLD = "world";
     private static final String X = "x";
     private static final String Y = "y";

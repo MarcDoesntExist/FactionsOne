@@ -37,12 +37,12 @@ public class CmdCoords extends FCommand {
         FLocation chunk = new FLocation(location);
         Faction owner = Board.getFactionAt(chunk);
         Rel relation = this.myFaction == null
-                ? Rel.NEUTRAL
-                : this.myFaction.getRelationTo(owner);
+            ? Rel.NEUTRAL
+            : this.myFaction.getRelationTo(owner);
 
         msg(Lang.coordsLine, chunk.getCoordString(), chunk.getWorldName(),
-                owner.getTagPlain(), relation.name().toLowerCase(Locale.ROOT));
+            owner.getTagPlain(), relation.name().toLowerCase(Locale.ROOT));
         msg(Lang.coordsBlock, location.getBlockX(), location.getBlockY(), location.getBlockZ(),
-                location.getBlockX() & 15, location.getBlockZ() & 15);
+            location.getBlockX() & 15, location.getBlockZ() & 15);
     }
 }

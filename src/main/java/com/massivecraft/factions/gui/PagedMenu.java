@@ -28,6 +28,10 @@ public abstract class PagedMenu extends Menu {
         this.contentSize = Math.max(9, (Math.max(9, Math.min(54, rows * 9)) / 9 - 1) * 9);
     }
 
+    protected static ItemStack icon(Material material) {
+        return new ItemStack(material);
+    }
+
     protected void setEntries(List<MenuItem> entries) {
         this.entries.clear();
         if (entries != null) {
@@ -43,6 +47,14 @@ public abstract class PagedMenu extends Menu {
 
     protected int getPage() {
         return this.page;
+    }
+
+    protected void setPage(int page) {
+        int clamped = Math.max(0, Math.min(this.maxPage(), page));
+        if (clamped != this.page) {
+            this.page = clamped;
+            this.render();
+        }
     }
 
     protected void render() {
@@ -63,20 +75,8 @@ public abstract class PagedMenu extends Menu {
         this.setItem(row + 8, next, player -> this.setPage(this.page + 1));
     }
 
-    protected void setPage(int page) {
-        int clamped = Math.max(0, Math.min(this.maxPage(), page));
-        if (clamped != this.page) {
-            this.page = clamped;
-            this.render();
-        }
-    }
-
     protected int maxPage() {
         return this.contentSize == 0 ? 0 : Math.max(0,
-                (this.entries.size() - 1) / this.contentSize);
-    }
-
-    protected static ItemStack icon(Material material) {
-        return new ItemStack(material);
+            (this.entries.size() - 1) / this.contentSize);
     }
 }

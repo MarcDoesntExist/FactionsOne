@@ -34,12 +34,12 @@ public final class MembersMenu extends PagedMenu {
 
     private MembersMenu(Player player, GuiConfig config, Faction faction) {
         super(player, config, config.title("menu.members.title", "<aqua>Members"),
-                config.rows("menu.members.rows", 6),
-                clicker -> {
-                    FPlayer fplayer = FPlayers.i.get(clicker);
-                    return fplayer != null && fplayer.getFaction() == faction
-                            && FPerm.MENU_MEMBERS.has(clicker, faction, false);
-                });
+            config.rows("menu.members.rows", 6),
+            clicker -> {
+                FPlayer fplayer = FPlayers.i.get(clicker);
+                return fplayer != null && fplayer.getFaction() == faction
+                    && FPerm.MENU_MEMBERS.has(clicker, faction, false);
+            });
         this.plugin = Main.main;
         this.faction = faction;
         this.build();
@@ -53,7 +53,7 @@ public final class MembersMenu extends PagedMenu {
     private void build() {
         List<FPlayer> members = new ArrayList<FPlayer>(this.faction.getFPlayers());
         members.sort(Comparator.comparing((FPlayer member) -> member.getRole().ordinal())
-                .thenComparing(FPlayer::getName, String.CASE_INSENSITIVE_ORDER));
+            .thenComparing(FPlayer::getName, String.CASE_INSENSITIVE_ORDER));
 
         List<MenuItem> entries = new ArrayList<MenuItem>();
         for (FPlayer member : members) {
@@ -72,18 +72,18 @@ public final class MembersMenu extends PagedMenu {
             UUID uuid = this.uuid(member.getId());
             String name = member.getName();
             PlayerProfile profile = uuid != null
-                    ? Bukkit.createProfile(uuid, name)
-                    : Bukkit.createProfile(name == null || name.isBlank()
-                    ? UUID.randomUUID().toString() : name);
+                ? Bukkit.createProfile(uuid, name)
+                : Bukkit.createProfile(name == null || name.isBlank()
+                ? UUID.randomUUID().toString() : name);
             meta.setPlayerProfile(profile);
             meta.displayName(this.plugin.txt.parse(
-                    this.config.text("menu.members.entry-name", "<white>%s"), name));
+                this.config.text("menu.members.entry-name", "<white>%s"), name));
 
             List<String> configured = this.config.list("menu.members.entry-lore");
             String[] values = {
-                    member.getRole().toString(),
-                    member.getPowerRounded() + "/" + member.getPowerMaxRounded(),
-                    member.getPlayer() == null ? "offline" : "online"
+                member.getRole().toString(),
+                member.getPowerRounded() + "/" + member.getPowerMaxRounded(),
+                member.getPlayer() == null ? "offline" : "online"
             };
             List<Component> lines = new ArrayList<Component>();
             for (int i = 0; i < configured.size(); i++) {

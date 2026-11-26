@@ -32,30 +32,6 @@ import java.util.logging.Logger;
  */
 public final class FactionMailbox {
 
-    public enum State {
-        PENDING, DELIVERY_UNKNOWN, DELIVERED, EXPIRED, REFUND_UNKNOWN
-    }
-
-    public enum Result {
-        SUCCESS, NOT_FOUND, NOT_OWNED, ALREADY_CLAIMED, EXPIRED, DELIVERY_FAILED, DELIVERY_UNKNOWN,
-        MAILBOX_FULL, INVALID
-    }
-
-    public record Claim(String id, String playerId, double amount, String sourceAccount,
-                        String source, String reason, long createdAt, long expiresAt, State state,
-                        boolean refunded, long completedAt) {
-    }
-
-    @FunctionalInterface
-    public interface Delivery {
-        boolean deliver(Claim claim);
-    }
-
-    @FunctionalInterface
-    public interface Refund {
-        boolean refund(Claim claim);
-    }
-
     private final MailboxStore store;
     private final Logger logger;
     private final IdempotencyStore idempotency;
@@ -65,7 +41,6 @@ public final class FactionMailbox {
     private final MailboxRecovery recovery;
     private final MailboxExpiry expiry;
     private final Map<String, Claim> claims = new LinkedHashMap<>();
-
     public FactionMailbox(Path file, IdempotencyStore idempotency, Clock clock, int maxPerPlayer,
                           long ttlMillis, Logger logger) {
         this.store = new MailboxStore(file, logger);
@@ -82,6 +57,22 @@ public final class FactionMailbox {
         }
     }
 
+    private static boolean isPending(Claim claim, long now) {
+        return claim.state() == State.PENDING && claim.expiresAt() > now;
+    }
+
+    static String deliveryKey(String claimId) {
+        return "mailbox:" + claimId;
+    }
+
+    static String refundKey(String claimId) {
+        return "mailbox-refund:" + claimId;
+    }
+
+    private static String nullToEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
     /**
      * Adds a payout under a caller-supplied id. Replaying the same id returns
      * the existing claim instead of creating a second one.
@@ -89,7 +80,7 @@ public final class FactionMailbox {
     public synchronized Claim enqueue(String id, String playerId, double amount,
                                       String sourceAccount, String source, String reason) {
         if (id == null || id.isBlank() || playerId == null || playerId.isBlank()
-                || !Double.isFinite(amount) || amount <= 0.0) {
+            || !Double.isFinite(amount) || amount <= 0.0) {
             return null;
         }
         Claim existing = this.claims.get(id);
@@ -98,8 +89,8 @@ public final class FactionMailbox {
         }
         long now = this.clock.millis();
         long pending = this.claims.values().stream()
-                .filter(claim -> claim.playerId().equals(playerId) && isPending(claim, now))
-                .count();
+            .filter(claim -> claim.playerId().equals(playerId) && isPending(claim, now))
+            .count();
         if (pending >= this.maxPerPlayer) {
             return null;
         }
@@ -108,8 +99,8 @@ public final class FactionMailbox {
             return null;
         }
         Claim claim = new Claim(id, playerId, exact, nullToEmpty(sourceAccount),
-                nullToEmpty(source), nullToEmpty(reason), now, now + this.ttlMillis, State.PENDING,
-                false, 0L);
+            nullToEmpty(source), nullToEmpty(reason), now, now + this.ttlMillis, State.PENDING,
+            false, 0L);
         this.claims.put(id, claim);
         if (!save()) {
             this.claims.remove(id);
@@ -162,14 +153,14 @@ public final class FactionMailbox {
             }
             if (!this.idempotency.claim(key)) {
                 return this.idempotency.isClaimed(key) ? markUnknown(claim)
-                        : Result.DELIVERY_FAILED;
+                    : Result.DELIVERY_FAILED;
             }
             boolean delivered;
             try {
                 delivered = delivery.deliver(claim);
             } catch (RuntimeException exception) {
                 this.logger.log(java.util.logging.Level.SEVERE,
-                        "Mailbox delivery status is unknown for " + claim.id(), exception);
+                    "Mailbox delivery status is unknown for " + claim.id(), exception);
                 return markUnknown(claim);
             }
             if (!delivered) {
@@ -250,7 +241,7 @@ public final class FactionMailbox {
             this.idempotency.release(deliveryKey(claim.id()));
         }
         this.claims.put(claim.id(), withState(claim,
-                delivered ? State.DELIVERED : State.PENDING));
+            delivered ? State.DELIVERED : State.PENDING));
         return save();
     }
 
@@ -283,7 +274,7 @@ public final class FactionMailbox {
                 keys.add(deliveryKey(claim.id()));
             }
             if (claim.state() == State.REFUND_UNKNOWN
-                    || claim.state() == State.EXPIRED && !claim.refunded()) {
+                || claim.state() == State.EXPIRED && !claim.refunded()) {
                 keys.add(refundKey(claim.id()));
             }
         }
@@ -298,7 +289,7 @@ public final class FactionMailbox {
         this.claims.put(claim.id(), withState(claim, State.DELIVERY_UNKNOWN));
         save();
         this.logger.warning("Mailbox claim " + claim.id()
-                + " has an unknown delivery; use /f mail reconcile " + claim.id() + " paid|retry.");
+            + " has an unknown delivery; use /f mail reconcile " + claim.id() + " paid|retry.");
         return Result.DELIVERY_UNKNOWN;
     }
 
@@ -306,27 +297,35 @@ public final class FactionMailbox {
         return this.store.save(this.claims.values());
     }
 
-    private static boolean isPending(Claim claim, long now) {
-        return claim.state() == State.PENDING && claim.expiresAt() > now;
-    }
-
     private Claim withState(Claim claim, State state) {
         long completedAt = state == State.DELIVERED || state == State.EXPIRED
-                ? this.clock.millis() : 0L;
+            ? this.clock.millis() : 0L;
         return new Claim(claim.id(), claim.playerId(), claim.amount(), claim.sourceAccount(),
-                claim.source(), claim.reason(), claim.createdAt(), claim.expiresAt(), state,
-                claim.refunded(), completedAt);
+            claim.source(), claim.reason(), claim.createdAt(), claim.expiresAt(), state,
+            claim.refunded(), completedAt);
     }
 
-    static String deliveryKey(String claimId) {
-        return "mailbox:" + claimId;
+    public enum State {
+        PENDING, DELIVERY_UNKNOWN, DELIVERED, EXPIRED, REFUND_UNKNOWN
     }
 
-    static String refundKey(String claimId) {
-        return "mailbox-refund:" + claimId;
+    public enum Result {
+        SUCCESS, NOT_FOUND, NOT_OWNED, ALREADY_CLAIMED, EXPIRED, DELIVERY_FAILED, DELIVERY_UNKNOWN,
+        MAILBOX_FULL, INVALID
     }
 
-    private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
+    @FunctionalInterface
+    public interface Delivery {
+        boolean deliver(Claim claim);
+    }
+
+    @FunctionalInterface
+    public interface Refund {
+        boolean refund(Claim claim);
+    }
+
+    public record Claim(String id, String playerId, double amount, String sourceAccount,
+                        String source, String reason, long createdAt, long expiresAt, State state,
+                        boolean refunded, long completedAt) {
     }
 }

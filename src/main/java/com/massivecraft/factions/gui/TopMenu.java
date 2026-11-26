@@ -21,7 +21,7 @@ public final class TopMenu extends PagedMenu {
     public TopMenu(Player player, GuiConfig config, FactionRankEntry.Metric metric,
                    List<FactionRankEntry> entries) {
         super(player, config, config.title("menu.top.title", "<gold>Top factions"),
-                config.rows("menu.top.rows", 6), ignored -> true);
+            config.rows("menu.top.rows", 6), ignored -> true);
 
         List<MenuItem> items = new ArrayList<MenuItem>();
         int rank = 1;
@@ -30,8 +30,8 @@ public final class TopMenu extends PagedMenu {
             ItemMeta meta = icon.getItemMeta();
             if (meta != null) {
                 meta.displayName(Main.main.txt.parse(
-                        config.text("menu.top.entry-name", "<gold>#%s <white>%s"),
-                        rank, entry.tag()));
+                    config.text("menu.top.entry-name", "<gold>#%s <white>%s"),
+                    rank, entry.tag()));
                 List<Component> lore = new ArrayList<Component>();
                 for (String line : config.list("menu.top.entry-lore")) {
                     lore.add(Main.main.txt.parse(line, metric.key(), value(metric, entry)));

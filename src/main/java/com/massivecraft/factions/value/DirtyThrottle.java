@@ -28,7 +28,7 @@ public final class DirtyThrottle {
         }
         if (previous == null && this.last.size() >= MAX_KEYS) {
             this.last.entrySet()
-                    .removeIf(entry -> now - entry.getValue() >= this.cooldownMs);
+                .removeIf(entry -> now - entry.getValue() >= this.cooldownMs);
             if (this.last.size() >= MAX_KEYS) {
                 return false;
             }

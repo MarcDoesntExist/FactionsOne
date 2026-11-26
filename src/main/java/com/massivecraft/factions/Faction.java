@@ -6,16 +6,27 @@ import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
+import com.massivecraft.factions.util.Color;
 import com.massivecraft.factions.util.LazyLocation;
 import com.massivecraft.factions.util.MiscUtil;
 import com.massivecraft.factions.util.RelationUtil;
 import com.massivecraft.factions.zcore.persist.Entity;
-import com.massivecraft.factions.util.Color;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 
 /**
@@ -95,6 +106,10 @@ public class Faction extends Entity implements EconomyParticipator {
         this.permOverrides = new LinkedHashMap<FPerm, Set<Rel>>();
     }
 
+    private static String resetKey(FeatureConfig.MissionPeriod period) {
+        return "__mission_reset_" + period.name().toLowerCase(Locale.ROOT);
+    }
+
     public Set<String> getInvites() {
         return invites;
     }
@@ -159,18 +174,18 @@ public class Faction extends Entity implements EconomyParticipator {
         return Component.text(this.tag);
     }
 
-    /**
-     * Plain tag for storage, logs, events and validation.
-     */
-    public String getTagPlain() {
-        return this.tag;
-    }
-
     public void setTag(String str) {
         if (Conf.factionTagForceUpperCase) {
             str = str.toUpperCase();
         }
         this.tag = str;
+    }
+
+    /**
+     * Plain tag for storage, logs, events and validation.
+     */
+    public String getTagPlain() {
+        return this.tag;
     }
 
     public Component getTag(RelationParticipator observer) {
@@ -216,24 +231,28 @@ public class Faction extends Entity implements EconomyParticipator {
 
     public void confirmValidHome() {
         if (!Conf.homesMustBeInClaimedTerritory || this.home == null || (
-                this.home.getLocation() != null
-                        && Board.getFactionAt(new FLocation(this.home.getLocation())) == this))
+            this.home.getLocation() != null
+                && Board.getFactionAt(new FLocation(this.home.getLocation())) == this))
             return;
 
         msg("<b>Your faction home has been un-set since it is no longer in your territory.");
         this.home = null;
     }
+    // Contains the modifications to the default values
 
     public String getAccountId() {
         // Account creation is the bank gateway's job; reading this id must stay free
         // of economy calls so it can be used as a lock key.
         return "faction-" + this.getId();
     }
-    // Contains the modifications to the default values
 
     public double getPowerBoost() {
         long now = System.currentTimeMillis();
         return this.powerBoost + (this.perks == null ? 0.0 : this.perks.power(now));
+    }
+
+    public void setPowerBoost(double powerBoost) {
+        this.powerBoost = powerBoost;
     }
 
     public FactionPerks getPerks() {
@@ -243,13 +262,10 @@ public class Faction extends Entity implements EconomyParticipator {
         return this.perks;
     }
 
-    public void setPowerBoost(double powerBoost) {
-        this.powerBoost = powerBoost;
-    }
-
     public void addPowerBoost(double delta) {
         this.powerBoost += delta;
     }
+    // Contains the modifications to the default values
 
     public boolean getFlag(FFlag flag) {
         if (this.perks != null && this.perks.flag(flag, System.currentTimeMillis())) {
@@ -263,7 +279,6 @@ public class Faction extends Entity implements EconomyParticipator {
             ret = flag.getDefault();
         return ret;
     }
-    // Contains the modifications to the default values
 
     public void setFlag(FFlag flag, boolean value) {
         if (flag == FFlag.OPEN) {
@@ -278,6 +293,23 @@ public class Faction extends Entity implements EconomyParticipator {
         this.flagOverrides.put(flag, value);
     }
 
+	/*
+	public void addPermittedRelation(FPerm perm, Rel rel)
+	{
+		Set<Rel> newPermittedRelations = EnumSet.noneOf(Rel.class);
+		newPermittedRelations.addAll(this.getPermittedRelations(perm));
+		newPermittedRelations.add(rel);
+		this.setPermittedRelations(perm, newPermittedRelations);
+	}
+
+	public void removePermittedRelation(FPerm perm, Rel rel)
+	{
+		Set<Rel> newPermittedRelations = EnumSet.noneOf(Rel.class);
+		newPermittedRelations.addAll(this.getPermittedRelations(perm));
+		newPermittedRelations.remove(rel);
+		this.setPermittedRelations(perm, newPermittedRelations);
+	}*/
+
     /**
      * Removes unknown flag keys and null values left by older or newer data.
      */
@@ -289,23 +321,6 @@ public class Faction extends Entity implements EconomyParticipator {
         this.flagOverrides.values().removeIf(Objects::isNull);
         this.flagOverrides.remove(FFlag.OPEN);
     }
-	
-	/*
-	public void addPermittedRelation(FPerm perm, Rel rel)
-	{
-		Set<Rel> newPermittedRelations = EnumSet.noneOf(Rel.class);
-		newPermittedRelations.addAll(this.getPermittedRelations(perm));
-		newPermittedRelations.add(rel);
-		this.setPermittedRelations(perm, newPermittedRelations);
-	}
-	
-	public void removePermittedRelation(FPerm perm, Rel rel)
-	{
-		Set<Rel> newPermittedRelations = EnumSet.noneOf(Rel.class);
-		newPermittedRelations.addAll(this.getPermittedRelations(perm));
-		newPermittedRelations.remove(rel);
-		this.setPermittedRelations(perm, newPermittedRelations);
-	}*/
 
     public Set<Rel> getPermittedRelations(FPerm perm) {
         Set<Rel> ret = this.permOverrides.get(perm);
@@ -368,6 +383,11 @@ public class Faction extends Entity implements EconomyParticipator {
         this.setPermittedRelations(perm, newPermittedRelations);
     }
 
+
+    // -------------------------------------------- //
+    // Construct
+    // -------------------------------------------- //
+
     public void setPermittedRelations(FPerm perm, Set<Rel> rels) {
         if (perm.getDefault().equals(rels)) {
             this.permOverrides.remove(perm);
@@ -377,9 +397,11 @@ public class Faction extends Entity implements EconomyParticipator {
     }
 
 
-    // -------------------------------------------- //
-    // Construct
-    // -------------------------------------------- //
+    // -------------------------------
+    // Understand the types
+    // -------------------------------
+
+    // TODO: These should be gone after the refactoring...
 
     public void setPermittedRelations(FPerm perm, Rel... rels) {
         Set<Rel> temp = new HashSet<Rel>();
@@ -387,25 +409,18 @@ public class Faction extends Entity implements EconomyParticipator {
         this.setPermittedRelations(perm, temp);
     }
 
-
-    // -------------------------------
-    // Understand the types
-    // -------------------------------
-
-    // TODO: These should be gone after the refactoring...
-
     public boolean isNormal() {
         //return ! (this.isNone() || this.isSafeZone() || this.isWarZone());
         return !this.isNone();
     }
 
-    public boolean isNone() {
-        return this.getId().equals("0");
-    }
-
     // -------------------------------
     // Relation and relation colors
     // -------------------------------
+
+    public boolean isNone() {
+        return this.getId().equals("0");
+    }
 
     @Override
     public Component describeTo(RelationParticipator observer, boolean ucfirst) {
@@ -517,13 +532,13 @@ public class Faction extends Entity implements EconomyParticipator {
         return Board.getFactionCoordCountInWorld(this, worldName);
     }
 
-    public boolean hasLandInflation() {
-        return this.getLandRounded() > this.getPowerRounded();
-    }
-
     // -------------------------------
     // FPlayers
     // -------------------------------
+
+    public boolean hasLandInflation() {
+        return this.getLandRounded() > this.getPowerRounded();
+    }
 
     // maintain the reference list of FPlayers in this faction
     public void refreshFPlayers() {
@@ -625,7 +640,7 @@ public class Faction extends Entity implements EconomyParticipator {
             replacements = this.getFPlayersWhereRole(Rel.MEMBER);
 
         if (replacements == null || replacements
-                .isEmpty()) {  // faction leader is the only member; one-man faction
+            .isEmpty()) {  // faction leader is the only member; one-man faction
             if (this.getFlag(FFlag.PERMANENT)) {
                 if (oldLeader != null)
                     oldLeader.setRole(Rel.MEMBER);
@@ -635,7 +650,7 @@ public class Faction extends Entity implements EconomyParticipator {
             // no members left and faction isn't permanent, so disband it
             if (Conf.logFactionDisband)
                 Main.main.log("The faction " + this.getTagPlain() + " (" + this.getId()
-                        + ") has been disbanded since it has no members left.");
+                    + ") has been disbanded since it has no members left.");
 
             for (FPlayer fplayer : FPlayers.i.getOnline()) {
                 fplayer.msg("The faction %s<i> was disbanded.", this.getTag(fplayer));
@@ -647,10 +662,10 @@ public class Faction extends Entity implements EconomyParticipator {
                 oldLeader.setRole(Rel.MEMBER);
             replacements.get(0).setRole(Rel.LEADER);
             this.msg(
-                    "<i>Faction leader <h>%s<i> has been removed. %s<i> has been promoted as the new faction leader.",
-                    oldLeader == null ? "" : oldLeader.getName(), replacements.get(0).getName());
+                "<i>Faction leader <h>%s<i> has been removed. %s<i> has been promoted as the new faction leader.",
+                oldLeader == null ? "" : oldLeader.getName(), replacements.get(0).getName());
             Main.main.log("Faction " + this.getTagPlain() + " (" + this.getId()
-                    + ") leader was removed. Replacement leader: " + replacements.get(0).getName());
+                + ") leader was removed. Replacement leader: " + replacements.get(0).getName());
         }
     }
 
@@ -693,7 +708,7 @@ public class Faction extends Entity implements EconomyParticipator {
             return false;
 
         long timeUntilNoboom =
-                this.getLastOnlineTime() + (long) (Conf.offlineExplosionProtectionDelay * 60 * 1000);
+            this.getLastOnlineTime() + (long) (Conf.offlineExplosionProtectionDelay * 60 * 1000);
 
         //No protection if players are online.
         if (this.getOnlinePlayers().size() > 0)
@@ -703,13 +718,13 @@ public class Faction extends Entity implements EconomyParticipator {
         return timeUntilNoboom <= System.currentTimeMillis();
     }
 
-    public long getLastOnlineTime() {
-        return this.lastOnlineTime;
-    }
-
     //----------------------------------------------//
     // Deprecated
     //----------------------------------------------//
+
+    public long getLastOnlineTime() {
+        return this.lastOnlineTime;
+    }
 
     /**
      * @deprecated As of release 1.7, replaced by {@link #getFPlayerLeader()}
@@ -743,6 +758,10 @@ public class Faction extends Entity implements EconomyParticipator {
         return !this.getFlag(FFlag.EXPLOSIONS);
     }
 
+    //----------------------------------------------//
+    // Warps
+    //----------------------------------------------//
+
     /**
      * @deprecated As of release 1.7, replaced by {@link #getFlag()}
      */
@@ -750,10 +769,6 @@ public class Faction extends Entity implements EconomyParticipator {
     public boolean isSafeZone() {
         return !this.getFlag(FFlag.EXPLOSIONS);
     }
-
-    //----------------------------------------------//
-    // Warps
-    //----------------------------------------------//
 
     public Map<String, FactionWarp> getWarps() {
         return Collections.unmodifiableMap(new LinkedHashMap<String, FactionWarp>(this.warps));
@@ -769,15 +784,15 @@ public class Faction extends Entity implements EconomyParticipator {
         }
     }
 
+    //----------------------------------------------//
+    // TNT bank, points, upgrades and missions
+    //----------------------------------------------//
+
     public void removeWarp(String name) {
         if (name != null) {
             this.warps.remove(name.toLowerCase(Locale.ROOT));
         }
     }
-
-    //----------------------------------------------//
-    // TNT bank, points, upgrades and missions
-    //----------------------------------------------//
 
     public int getTntBank() {
         return this.tntBank;
@@ -921,11 +936,7 @@ public class Faction extends Entity implements EconomyParticipator {
         }
         long seconds = Math.max(0L, millis / 1000L);
         this.missionProgress.put(resetKey(period),
-                (int) Math.min(Integer.MAX_VALUE, seconds));
-    }
-
-    private static String resetKey(FeatureConfig.MissionPeriod period) {
-        return "__mission_reset_" + period.name().toLowerCase(Locale.ROOT);
+            (int) Math.min(Integer.MAX_VALUE, seconds));
     }
 
     //----------------------------------------------//
@@ -934,8 +945,8 @@ public class Faction extends Entity implements EconomyParticipator {
 
     public void addLog(String actor, String action, String detail) {
         FactionLogView.addRotated(this.logs,
-                new FactionLogEntry(System.currentTimeMillis(), actor, action, detail),
-                Conf.factionLogLimit);
+            new FactionLogEntry(System.currentTimeMillis(), actor, action, detail),
+            Conf.factionLogLimit);
     }
 
     public List<FactionLogEntry> getLogs() {
@@ -950,7 +961,7 @@ public class Faction extends Entity implements EconomyParticipator {
             this.warps = new LinkedHashMap<String, FactionWarp>();
         }
         this.warps.entrySet().removeIf(entry -> entry.getKey() == null || entry.getValue() == null
-                || entry.getValue().getLocation() == null);
+            || entry.getValue().getLocation() == null);
 
         if (this.upgradeLevels == null) {
             this.upgradeLevels = new LinkedHashMap<String, Integer>();

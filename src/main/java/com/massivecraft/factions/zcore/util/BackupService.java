@@ -35,8 +35,8 @@ public final class BackupService {
 
     private static final Logger LOGGER = Logger.getLogger("FactionsOne");
     private static final DateTimeFormatter TIMESTAMP = DateTimeFormatter
-            .ofPattern("yyyyMMdd-HHmmss-SSS")
-            .withZone(ZoneOffset.UTC);
+        .ofPattern("yyyyMMdd-HHmmss-SSS")
+        .withZone(ZoneOffset.UTC);
 
     private BackupService() {
     }
@@ -76,7 +76,7 @@ public final class BackupService {
             rotate(backupDirectory, fileName, keep);
         } catch (IOException | RuntimeException ex) {
             LOGGER.log(Level.WARNING,
-                    "Could not back up \"" + absolute + "\": " + ex.getMessage());
+                "Could not back up \"" + absolute + "\": " + ex.getMessage());
         }
     }
 
@@ -104,13 +104,13 @@ public final class BackupService {
         List<Path> backups;
         try (Stream<Path> stream = Files.list(directory)) {
             backups = stream
-                    .filter(Files::isRegularFile)
-                    .filter(path -> isBackup(path.getFileName().toString(), fileName))
-                    .sorted(Comparator
-                            .comparing(BackupService::lastModified)
-                            .thenComparing(path -> path.getFileName().toString())
-                            .reversed())
-                    .toList();
+                .filter(Files::isRegularFile)
+                .filter(path -> isBackup(path.getFileName().toString(), fileName))
+                .sorted(Comparator
+                    .comparing(BackupService::lastModified)
+                    .thenComparing(path -> path.getFileName().toString())
+                    .reversed())
+                .toList();
         }
 
         for (int index = limit; index < backups.size(); index++) {

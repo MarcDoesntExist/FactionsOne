@@ -5,7 +5,6 @@ import com.massivecraft.factions.Main;
 import com.massivecraft.factions.iface.EconomyParticipator;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.Permission;
-import com.massivecraft.factions.util.Color;
 
 
 /**
@@ -48,8 +47,8 @@ public class CmdMoneyTransferFp extends FCommand {
 
         if (success && Conf.logMoneyTransactions)
             Main.main.log(Main.main.txt
-                    .parse("%s transferred %s from the faction \"%s\" to the player \"%s\"",
-                            actorName(), Econ.moneyString(amount), from.describeTo(null),
-                            to.describeTo(null)));
+                .parse("%s transferred %s from the faction \"%s\" to the player \"%s\"",
+                    actorName(), Econ.moneyString(amount), from.describeTo(null),
+                    to.describeTo(null)));
     }
 }

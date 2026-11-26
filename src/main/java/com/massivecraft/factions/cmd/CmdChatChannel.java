@@ -6,6 +6,7 @@ import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.zcore.Lang;
 
+import java.util.Collections;
 import java.util.Locale;
 
 /**
@@ -20,9 +21,7 @@ abstract class CmdChatChannel extends FCommand {
     protected CmdChatChannel(ChatChannel channel, String... aliases) {
         super();
         this.channel = channel;
-        for (String alias : aliases) {
-            this.aliases.add(alias);
-        }
+        Collections.addAll(this.aliases, aliases);
         this.optionalArgs.put("message", "");
         this.errorOnToManyArgs = false;
         this.permission = Permission.CHAT.node;

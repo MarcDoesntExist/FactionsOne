@@ -15,6 +15,12 @@ import org.bukkit.entity.Player;
  * @author Daniel Saukel
  */
 public class CmdSeeChunk extends FCommand {
+    /**
+     * How far above and below the player the corner pillars are drawn. Only the
+     * part of the column the player can actually see is worth sending.
+     */
+    private static final int VERTICAL_RANGE = 32;
+
     public CmdSeeChunk() {
         super();
         this.aliases.add("sc");
@@ -28,12 +34,6 @@ public class CmdSeeChunk extends FCommand {
         senderMustBeOfficer = false;
         senderMustBeLeader = false;
     }
-
-    /**
-     * How far above and below the player the corner pillars are drawn. Only the
-     * part of the column the player can actually see is worth sending.
-     */
-    private static final int VERTICAL_RANGE = 32;
 
     @Override
     public void perform() {

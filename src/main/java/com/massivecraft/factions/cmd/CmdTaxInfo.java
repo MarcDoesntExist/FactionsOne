@@ -54,22 +54,22 @@ public class CmdTaxInfo extends FCommand {
     private void showServer() {
         BankService bank = BankService.get();
         msg(Lang.taxServerInfo,
-                "enabled",
-                Conf.taxMode,
-                Main.main.factionTaxService.intervalMinutes(),
-                bank.format(Conf.taxBase),
-                bank.format(Conf.taxPerMember),
-                bank.format(Conf.taxPerChunk),
-                bank.format(Conf.taxPercent),
-                bank.format(Conf.taxCap),
-                Conf.taxGracePeriods,
-                Conf.taxInsolvencyAction);
+            "enabled",
+            Conf.taxMode,
+            Main.main.factionTaxService.intervalMinutes(),
+            bank.format(Conf.taxBase),
+            bank.format(Conf.taxPerMember),
+            bank.format(Conf.taxPerChunk),
+            bank.format(Conf.taxPercent),
+            bank.format(Conf.taxCap),
+            Conf.taxGracePeriods,
+            Conf.taxInsolvencyAction);
     }
 
     private void showFaction(Faction faction) {
         long next = faction.getLastTaxAt() <= 0
-                ? 0
-                : faction.getLastTaxAt() + Main.main.factionTaxService.intervalMillis();
+            ? 0
+            : faction.getLastTaxAt() + Main.main.factionTaxService.intervalMillis();
         String state;
         if (faction.isTaxInsolvent()) {
             state = String.format(Lang.taxInsolventState, Conf.taxInsolvencyAction.toUpperCase(Locale.ROOT));
@@ -79,9 +79,9 @@ public class CmdTaxInfo extends FCommand {
             state = String.format(Lang.taxNextCharge, Math.max(0, (next - System.currentTimeMillis()) / 60_000L));
         }
         msg(Lang.taxFactionInfo,
-                faction.getTagPlain(),
-                BankService.get().format(Main.main.factionTaxService.dueFor(faction)),
-                faction.getTaxArrears(),
-                state);
+            faction.getTagPlain(),
+            BankService.get().format(Main.main.factionTaxService.dueFor(faction)),
+            faction.getTaxArrears(),
+            state);
     }
 }

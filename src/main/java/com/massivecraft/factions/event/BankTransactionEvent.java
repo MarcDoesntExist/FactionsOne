@@ -14,20 +14,12 @@ import org.bukkit.event.HandlerList;
  */
 public class BankTransactionEvent extends Event implements Cancellable {
 
-    public enum Type {
-        DEPOSIT,
-        WITHDRAW,
-        TRANSFER
-    }
-
     private static final HandlerList handlers = new HandlerList();
-
     private final Faction faction;
     private final Type type;
     private final double amount;
     private final String actor;
     private boolean cancelled;
-
     /**
      * @param faction faction whose account is touched, or null for a
      *                player-to-player movement
@@ -87,5 +79,11 @@ public class BankTransactionEvent extends Event implements Cancellable {
     @Override
     public void setCancelled(boolean cancelled) {
         this.cancelled = cancelled;
+    }
+
+    public enum Type {
+        DEPOSIT,
+        WITHDRAW,
+        TRANSFER
     }
 }

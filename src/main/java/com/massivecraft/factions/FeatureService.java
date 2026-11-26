@@ -20,25 +20,26 @@ import java.util.List;
  */
 public final class FeatureService {
 
-    public enum Result {
-        SUCCESS,
-        NO_PERMISSION,
-        NOT_FOUND,
-        MAX_LEVEL,
-        NOT_ENOUGH_POINTS,
-        NO_SPACE,
-        NOT_READY,
-        REWARD_FAILED,
-        CANCELLED
-    }
-
     private final Main plugin;
     private final FeatureConfig config;
     private final ShopPerkService shopPerks = new ShopPerkService();
-
     public FeatureService(Main plugin, FeatureConfig config) {
         this.plugin = plugin;
         this.config = config;
+    }
+
+    public static String message(Result result) {
+        return switch (result) {
+            case SUCCESS -> Lang.featureSuccess;
+            case NO_PERMISSION -> Lang.featureNoPermission;
+            case NOT_FOUND -> Lang.featureNotFound;
+            case MAX_LEVEL -> Lang.featureMaxLevel;
+            case NOT_ENOUGH_POINTS -> Lang.featureNotEnoughPoints;
+            case NO_SPACE -> Lang.featureNoSpace;
+            case NOT_READY -> Lang.featureNotReady;
+            case REWARD_FAILED -> Lang.missionRewardFailed;
+            case CANCELLED -> Lang.featureCancelled;
+        };
     }
 
     public FeatureConfig getConfig() {
@@ -54,33 +55,33 @@ public final class FeatureService {
 
     public int warpLimit(Faction faction) {
         return UpgradeMath.additive(Conf.warpMax,
-                bonus(faction, FeatureConfig.UpgradeEffect.WARP_LIMIT));
+            bonus(faction, FeatureConfig.UpgradeEffect.WARP_LIMIT));
     }
 
     public int tntLimit(Faction faction) {
         return UpgradeMath.additive(Conf.tntBankMax,
-                bonus(faction, FeatureConfig.UpgradeEffect.TNT_LIMIT));
+            bonus(faction, FeatureConfig.UpgradeEffect.TNT_LIMIT));
     }
 
     public int memberLimit(Faction faction) {
         return UpgradeMath.limit(Conf.factionMemberLimit,
-                bonus(faction, FeatureConfig.UpgradeEffect.MEMBER_LIMIT), 0);
+            bonus(faction, FeatureConfig.UpgradeEffect.MEMBER_LIMIT), 0);
     }
 
     public int allyLimit(Faction faction) {
         return UpgradeMath.limit(Conf.factionAllyLimit,
-                bonus(faction, FeatureConfig.UpgradeEffect.ALLY_LIMIT), 0);
+            bonus(faction, FeatureConfig.UpgradeEffect.ALLY_LIMIT), 0);
     }
 
     public int claimLimit(Faction faction) {
         return UpgradeMath.limit(Conf.claimedLandsMax,
-                bonus(faction, FeatureConfig.UpgradeEffect.CLAIM_LIMIT),
-                Conf.claimedLandsMaxHardCap);
+            bonus(faction, FeatureConfig.UpgradeEffect.CLAIM_LIMIT),
+            Conf.claimedLandsMaxHardCap);
     }
 
     public double powerMax(Faction faction) {
         return UpgradeMath.power(Conf.powerPlayerMax,
-                bonus(faction, FeatureConfig.UpgradeEffect.POWER_MAX));
+            bonus(faction, FeatureConfig.UpgradeEffect.POWER_MAX));
     }
 
     public int upgradeCost(Faction faction, FeatureConfig.UpgradeDefinition definition) {
@@ -105,12 +106,10 @@ public final class FeatureService {
             return Result.NOT_ENOUGH_POINTS;
         }
         UpgradePurchaseEvent event = new UpgradePurchaseEvent(fplayer, faction, definition,
-                level, cost);
-        if (Bukkit.getServer() != null) {
-            Bukkit.getServer().getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                return Result.CANCELLED;
-            }
+            level, cost);
+        Bukkit.getServer().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return Result.CANCELLED;
         }
 
         faction.addFactionPoints(-cost);
@@ -147,7 +146,7 @@ public final class FeatureService {
         if (material == null || material.isAir()) {
             return Result.NOT_FOUND;
         }
-        int amount = Math.max(1, Math.min(64, offer.amount()));
+        int amount = Math.clamp(offer.amount(), 1, 64);
         if (player.getInventory().firstEmpty() == -1) {
             return Result.NO_SPACE;
         }
@@ -198,14 +197,12 @@ public final class FeatureService {
             return Result.NO_SPACE;
         }
         MissionClaimEvent event = new MissionClaimEvent(fplayer, faction, mission);
-        if (Bukkit.getServer() != null) {
-            Bukkit.getServer().getPluginManager().callEvent(event);
-            if (event.isCancelled()) {
-                return Result.CANCELLED;
-            }
+        Bukkit.getServer().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return Result.CANCELLED;
         }
         if (mission.rewardMoney() > 0.0
-                && !Econ.modifyMoney(faction, mission.rewardMoney(), null, "mission reward")) {
+            && !Econ.modifyMoney(faction, mission.rewardMoney(), null, "mission reward")) {
             return Result.REWARD_FAILED;
         }
 
@@ -231,17 +228,17 @@ public final class FeatureService {
     private boolean hasPeriod(FeatureConfig.MissionPeriod period) {
         for (FeatureConfig.MissionDefinition mission : this.config.missions()) {
             if (mission.period() == period) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
-    public int resetExpiredMissions(long now) {
+    public void resetExpiredMissions(long now) {
         int reset = 0;
         for (FeatureConfig.MissionPeriod period : new FeatureConfig.MissionPeriod[]{
-                FeatureConfig.MissionPeriod.DAILY, FeatureConfig.MissionPeriod.WEEKLY}) {
-            if (!hasPeriod(period)) {
+            FeatureConfig.MissionPeriod.DAILY, FeatureConfig.MissionPeriod.WEEKLY}) {
+            if (hasPeriod(period)) {
                 continue;
             }
             for (Faction faction : Factions.i.get()) {
@@ -263,7 +260,6 @@ public final class FeatureService {
                 reset++;
             }
         }
-        return reset;
     }
 
     public long nextResetAt(Faction faction) {
@@ -273,12 +269,12 @@ public final class FeatureService {
         long next = Long.MAX_VALUE;
         long now = System.currentTimeMillis();
         for (FeatureConfig.MissionPeriod period : new FeatureConfig.MissionPeriod[]{
-                FeatureConfig.MissionPeriod.DAILY, FeatureConfig.MissionPeriod.WEEKLY}) {
-            if (!hasPeriod(period)) {
+            FeatureConfig.MissionPeriod.DAILY, FeatureConfig.MissionPeriod.WEEKLY}) {
+            if (hasPeriod(period)) {
                 continue;
             }
             long candidate = MissionResetSchedule.nextBoundary(
-                    faction.getLastMissionResetAt(period), period, now);
+                faction.getLastMissionResetAt(period), period, now);
             if (candidate > 0L) {
                 next = Math.min(next, candidate);
             }
@@ -292,26 +288,24 @@ public final class FeatureService {
                 continue;
             }
             int progress = Math.min(mission.target(),
-                    faction.getMissionProgress(mission.id()) + Math.max(0, amount));
+                faction.getMissionProgress(mission.id()) + Math.max(0, amount));
             faction.setMissionProgress(mission.id(), progress);
         }
     }
 
-    public static String message(Result result) {
-        return switch (result) {
-            case SUCCESS -> Lang.featureSuccess;
-            case NO_PERMISSION -> Lang.featureNoPermission;
-            case NOT_FOUND -> Lang.featureNotFound;
-            case MAX_LEVEL -> Lang.featureMaxLevel;
-            case NOT_ENOUGH_POINTS -> Lang.featureNotEnoughPoints;
-            case NO_SPACE -> Lang.featureNoSpace;
-            case NOT_READY -> Lang.featureNotReady;
-            case REWARD_FAILED -> Lang.missionRewardFailed;
-            case CANCELLED -> Lang.featureCancelled;
-        };
-    }
-
     public Main getPlugin() {
         return this.plugin;
+    }
+
+    public enum Result {
+        SUCCESS,
+        NO_PERMISSION,
+        NOT_FOUND,
+        MAX_LEVEL,
+        NOT_ENOUGH_POINTS,
+        NO_SPACE,
+        NOT_READY,
+        REWARD_FAILED,
+        CANCELLED
     }
 }

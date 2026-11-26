@@ -32,12 +32,12 @@ public final class ShopMenu extends PagedMenu {
 
     private ShopMenu(Player player, GuiConfig config, Faction faction) {
         super(player, config, config.title("menu.shop.title", Lang.shopTitle),
-                config.rows("menu.shop.rows", 6),
-                clicker -> {
-                    FPlayer fplayer = FPlayers.i.get(clicker);
-                    return fplayer != null && fplayer.getFaction() == faction
-                            && FPerm.SHOP.has(clicker, faction, false);
-                });
+            config.rows("menu.shop.rows", 6),
+            clicker -> {
+                FPlayer fplayer = FPlayers.i.get(clicker);
+                return fplayer != null && fplayer.getFaction() == faction
+                    && FPerm.SHOP.has(clicker, faction, false);
+            });
         this.faction = faction;
         this.build();
     }
@@ -53,18 +53,18 @@ public final class ShopMenu extends PagedMenu {
         for (FeatureConfig.ShopOffer offer : service.getConfig().shopOffers()) {
             Material material = Material.matchMaterial(offer.material());
             ItemStack icon = new ItemStack(material == null || material.isAir()
-                    ? Material.CHEST : material);
+                ? Material.CHEST : material);
             ItemMeta meta = icon.getItemMeta();
             if (meta != null) {
                 meta.displayName(Main.main.txt.parse(Lang.shopItemName, offer.name()));
                 List<Component> lore = new ArrayList<Component>();
                 if (offer.type() == FeatureConfig.ShopOfferType.PERK) {
                     lore.add(Main.main.txt.parse(Lang.shopLorePerk,
-                            offer.perk().name().toLowerCase(java.util.Locale.ROOT)));
+                        offer.perk().name().toLowerCase(java.util.Locale.ROOT)));
                     lore.add(Main.main.txt.parse(Lang.shopLorePerkAmount,
-                            String.format(java.util.Locale.ROOT, "%.2f", offer.perkAmount())));
+                        String.format(java.util.Locale.ROOT, "%.2f", offer.perkAmount())));
                     lore.add(Main.main.txt.parse(Lang.shopLoreDuration,
-                            offer.durationMinutes()));
+                        offer.durationMinutes()));
                 } else {
                     lore.add(Main.main.txt.parse(Lang.shopLoreAmount, offer.amount()));
                 }
@@ -79,7 +79,7 @@ public final class ShopMenu extends PagedMenu {
             entries.add(new MenuItem(icon, clicker -> {
                 FPlayer fplayer = FPlayers.i.get(clicker);
                 FeatureService.Result result = service.buyShopOffer(fplayer, this.faction,
-                        offer.id());
+                    offer.id());
                 if (result == FeatureService.Result.SUCCESS) {
                     clicker.sendMessage(Main.main.txt.parse(Lang.shopPurchase));
                 } else {

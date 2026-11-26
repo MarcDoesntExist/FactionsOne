@@ -11,14 +11,6 @@ import com.massivecraft.factions.struct.Rel;
  */
 public final class BetrayalRules {
 
-    public enum Outcome {
-        NONE,
-        BLOCK_DIRECT_WAR,
-        RECORD_BREAK,
-        CLEAR_BREAK,
-        PENALIZE
-    }
-
     private BetrayalRules() {
     }
 
@@ -47,5 +39,13 @@ public final class BetrayalRules {
             return Outcome.PENALIZE;
         }
         return Outcome.NONE;
+    }
+
+    public enum Outcome {
+        NONE,
+        BLOCK_DIRECT_WAR,
+        RECORD_BREAK,
+        CLEAR_BREAK,
+        PENALIZE
     }
 }

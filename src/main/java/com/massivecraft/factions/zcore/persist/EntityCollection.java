@@ -11,8 +11,13 @@ import org.bukkit.Bukkit;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -29,10 +34,15 @@ public abstract class EntityCollection<E extends Entity> {
     // FIELDS
     // -------------------------------------------- //
 
+    private static final Pattern UUID_PATTERN = Pattern.compile(
+        "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+    private static final Pattern LEGACY_NAME_PATTERN = Pattern.compile("[a-zA-Z0-9_]{2,16}");
     // These must be instantiated in order to allow for different configuration (orders, comparators etc)
     private final Collection<E> entities;
     // This ugly crap is necessary due to java type erasure
     private final Class<E> entityClass;
+    // Guards the one-time background conversion of legacy player names to UUIDs.
+    private final AtomicBoolean uuidMigrationScheduled = new AtomicBoolean(false);
     protected Map<String, E> id2entity;
     // If the entities are creative they will create a new instance if a non existent id was requested
     private boolean creative;
@@ -41,11 +51,6 @@ public abstract class EntityCollection<E extends Entity> {
     // Info on how to persist
     private Gson gson;
     private File file;
-    private static final Pattern UUID_PATTERN = Pattern.compile(
-            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
-    private static final Pattern LEGACY_NAME_PATTERN = Pattern.compile("[a-zA-Z0-9_]{2,16}");
-    // Guards the one-time background conversion of legacy player names to UUIDs.
-    private final AtomicBoolean uuidMigrationScheduled = new AtomicBoolean(false);
 
     public EntityCollection(Class<E> entityClass, Collection<E> entities, Map<String, E> id2entity,
                             File file, Gson gson, boolean creative) {
@@ -212,7 +217,7 @@ public abstract class EntityCollection<E extends Entity> {
             return true;
         } catch (RuntimeException ex) {
             Bukkit.getLogger().log(Level.WARNING,
-                    "[Factions] Could not queue a save for \"" + this.file + "\": " + ex.getMessage());
+                "[Factions] Could not queue a save for \"" + this.file + "\": " + ex.getMessage());
             return false;
         }
     }
@@ -270,14 +275,14 @@ public abstract class EntityCollection<E extends Entity> {
             }
             if (!invalidNames.isEmpty()) {
                 Bukkit.getLogger().log(Level.INFO, "[Factions] Removed " + invalidNames.size()
-                        + " invalid player entries while loading: " + String.join(", ", invalidNames));
+                    + " invalid player entries while loading: " + String.join(", ", invalidNames));
             }
             if (!list.isEmpty()) {
                 // Never block the server start on the Mojang API. The entries stay keyed
                 // by name until the conversion finishes; a player who joins meanwhile is
                 // migrated immediately with his real UUID (see #migrateEntityId).
                 Bukkit.getLogger().log(Level.INFO, "[Factions] Converting " + list.size()
-                        + " old player names to UUID in the background.");
+                    + " old player names to UUID in the background.");
                 this.scheduleUuidMigration(list, content);
             }
             return (Map<String, E>) data;
@@ -291,7 +296,7 @@ public abstract class EntityCollection<E extends Entity> {
 
     private Map<String, E> handleCorrupt(Exception ex) {
         Bukkit.getLogger().log(Level.WARNING,
-                "JSON error encountered loading \"" + this.file + "\": " + ex.getLocalizedMessage());
+            "JSON error encountered loading \"" + this.file + "\": " + ex.getLocalizedMessage());
 
         // Back up the bad file so the user can recover it; never replace it with empty state.
         File backup = new File(this.file.getPath() + "_bad");
@@ -319,20 +324,20 @@ public abstract class EntityCollection<E extends Entity> {
                 DiscUtil.write(backup, originalContent);
             } catch (IOException ex) {
                 Bukkit.getLogger().log(Level.WARNING, "[Factions] Could not back up " + this.file
-                        + " to " + backup + "; legacy player names were left untouched: "
-                        + ex.getMessage());
+                    + " to " + backup + "; legacy player names were left untouched: "
+                    + ex.getMessage());
                 this.uuidMigrationScheduled.set(false);
                 return;
             }
             Bukkit.getLogger().log(Level.INFO,
-                    "[Factions] Backed up old player data at " + backup.getAbsolutePath());
+                "[Factions] Backed up old player data at " + backup.getAbsolutePath());
 
             Map<String, UUID> response;
             try {
                 response = new UUIDFetcher(names).call();
             } catch (Exception ex) {
                 Bukkit.getLogger().log(Level.WARNING,
-                        "[Factions] Could not convert old player names to UUID now: " + ex.getMessage());
+                    "[Factions] Could not convert old player names to UUID now: " + ex.getMessage());
                 this.uuidMigrationScheduled.set(false);
                 return;
             }
@@ -381,8 +386,8 @@ public abstract class EntityCollection<E extends Entity> {
 
         if (!removed.isEmpty()) {
             Bukkit.getLogger().log(Level.INFO,
-                    "[Factions] Removed player entries without a valid UUID: "
-                            + String.join(", ", removed));
+                "[Factions] Removed player entries without a valid UUID: "
+                    + String.join(", ", removed));
         }
         this.saveToDisc();
         Bukkit.getLogger().log(Level.INFO, "[Factions] Done converting old player names to UUID.");
@@ -407,7 +412,7 @@ public abstract class EntityCollection<E extends Entity> {
         entity.setId(newId);
         this.id2entity.put(newId, entity);
         Bukkit.getLogger().log(Level.INFO,
-                "[Factions] Moved legacy player data from \"" + oldId + "\" to " + newId);
+            "[Factions] Moved legacy player data from \"" + oldId + "\" to " + newId);
         this.saveToDisc();
     }
 

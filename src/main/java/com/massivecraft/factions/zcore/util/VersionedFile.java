@@ -31,8 +31,8 @@ public final class VersionedFile {
     public static final int LEGACY_VERSION = 1;
 
     private static final DateTimeFormatter TIMESTAMP = DateTimeFormatter
-            .ofPattern("yyyyMMdd-HHmmss-SSS")
-            .withZone(ZoneOffset.UTC);
+        .ofPattern("yyyyMMdd-HHmmss-SSS")
+        .withZone(ZoneOffset.UTC);
 
     private VersionedFile() {
     }
@@ -66,7 +66,7 @@ public final class VersionedFile {
     public static int version(JsonObject root) {
         JsonElement value = root == null ? null : root.get("version");
         if (value == null || !value.isJsonPrimitive()
-                || !value.getAsJsonPrimitive().isNumber()) {
+            || !value.getAsJsonPrimitive().isNumber()) {
             return LEGACY_VERSION;
         }
         return value.getAsInt();
@@ -99,11 +99,11 @@ public final class VersionedFile {
                 Files.move(file, target);
             }
             logger.severe("Moved corrupt data file " + file.toAbsolutePath()
-                    + " to " + target.toAbsolutePath() + "; starting from empty state.");
+                + " to " + target.toAbsolutePath() + "; starting from empty state.");
             return target;
         } catch (IOException exception) {
             logger.log(Level.SEVERE, "Could not quarantine corrupt data file " + file,
-                    exception);
+                exception);
             return null;
         }
     }
@@ -113,7 +113,7 @@ public final class VersionedFile {
      */
     public static boolean write(Path file, String content, Logger logger) {
         Path temporary = file.resolveSibling(
-                file.getFileName() + "." + UUID.randomUUID() + ".tmp");
+            file.getFileName() + "." + UUID.randomUUID() + ".tmp");
         try {
             Path parent = file.getParent();
             if (parent != null) {
@@ -122,7 +122,7 @@ public final class VersionedFile {
             Files.writeString(temporary, content, StandardCharsets.UTF_8);
             try {
                 Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.ATOMIC_MOVE);
+                    StandardCopyOption.ATOMIC_MOVE);
             } catch (AtomicMoveNotSupportedException | UnsupportedOperationException fallback) {
                 Files.move(temporary, file, StandardCopyOption.REPLACE_EXISTING);
             }

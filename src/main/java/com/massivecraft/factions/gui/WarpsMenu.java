@@ -30,12 +30,12 @@ public final class WarpsMenu extends PagedMenu {
 
     private WarpsMenu(Player player, GuiConfig config, Faction faction) {
         super(player, config, config.title("menu.warps.title", "<aqua>Warps"),
-                config.rows("menu.warps.rows", 6),
-                clicker -> {
-                    FPlayer fplayer = FPlayers.i.get(clicker);
-                    return fplayer != null && fplayer.getFaction() == faction
-                            && FPerm.WARP.has(clicker, faction, false);
-                });
+            config.rows("menu.warps.rows", 6),
+            clicker -> {
+                FPlayer fplayer = FPlayers.i.get(clicker);
+                return fplayer != null && fplayer.getFaction() == faction
+                    && FPerm.WARP.has(clicker, faction, false);
+            });
         this.faction = faction;
         this.build();
     }
@@ -57,17 +57,17 @@ public final class WarpsMenu extends PagedMenu {
                 meta.displayName(Main.main.txt.parse("<aqua>%s", warp.getName()));
                 List<Component> lore = new ArrayList<Component>();
                 lore.add(Main.main.txt.parse("<gray>World: <white>%s",
-                        warp.getLocation().getWorldName()));
+                    warp.getLocation().getWorldName()));
                 lore.add(Main.main.txt.parse(warp.hasPassword()
-                        ? "<gray>Password required; use /f warp %s <password>"
-                        : "<yellow>Click to teleport", warp.getName()));
+                    ? "<gray>Password required; use /f warp %s <password>"
+                    : "<yellow>Click to teleport", warp.getName()));
                 meta.lore(lore);
                 icon.setItemMeta(meta);
             }
             entries.add(new MenuItem(icon, clicker -> {
                 if (warp.hasPassword()) {
                     clicker.sendMessage(Main.main.txt.parse(
-                            "<b>Use /f warp %s <password>.", warp.getName()));
+                        "<b>Use /f warp %s <password>.", warp.getName()));
                     return;
                 }
                 Main.main.warpService.teleport(FPlayers.i.get(clicker), warp.getName(), null);

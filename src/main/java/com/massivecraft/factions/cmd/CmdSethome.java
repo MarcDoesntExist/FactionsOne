@@ -47,21 +47,21 @@ public class CmdSethome extends FCommand {
 
         // Can the player set the faction home HERE?
         if (!fme.hasAdminMode() && Conf.homesMustBeInClaimedTerritory
-                && Board.getFactionAt(new FLocation(me)) != faction) {
+            && Board.getFactionAt(new FLocation(me)) != faction) {
             fme.msg(
-                    "<b>Sorry, your faction home can only be set inside your own claimed territory.");
+                "<b>Sorry, your faction home can only be set inside your own claimed territory.");
             return;
         }
 
         // if economy is enabled, they're not on the bypass list, and this command has a cost set, make 'em pay
         if (!payForCommand(Conf.econCostSethome, "to set the faction home",
-                "for setting the faction home"))
+            "for setting the faction home"))
             return;
 
         faction.setHome(me.getLocation());
 
         faction.msg("%s<i> set the home for your faction. You can now use:",
-                fme.describeTo(myFaction, true));
+            fme.describeTo(myFaction, true));
         faction.sendMessage(p.cmdBase.cmdHome.getUseageTemplate());
         if (faction != myFaction) {
             fme.msg("<b>You have set the home for the " + faction.getTag(fme) + "<i> faction.");

@@ -3,11 +3,11 @@ package com.massivecraft.factions.gui;
 import com.destroystokyo.paper.profile.PlayerProfile;
 import com.destroystokyo.paper.profile.ProfileProperty;
 import com.massivecraft.factions.Main;
+import io.papermc.paper.registry.RegistryAccess;
+import io.papermc.paper.registry.RegistryKey;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import io.papermc.paper.registry.RegistryAccess;
-import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
@@ -40,6 +40,11 @@ public final class GuiItemFactory {
 
     public GuiItemFactory(Main plugin) {
         this.plugin = plugin;
+    }
+
+    private static String encodeTextureUrl(String url) {
+        String json = "{\"textures\":{\"SKIN\":{\"url\":\"" + url + "\"}}}";
+        return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
     }
 
     public ItemStack create(ConfigurationSection section, Player viewer) {
@@ -155,12 +160,12 @@ public final class GuiItemFactory {
         String texture = head.getString("texture");
         if (texture != null && !texture.isBlank()) {
             String value = texture.startsWith("http")
-                    ? encodeTextureUrl(texture)
-                    : texture;
+                ? encodeTextureUrl(texture)
+                : texture;
             String signature = head.getString("signature");
             profile.setProperty(signature == null
-                    ? new ProfileProperty("textures", value)
-                    : new ProfileProperty("textures", value, signature));
+                ? new ProfileProperty("textures", value)
+                : new ProfileProperty("textures", value, signature));
         }
 
         skull.setPlayerProfile(profile);
@@ -174,8 +179,8 @@ public final class GuiItemFactory {
         for (String key : enchantments.getKeys(false)) {
             NamespacedKey namespacedKey = NamespacedKey.fromString(key.toLowerCase(Locale.ROOT));
             Enchantment enchantment = namespacedKey == null ? null
-                    : RegistryAccess.registryAccess()
-                    .getRegistry(RegistryKey.ENCHANTMENT).get(namespacedKey);
+                : RegistryAccess.registryAccess()
+                .getRegistry(RegistryKey.ENCHANTMENT).get(namespacedKey);
             if (enchantment == null) {
                 this.plugin.getLogger().warning("Unknown menu enchantment: " + key);
                 continue;
@@ -196,10 +201,5 @@ public final class GuiItemFactory {
 
     private Component parse(String text, Player viewer) {
         return this.plugin.txt.parse(text, viewer);
-    }
-
-    private static String encodeTextureUrl(String url) {
-        String json = "{\"textures\":{\"SKIN\":{\"url\":\"" + url + "\"}}}";
-        return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
     }
 }

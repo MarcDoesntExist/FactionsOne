@@ -55,7 +55,7 @@ public class CmdMailSend extends FCommand {
         } else {
             Faction faction = fme == null ? null : fme.getFaction();
             sourceAccount = faction != null && faction.isNormal()
-                    ? faction.getAccountId() : fme.getAccountId();
+                ? faction.getAccountId() : fme.getAccountId();
         }
         if (!BankService.get().debitAccount(sourceAccount, amount)) {
             msg(Lang.mailboxSendFailed);
@@ -64,7 +64,7 @@ public class CmdMailSend extends FCommand {
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
         FactionMailbox.Claim claim = Main.main.mailbox.enqueue(target.getUniqueId().toString(),
-                amount, sourceAccount, sender.getName(), this.argAsString(2, "mail"));
+            amount, sourceAccount, sender.getName(), this.argAsString(2, "mail"));
         if (claim == null) {
             BankService.get().creditAccount(sourceAccount, amount);
             msg(Lang.mailboxFull);
@@ -72,6 +72,6 @@ public class CmdMailSend extends FCommand {
         }
         msg(Lang.mailboxSent, BankService.get().format(claim.amount()), targetName);
         Main.main.log(sender.getName() + " queued " + claim.amount() + " for " + targetName
-                + " in the mailbox.");
+            + " in the mailbox.");
     }
 }

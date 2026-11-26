@@ -28,13 +28,13 @@ public final class PermEditorMenu extends Menu {
 
     public PermEditorMenu(Player player, GuiConfig config, Faction faction, FPerm perm) {
         super(player, Main.main.txt.parse(config.text("menu.perm-editor.title",
-                        "<gold>Permissions: <white>%s"), perm.getNicename()),
-                config.rows("menu.perm-editor.rows", 3),
-                clicker -> {
-                    com.massivecraft.factions.FPlayer fplayer = com.massivecraft.factions.FPlayers.i.get(clicker);
-                    return fplayer != null && fplayer.getFaction() == faction
-                            && FPerm.PERMS.has(clicker, faction, false);
-                });
+                "<gold>Permissions: <white>%s"), perm.getNicename()),
+            config.rows("menu.perm-editor.rows", 3),
+            clicker -> {
+                com.massivecraft.factions.FPlayer fplayer = com.massivecraft.factions.FPlayers.i.get(clicker);
+                return fplayer != null && fplayer.getFaction() == faction
+                    && FPerm.PERMS.has(clicker, faction, false);
+            });
         this.config = config;
         this.faction = faction;
         this.perm = perm;
@@ -48,10 +48,10 @@ public final class PermEditorMenu extends Menu {
         for (int slot = 0; slot < relations.length; slot++) {
             Rel rel = relations[slot];
             this.setItem(slot, this.roleIcon(rel, permitted.contains(rel)),
-                    clicker -> this.toggle(clicker, rel));
+                clicker -> this.toggle(clicker, rel));
         }
         this.setItem(22, this.config.item("navigation.back", this.getPlayer()),
-                clicker -> new PermsMenu(clicker, this.config).open());
+            clicker -> new PermsMenu(clicker, this.config).open());
     }
 
     private ItemStack roleIcon(Rel rel, boolean enabled) {
@@ -59,7 +59,7 @@ public final class PermEditorMenu extends Menu {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             meta.displayName(Main.main.txt.parse(this.config.text("menu.perm-editor.role-name",
-                    "<white>%s"), rel.name()));
+                "<white>%s"), rel.name()));
             List<Component> lore = new ArrayList<Component>();
             for (String line : this.config.list("menu.perm-editor.role-lore")) {
                 lore.add(Main.main.txt.parse(line, enabled ? "allowed" : "denied"));
@@ -77,7 +77,7 @@ public final class PermEditorMenu extends Menu {
         boolean enabled = !this.faction.getPermittedRelations(this.perm).contains(rel);
         this.faction.setRelationPermitted(this.perm, rel, enabled);
         this.faction.addLog(player.getName(), "PERM",
-                this.perm.name() + " " + rel.name() + "=" + enabled);
+            this.perm.name() + " " + rel.name() + "=" + enabled);
 
         // Keep the leader able to change permissions when the matrix is edited
         // through the GUI, matching /f perm's safeguard.

@@ -3,8 +3,8 @@ package com.massivecraft.factions.cmd;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.Faction;
-import com.massivecraft.factions.zcore.Lang;
 import com.massivecraft.factions.struct.Permission;
+import com.massivecraft.factions.zcore.Lang;
 
 /**
  * @author drtshock
@@ -43,24 +43,24 @@ public class CmdPower extends FCommand {
 
         // if economy is enabled, they're not on the bypass list, and this command has a cost set, make 'em pay
         if (!payForCommand(Conf.econCostPower, "to show player power info",
-                "for showing player power info"))
+            "for showing player power info"))
             return;
 
         double powerBoost = target.getPowerBoost();
         String boost = (powerBoost == 0.0) ?
-                "" :
-                (powerBoost > 0.0 ? " (bonus: " : " (penalty: ") + powerBoost + ")";
+            "" :
+            (powerBoost > 0.0 ? " (bonus: " : " (penalty: ") + powerBoost + ")";
         msg("%s<a> - Power / Maxpower: <i>%d / %d %s", target.describeTo(fme, true),
-                target.getPowerRounded(), target.getPowerMaxRounded(), boost);
+            target.getPowerRounded(), target.getPowerMaxRounded(), boost);
 
         Faction faction = target.getFaction();
         if (faction != null && faction.isNormal()) {
             double factionBoost = faction.getPowerBoost();
             String factionBonus = factionBoost == 0.0 ? "0"
-                    : (factionBoost > 0.0 ? "+" : "") + factionBoost;
+                : (factionBoost > 0.0 ? "+" : "") + factionBoost;
             msg(Lang.powerFactionBreakdown, faction.getPowerRounded(),
-                    faction.getPowerMaxRounded(), faction.getFPlayers().size(),
-                    faction.getLandRounded(), factionBonus);
+                faction.getPowerMaxRounded(), faction.getFPlayers().size(),
+                faction.getLandRounded(), factionBonus);
         }
     }
 

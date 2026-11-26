@@ -65,9 +65,9 @@ public class CmdPowerBoost extends FCommand {
         }
 
         msg("<i>" + target + " now has a power bonus/penalty of " + targetPower
-                + " to min and max power levels.");
+            + " to min and max power levels.");
         if (!senderIsConsole)
             Main.main.log(fme.getName() + " has set the power bonus/penalty for " + target + " to "
-                    + targetPower + ".");
+                + targetPower + ".");
     }
 }

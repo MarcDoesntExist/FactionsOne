@@ -30,7 +30,7 @@ final class Migrations {
                     // migrated by the owning stores after the folder snapshot.
                 }
                 default -> throw new IOException(
-                        "No migration registered for data version " + target);
+                    "No migration registered for data version " + target);
             }
         }
     }

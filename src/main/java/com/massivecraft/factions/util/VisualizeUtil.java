@@ -9,7 +9,15 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Sends fake blocks to a player. The changes are queued per player and sent in

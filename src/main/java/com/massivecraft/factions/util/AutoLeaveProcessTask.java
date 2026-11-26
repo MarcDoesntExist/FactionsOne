@@ -1,6 +1,10 @@
 package com.massivecraft.factions.util;
 
-import com.massivecraft.factions.*;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.Rel;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -31,7 +35,7 @@ public class AutoLeaveProcessTask extends BukkitRunnable {
 
     public void run() {
         if (Conf.autoLeaveAfterDaysOfInactivity <= 0.0
-                || Conf.autoLeaveRoutineMaxMillisecondsPerTick <= 0.0) {
+            || Conf.autoLeaveRoutineMaxMillisecondsPerTick <= 0.0) {
             this.stop();
             return;
         }
@@ -56,7 +60,7 @@ public class AutoLeaveProcessTask extends BukkitRunnable {
             if (fplayer.isOffline() && now - fplayer.getLastLoginTime() > toleranceMillis) {
                 if (Conf.logFactionLeave || Conf.logFactionKick)
                     Main.main.log(
-                            "Player " + fplayer.getName() + " was auto-removed due to inactivity.");
+                        "Player " + fplayer.getName() + " was auto-removed due to inactivity.");
 
                 // if player is faction leader, sort out the faction since he's going away
                 if (fplayer.getRole() == Rel.LEADER) {

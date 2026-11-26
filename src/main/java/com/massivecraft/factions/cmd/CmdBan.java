@@ -58,7 +58,7 @@ public class CmdBan extends FCommand {
                 return;
             }
             if (target.getRole() == Rel.COLEADER && fme.getRole() != Rel.LEADER
-                    && !fme.hasAdminMode()) {
+                && !fme.hasAdminMode()) {
                 msg("<b>Only the faction leader can ban a co-leader.");
                 return;
             }
@@ -68,7 +68,7 @@ public class CmdBan extends FCommand {
             }
 
             FPlayerLeaveEvent event = new FPlayerLeaveEvent(target, myFaction,
-                    FPlayerLeaveEvent.PlayerLeaveReason.KICKED);
+                FPlayerLeaveEvent.PlayerLeaveReason.KICKED);
             Bukkit.getServer().getPluginManager().callEvent(event);
             if (event.isCancelled()) {
                 return;
@@ -81,13 +81,13 @@ public class CmdBan extends FCommand {
         myFaction.ban(target);
         myFaction.addLog(fme.getName(), "BAN", target.getName());
         target.msg("%s<i> banned you from %s.", fme.describeTo(target, true),
-                myFaction.describeTo(target));
+            myFaction.describeTo(target));
         myFaction.msg("%s<i> banned %s<i> from joining the faction.", fme.describeTo(myFaction, true),
-                target.describeTo(myFaction));
+            target.describeTo(myFaction));
 
         if (Conf.logFactionKick) {
             Main.main.log(fme.getName() + " banned " + target.getName() + " from the faction: "
-                    + myFaction.getTagPlain());
+                + myFaction.getTagPlain());
         }
     }
 }

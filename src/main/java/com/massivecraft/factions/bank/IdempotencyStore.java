@@ -81,7 +81,7 @@ public final class IdempotencyStore {
         long cutoff = now - Math.max(0L, retentionMillis);
         int before = this.claimedAt.size();
         this.claimedAt.entrySet().removeIf(entry -> entry.getValue() <= cutoff
-                && !protect.test(entry.getKey()));
+            && !protect.test(entry.getKey()));
         int removed = before - this.claimedAt.size();
         if (removed > 0) {
             save();
@@ -109,7 +109,7 @@ public final class IdempotencyStore {
             // Oldest format: a JSON array of keys without timestamps.
             for (JsonElement item : element.getAsJsonArray()) {
                 if (item != null && item.isJsonPrimitive()
-                        && item.getAsJsonPrimitive().isString()) {
+                    && item.getAsJsonPrimitive().isString()) {
                     String key = item.getAsString();
                     if (!key.isBlank()) {
                         this.claimedAt.putIfAbsent(key, now);
@@ -121,8 +121,8 @@ public final class IdempotencyStore {
             version = VersionedFile.version(root);
             if (version > CURRENT_VERSION) {
                 this.logger.severe("Idempotency store " + this.file + " uses version "
-                        + version + " but this build supports " + CURRENT_VERSION
-                        + "; leaving it untouched.");
+                    + version + " but this build supports " + CURRENT_VERSION
+                    + "; leaving it untouched.");
                 return;
             }
             Storage storage;
@@ -130,14 +130,14 @@ public final class IdempotencyStore {
                 storage = this.gson.fromJson(root, Storage.class);
             } catch (RuntimeException exception) {
                 this.logger.log(Level.SEVERE,
-                        "Could not parse idempotency store " + this.file, exception);
+                    "Could not parse idempotency store " + this.file, exception);
                 VersionedFile.quarantine(this.file, this.logger);
                 return;
             }
             if (storage != null && storage.entries != null) {
                 for (Map.Entry<String, Long> entry : storage.entries.entrySet()) {
                     if (entry.getKey() != null && !entry.getKey().isBlank()
-                            && entry.getValue() != null) {
+                        && entry.getValue() != null) {
                         this.claimedAt.put(entry.getKey(), entry.getValue());
                     }
                 }
@@ -159,17 +159,17 @@ public final class IdempotencyStore {
             VersionedFile.backup(this.file);
             if (save()) {
                 this.logger.info("Migrated idempotency store " + this.file
-                        + " from version " + version + " to " + CURRENT_VERSION);
+                    + " from version " + version + " to " + CURRENT_VERSION);
             } else {
                 this.logger.warning("Could not migrate idempotency store " + this.file
-                        + " to version " + CURRENT_VERSION);
+                    + " to version " + CURRENT_VERSION);
             }
         }
     }
 
     private boolean save() {
         return VersionedFile.write(this.file, this.gson.toJson(new Storage(this.claimedAt)),
-                this.logger);
+            this.logger);
     }
 
     /**

@@ -1,6 +1,12 @@
 package com.massivecraft.factions.struct;
 
-import com.massivecraft.factions.*;
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.iface.RelationParticipator;
 import org.bukkit.Location;
 import org.bukkit.command.ConsoleCommandSender;
@@ -24,14 +30,14 @@ import java.util.Set;
  */
 public enum FPerm {
     BUILD("build", "edit the terrain", Rel.LEADER, Rel.COLEADER, Rel.OFFICER, Rel.MEMBER,
-            Rel.RECRUIT, Rel.ALLY),
+        Rel.RECRUIT, Rel.ALLY),
     PAINBUILD("painbuild", "edit, take damage"),
     DOOR("door", "use doors", Rel.LEADER, Rel.COLEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
-            Rel.ALLY),
+        Rel.ALLY),
     BUTTON("button", "use stone buttons", Rel.LEADER, Rel.COLEADER, Rel.OFFICER, Rel.MEMBER,
-            Rel.RECRUIT, Rel.ALLY),
+        Rel.RECRUIT, Rel.ALLY),
     LEVER("lever", "use levers", Rel.LEADER, Rel.COLEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
-            Rel.ALLY),
+        Rel.ALLY),
     CONTAINER("container", "use containers", Rel.LEADER, Rel.COLEADER, Rel.OFFICER, Rel.MEMBER),
     INVITE("invite", "invite players", Rel.LEADER, Rel.COLEADER, Rel.OFFICER),
     KICK("kick", "kick members", Rel.LEADER, Rel.COLEADER, Rel.OFFICER),
@@ -46,30 +52,30 @@ public enum FPerm {
     SETWARP("setwarp", "set faction warps", Rel.LEADER, Rel.COLEADER, Rel.OFFICER),
     FLY("fly", "fly in faction territory", Rel.LEADER, Rel.COLEADER, Rel.OFFICER, Rel.MEMBER),
     BANK_DEPOSIT("bankdeposit", "deposit into the faction bank", Rel.LEADER, Rel.COLEADER,
-            Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT),
+        Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT),
     BANK_WITHDRAW("bankwithdraw", "withdraw from the faction bank", Rel.LEADER, Rel.COLEADER,
-            Rel.OFFICER),
+        Rel.OFFICER),
     TNT_DEPOSIT("tntdeposit", "deposit TNT into the faction bank", Rel.LEADER, Rel.COLEADER,
-            Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT),
+        Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT),
     TNT_WITHDRAW("tntwithdraw", "withdraw TNT from the faction bank", Rel.LEADER, Rel.COLEADER,
-            Rel.OFFICER),
+        Rel.OFFICER),
     UPGRADE("upgrade", "upgrade the faction", Rel.LEADER, Rel.COLEADER),
     SHOP("shop", "use the faction shop", Rel.LEADER, Rel.COLEADER, Rel.OFFICER, Rel.MEMBER,
-            Rel.RECRUIT),
+        Rel.RECRUIT),
     MISSIONS("missions", "manage faction missions", Rel.LEADER, Rel.COLEADER, Rel.OFFICER,
-            Rel.MEMBER, Rel.RECRUIT),
+        Rel.MEMBER, Rel.RECRUIT),
     CHAT_ALLY("chatally", "use the ally chat channel", Rel.LEADER, Rel.COLEADER, Rel.OFFICER,
-            Rel.MEMBER, Rel.RECRUIT),
+        Rel.MEMBER, Rel.RECRUIT),
     LOGS("logs", "view faction logs", Rel.LEADER, Rel.COLEADER, Rel.OFFICER),
     BAN("ban", "ban players from the faction", Rel.LEADER, Rel.COLEADER, Rel.OFFICER),
     MENU_MEMBERS("menumembers", "open the members menu", Rel.LEADER, Rel.COLEADER, Rel.OFFICER,
-            Rel.MEMBER, Rel.RECRUIT),
+        Rel.MEMBER, Rel.RECRUIT),
     MENU_PERMS("menuperms", "open the permissions menu", Rel.LEADER, Rel.COLEADER),
     ;
 
     // Perms which apply strictly to granting territory access
     private static final Set<FPerm> TerritoryPerms =
-            EnumSet.of(BUILD, DOOR, BUTTON, LEVER, CONTAINER);
+        EnumSet.of(BUILD, DOOR, BUTTON, LEVER, CONTAINER);
     private static final String errorpattern = "%s<b> does not allow you to %s<b>.";
     public final Set<Rel> defaultDefaultValue;
     private final String nicename;
@@ -88,7 +94,7 @@ public enum FPerm {
         }
 
         String normalized = str.trim().toLowerCase(Locale.ROOT)
-                .replace("_", "").replace("-", "").replace(".", "").replace(" ", "");
+            .replace("_", "").replace("-", "").replace(".", "").replace(" ", "");
         if (normalized.isEmpty()) {
             return null;
         }
@@ -233,15 +239,14 @@ public enum FPerm {
         // TODO: Create better description messages like: "You must at least be officer".
         boolean ret = hostFaction.getPermittedRelations(this).contains(rel);
 
-        if (rpSubject instanceof FPlayer && ret == false && ((FPlayer) rpSubject).hasAdminMode())
+        if (rpSubject instanceof FPlayer && !ret && ((FPlayer) rpSubject).hasAdminMode())
             ret = true;
 
-        if (!ret && informIfNot && rpSubject instanceof FPlayer) {
-            FPlayer fplayer = (FPlayer) rpSubject;
+        if (!ret && informIfNot && rpSubject instanceof final FPlayer fplayer) {
             fplayer.msg(errorpattern, hostFaction.describeTo(fplayer, true), this.getDescription());
             if (Permission.ADMIN.has(fplayer.getPlayer())) {
                 fplayer.msg("<i>You can bypass by using " + Main.main.cmdBase.cmdBypass
-                        .getUseageTemplate(false));
+                    .getUseageTemplate(false));
             }
         }
         return ret;
@@ -265,7 +270,7 @@ public enum FPerm {
                         notify = (FPlayer) testSubject;
                     if (notify != null)
                         notify
-                                .msg("<b>This territory owned by your faction has restricted access.");
+                            .msg("<b>This territory owned by your faction has restricted access.");
                 }
                 return false;
             }

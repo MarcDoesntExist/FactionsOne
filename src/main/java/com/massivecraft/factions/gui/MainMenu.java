@@ -18,7 +18,7 @@ public final class MainMenu extends Menu {
 
     public MainMenu(Player player, GuiConfig config) {
         super(player, config.title("menu.main.title", "<gradient:#ffd166:#ef476f>Factions</gradient>"),
-                config.rows("menu.main.rows", 5), ignored -> true);
+            config.rows("menu.main.rows", 5), ignored -> true);
         this.config = config;
 
         this.setItem(this.slot("info", 4), config.item("main.info", player), this::openInfo);
@@ -33,6 +33,11 @@ public final class MainMenu extends Menu {
         this.setItem(this.slot("shop", 20), config.item("main.shop", player), this::openShop);
         this.setItem(this.slot("logs", 21), config.item("main.logs", player), this::openLogs);
         this.setItem(this.slot("close", 22), config.item("main.close", player), Player::closeInventory);
+    }
+
+    private static Faction factionOf(Player player) {
+        FPlayer fplayer = FPlayers.i.get(player);
+        return fplayer == null ? null : fplayer.getFaction();
     }
 
     private int slot(String key, int fallback) {
@@ -111,10 +116,5 @@ public final class MainMenu extends Menu {
             return;
         }
         new LogsMenu(player, this.config).open();
-    }
-
-    private static Faction factionOf(Player player) {
-        FPlayer fplayer = FPlayers.i.get(player);
-        return fplayer == null ? null : fplayer.getFaction();
     }
 }

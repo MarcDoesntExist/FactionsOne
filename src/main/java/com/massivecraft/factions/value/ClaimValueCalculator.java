@@ -22,8 +22,8 @@ public final class ClaimValueCalculator {
             return 0.0;
         }
         return sum(data.spawners(), spawnerValues)
-                + sum(data.containers(), containerValues)
-                + sum(data.items(), itemValues);
+            + sum(data.containers(), containerValues)
+            + sum(data.items(), itemValues);
     }
 
     private static double sum(Map<String, Integer> counts, Map<String, Double> values) {

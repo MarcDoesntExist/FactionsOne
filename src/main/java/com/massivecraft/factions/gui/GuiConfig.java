@@ -55,7 +55,7 @@ public final class GuiConfig {
     public ItemStack item(String key, Player viewer) {
         ConfigurationSection section = this.config.getConfigurationSection("items." + key);
         return section == null
-                ? new ItemStack(Material.BARRIER)
-                : this.itemFactory.create(section, viewer);
+            ? new ItemStack(Material.BARRIER)
+            : this.itemFactory.create(section, viewer);
     }
 }

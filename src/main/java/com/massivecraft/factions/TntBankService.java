@@ -20,24 +20,25 @@ import java.util.Map;
  */
 public final class TntBankService {
 
-    public enum Result {
-        SUCCESS,
-        NO_PERMISSION,
-        INVALID_AMOUNT,
-        NOT_ENOUGH_ITEMS,
-        FULL,
-        NO_SPACE,
-        NO_CONTAINER,
-        NO_PLAYER,
-        DISABLED
-    }
-
     private static final int MAX_RADIUS = 10;
-
     private final FeatureService features;
 
     public TntBankService(FeatureService features) {
         this.features = features;
+    }
+
+    public static String message(Result result) {
+        return switch (result) {
+            case SUCCESS -> Lang.featureSuccess;
+            case NO_PERMISSION -> Lang.featureNoPermission;
+            case INVALID_AMOUNT -> "<b>Enter a positive TNT amount.";
+            case NOT_ENOUGH_ITEMS -> "<b>There is not enough TNT.";
+            case FULL -> "<b>The faction TNT bank is full.";
+            case NO_SPACE -> Lang.featureNoSpace;
+            case NO_CONTAINER -> Lang.tntNoContainer;
+            case NO_PLAYER -> Lang.featureNoPlayer;
+            case DISABLED -> "<b>The TNT bank is disabled.";
+        };
     }
 
     public Result deposit(FPlayer fplayer, int requested) {
@@ -60,7 +61,7 @@ public final class TntBankService {
 
         int amount = Math.min(requested, room);
         Map<Integer, ItemStack> leftover = player.getInventory()
-                .removeItem(new ItemStack(Material.TNT, amount));
+            .removeItem(new ItemStack(Material.TNT, amount));
         int removed = amount - leftover.values().stream().mapToInt(ItemStack::getAmount).sum();
         if (removed <= 0) {
             return Result.NOT_ENOUGH_ITEMS;
@@ -90,7 +91,7 @@ public final class TntBankService {
         Player player = fplayer.getPlayer();
         faction.setTntBank(faction.getTntBank() - amount);
         Map<Integer, ItemStack> leftover = player.getInventory()
-                .addItem(new ItemStack(Material.TNT, amount));
+            .addItem(new ItemStack(Material.TNT, amount));
         int rejected = leftover.values().stream().mapToInt(ItemStack::getAmount).sum();
         if (rejected > 0) {
             faction.setTntBank(faction.getTntBank() + rejected);
@@ -145,7 +146,7 @@ public final class TntBankService {
                 moved += added;
                 remaining -= added;
                 Main.main.getLogger().fine("TNT fill added " + added + " to "
-                        + block.getLocation() + " for " + fplayer.getName());
+                    + block.getLocation() + " for " + fplayer.getName());
             }
         }
 
@@ -199,7 +200,7 @@ public final class TntBankService {
                 moved += removed;
                 remaining -= removed;
                 Main.main.getLogger().fine("TNT siphon removed " + removed + " from "
-                        + block.getLocation() + " for " + fplayer.getName());
+                    + block.getLocation() + " for " + fplayer.getName());
             }
         }
 
@@ -235,17 +236,15 @@ public final class TntBankService {
         return blocks;
     }
 
-    public static String message(Result result) {
-        return switch (result) {
-            case SUCCESS -> Lang.featureSuccess;
-            case NO_PERMISSION -> Lang.featureNoPermission;
-            case INVALID_AMOUNT -> "<b>Enter a positive TNT amount.";
-            case NOT_ENOUGH_ITEMS -> "<b>There is not enough TNT.";
-            case FULL -> "<b>The faction TNT bank is full.";
-            case NO_SPACE -> Lang.featureNoSpace;
-            case NO_CONTAINER -> Lang.tntNoContainer;
-            case NO_PLAYER -> Lang.featureNoPlayer;
-            case DISABLED -> "<b>The TNT bank is disabled.";
-        };
+    public enum Result {
+        SUCCESS,
+        NO_PERMISSION,
+        INVALID_AMOUNT,
+        NOT_ENOUGH_ITEMS,
+        FULL,
+        NO_SPACE,
+        NO_CONTAINER,
+        NO_PLAYER,
+        DISABLED
     }
 }

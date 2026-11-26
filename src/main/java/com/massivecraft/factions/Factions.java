@@ -7,10 +7,10 @@ import com.massivecraft.factions.shield.ShieldPolicy;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
+import com.massivecraft.factions.util.Color;
 import com.massivecraft.factions.util.MiscUtil;
 import com.massivecraft.factions.zcore.persist.EntityCollection;
 import com.massivecraft.factions.zcore.util.TextUtil;
-import com.massivecraft.factions.util.Color;
 import net.kyori.adventure.text.Component;
 
 import java.io.File;
@@ -37,8 +37,8 @@ public class Factions extends EntityCollection<Faction> {
 
     private Factions() {
         super(Faction.class, new CopyOnWriteArrayList<Faction>(),
-                new ConcurrentHashMap<String, Faction>(),
-                new File(Main.main.getDataFolder(), "factions.json"), Main.main.gson);
+            new ConcurrentHashMap<String, Faction>(),
+            new File(Main.main.getDataFolder(), "factions.json"), Main.main.gson);
     }
 
     public static ArrayList<Component> validateTag(String str) {
@@ -46,20 +46,20 @@ public class Factions extends EntityCollection<Faction> {
 
         if (MiscUtil.getComparisonString(str).length() < Conf.factionTagLengthMin) {
             errors.add(Main.main.txt
-                    .parse("<i>The faction tag can't be shorter than <h>%s<i> chars.",
-                            Conf.factionTagLengthMin));
+                .parse("<i>The faction tag can't be shorter than <h>%s<i> chars.",
+                    Conf.factionTagLengthMin));
         }
 
         if (str.length() > Conf.factionTagLengthMax) {
             errors.add(Main.main.txt
-                    .parse("<i>The faction tag can't be longer than <h>%s<i> chars.",
-                            Conf.factionTagLengthMax));
+                .parse("<i>The faction tag can't be longer than <h>%s<i> chars.",
+                    Conf.factionTagLengthMax));
         }
 
         for (char c : str.toCharArray()) {
             if (!MiscUtil.substanceChars.contains(String.valueOf(c))) {
                 errors.add(Main.main.txt
-                        .parse("<i>Faction tag must be alphanumeric. \"<h>%s<i>\" is not allowed.", c));
+                    .parse("<i>Faction tag must be alphanumeric. \"<h>%s<i>\" is not allowed.", c));
             }
         }
 
@@ -170,16 +170,16 @@ public class Factions extends EntityCollection<Faction> {
         faction.setFlag(FFlag.FIRE_FRIENDLY, true);
 
         faction.setPermittedRelations(FPerm.BUILD, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
-                Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
+            Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
         faction.setPermittedRelations(FPerm.DOOR, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
-                Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
+            Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
         faction.setPermittedRelations(FPerm.CONTAINER, Rel.LEADER, Rel.OFFICER, Rel.MEMBER,
-                Rel.RECRUIT, Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
+            Rel.RECRUIT, Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
         faction
-                .setPermittedRelations(FPerm.BUTTON, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
-                        Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
-        faction.setPermittedRelations(FPerm.LEVER, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
+            .setPermittedRelations(FPerm.BUTTON, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
                 Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
+        faction.setPermittedRelations(FPerm.LEVER, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
+            Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
     }
 
     public void setFlagsForSafeZone(Faction faction) {
@@ -202,14 +202,14 @@ public class Factions extends EntityCollection<Faction> {
         faction.setFlag(FFlag.FIRE_FRIENDLY, false);
 
         faction.setPermittedRelations(FPerm.DOOR, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
-                Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
+            Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
         faction.setPermittedRelations(FPerm.CONTAINER, Rel.LEADER, Rel.OFFICER, Rel.MEMBER,
-                Rel.RECRUIT, Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
+            Rel.RECRUIT, Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
         faction
-                .setPermittedRelations(FPerm.BUTTON, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
-                        Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
-        faction.setPermittedRelations(FPerm.LEVER, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
+            .setPermittedRelations(FPerm.BUTTON, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
                 Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
+        faction.setPermittedRelations(FPerm.LEVER, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
+            Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
         faction.setPermittedRelations(FPerm.TERRITORY, Rel.LEADER, Rel.OFFICER, Rel.MEMBER);
     }
 
@@ -238,14 +238,14 @@ public class Factions extends EntityCollection<Faction> {
         faction.setFlag(FFlag.FIRE_FRIENDLY, true);
 
         faction.setPermittedRelations(FPerm.DOOR, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
-                Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
+            Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
         faction.setPermittedRelations(FPerm.CONTAINER, Rel.LEADER, Rel.OFFICER, Rel.MEMBER,
-                Rel.RECRUIT, Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
+            Rel.RECRUIT, Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
         faction
-                .setPermittedRelations(FPerm.BUTTON, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
-                        Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
-        faction.setPermittedRelations(FPerm.LEVER, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
+            .setPermittedRelations(FPerm.BUTTON, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
                 Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
+        faction.setPermittedRelations(FPerm.LEVER, Rel.LEADER, Rel.OFFICER, Rel.MEMBER, Rel.RECRUIT,
+            Rel.ALLY, Rel.TRUCE, Rel.NEUTRAL, Rel.ENEMY);
         faction.setPermittedRelations(FPerm.TERRITORY, Rel.LEADER, Rel.OFFICER, Rel.MEMBER);
     }
 
@@ -253,7 +253,7 @@ public class Factions extends EntityCollection<Faction> {
     public Faction get(String id) {
         if (!this.exists(id)) {
             main.log(Level.WARNING,
-                    "Non existing factionId " + id + " requested! Issuing cleaning!");
+                "Non existing factionId " + id + " requested! Issuing cleaning!");
             Board.clean();
             FPlayers.i.clean();
         }
@@ -312,17 +312,17 @@ public class Factions extends EntityCollection<Faction> {
                 }
                 double reward = Conf.econLandReward * landCount / playerCount;
                 String reason = "for faction owning " + landCount + " land divided among "
-                        + playerCount + " member(s)";
+                    + playerCount + " member(s)";
                 for (FPlayer player : players) {
                     if (player.isOnline() || !Conf.mailboxEnabled || Main.main.mailbox == null) {
                         Econ.modifyMoney(player, reward, "to own faction land", reason);
                         continue;
                     }
                     FactionMailbox.Claim claim = Main.main.mailbox.enqueue(player.getId(), reward,
-                            "", "land-reward", reason);
+                        "", "land-reward", reason);
                     if (claim == null) {
                         Main.main.log("Mailbox full; could not queue the land reward for "
-                                + player.getName() + ".");
+                            + player.getName() + ".");
                     }
                 }
             }

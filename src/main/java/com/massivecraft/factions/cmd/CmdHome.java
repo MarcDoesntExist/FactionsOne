@@ -1,6 +1,11 @@
 package com.massivecraft.factions.cmd;
 
-import com.massivecraft.factions.*;
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.FPlayer;
+import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.integration.Essentials;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Permission;
@@ -49,27 +54,27 @@ public class CmdHome extends FCommand {
 
         if (!Conf.homesTeleportCommandEnabled) {
             fme.msg(
-                    "<b>Sorry, the ability to teleport to Faction homes is disabled on this server.");
+                "<b>Sorry, the ability to teleport to Faction homes is disabled on this server.");
             return;
         }
 
         if (!myFaction.hasHome()) {
             fme.msg(
-                    "<b>Your faction does not have a home. " + (fme.getRole().isLessThan(Rel.OFFICER) ?
-                            "<i> Ask your leader to:" :
-                            "<i>You should:"));
+                "<b>Your faction does not have a home. " + (fme.getRole().isLessThan(Rel.OFFICER) ?
+                    "<i> Ask your leader to:" :
+                    "<i>You should:"));
             fme.sendMessage(p.cmdBase.cmdSethome.getUseageTemplate());
             return;
         }
 
         if (!Conf.homesTeleportAllowedFromEnemyTerritory && fme.isInEnemyTerritory()) {
             fme.msg(
-                    "<b>You cannot teleport to your faction home while in the territory of an enemy faction.");
+                "<b>You cannot teleport to your faction home while in the territory of an enemy faction.");
             return;
         }
 
         if (!Conf.homesTeleportAllowedFromDifferentWorld && !me.getWorld().getUID()
-                .equals(myFaction.getHome().getWorld().getUID())) {
+            .equals(myFaction.getHome().getWorld().getUID())) {
             fme.msg("<b>You cannot teleport to your faction home while in a different world.");
             return;
         }
@@ -79,8 +84,8 @@ public class CmdHome extends FCommand {
 
         // if player is not in a safe zone or their own faction territory, only allow teleport if no enemies are nearby
         if (Conf.homesTeleportAllowedEnemyDistance > 0 && faction.getFlag(FFlag.PVP) && (
-                !fme.isInOwnTerritory() || (fme.isInOwnTerritory()
-                        && !Conf.homesTeleportIgnoreEnemiesIfInOwnTerritory))) {
+            !fme.isInOwnTerritory() || (fme.isInOwnTerritory()
+                && !Conf.homesTeleportIgnoreEnemiesIfInOwnTerritory))) {
             World w = loc.getWorld();
             double x = loc.getX();
             double y = loc.getY();
@@ -105,7 +110,7 @@ public class CmdHome extends FCommand {
                     continue;
 
                 fme.msg("<b>You cannot teleport to your faction home while an enemy is within "
-                        + Conf.homesTeleportAllowedEnemyDistance + " blocks of you.");
+                    + Conf.homesTeleportAllowedEnemyDistance + " blocks of you.");
                 return;
             }
         }
@@ -116,7 +121,7 @@ public class CmdHome extends FCommand {
 
         // if economy is enabled, they're not on the bypass list, and this command has a cost set, make 'em pay
         if (!payForCommand(Conf.econCostHome, "to teleport to your faction home",
-                "for teleporting to your faction home"))
+            "for teleporting to your faction home"))
             return;
 
         // Create a smoke effect

@@ -63,8 +63,8 @@ public class CmdShield extends FCommand {
             state = Lang.shieldInactive;
         } else {
             state = String.format(Lang.shieldState,
-                    shields.isGrace(faction) ? Lang.shieldGrace : Lang.shieldActive,
-                    shields.remainingMinutes(faction));
+                shields.isGrace(faction) ? Lang.shieldGrace : Lang.shieldActive,
+                shields.remainingMinutes(faction));
         }
         msg(Lang.shieldStatus, faction.getTagPlain(), state);
     }

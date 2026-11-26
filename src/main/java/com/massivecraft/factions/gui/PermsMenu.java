@@ -30,12 +30,12 @@ public final class PermsMenu extends PagedMenu {
 
     private PermsMenu(Player player, GuiConfig config, Faction faction) {
         super(player, config, config.title("menu.perms.title", "<gold>Permissions"),
-                config.rows("menu.perms.rows", 6),
-                clicker -> {
-                    FPlayer fplayer = FPlayers.i.get(clicker);
-                    return fplayer != null && fplayer.getFaction() == faction
-                            && FPerm.MENU_PERMS.has(clicker, faction, false);
-                });
+            config.rows("menu.perms.rows", 6),
+            clicker -> {
+                FPlayer fplayer = FPlayers.i.get(clicker);
+                return fplayer != null && fplayer.getFaction() == faction
+                    && FPerm.MENU_PERMS.has(clicker, faction, false);
+            });
         this.faction = faction;
         this.build();
     }
@@ -66,7 +66,7 @@ public final class PermsMenu extends PagedMenu {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             meta.displayName(Main.main.txt.parse(
-                    this.config.text("menu.perms.entry-name", "<aqua>%s"), perm.getNicename()));
+                this.config.text("menu.perms.entry-name", "<aqua>%s"), perm.getNicename()));
             List<Component> lore = new ArrayList<Component>();
             lore.add(Main.main.txt.parse(perm.getStateInfo(this.faction.getPermittedRelations(perm), true)));
             for (String line : this.config.list("menu.perms.entry-lore")) {

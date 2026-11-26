@@ -6,6 +6,7 @@ import com.massivecraft.factions.ChatChannelService;
 import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.FPlayers;
+import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.struct.Permission;
 import com.massivecraft.factions.struct.Rel;
@@ -17,7 +18,6 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import com.massivecraft.factions.Faction;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -37,10 +37,10 @@ import java.util.regex.Pattern;
  */
 public class FactionsChatListener implements Listener {
     public static final Pattern parsePattern =
-            Pattern.compile("[{\\[]factions?_([a-zA-Z_]+)[}\\]]");
+        Pattern.compile("[{\\[]factions?_([a-zA-Z_]+)[}\\]]");
 
     private static final LegacyComponentSerializer LEGACY =
-            LegacyComponentSerializer.legacySection();
+        LegacyComponentSerializer.legacySection();
     private static final Pattern FORMAT_PLACEHOLDER = Pattern.compile("%([0-9]+[$])?s");
 
     public Main main;
@@ -70,14 +70,14 @@ public class FactionsChatListener implements Listener {
             }
             Faction otherFaction = other.getFaction();
             String relation = otherFaction == null
-                    ? null
-                    : faction.getRelationTo(otherFaction).name();
+                ? null
+                : faction.getRelationTo(otherFaction).name();
             if (ChatChannelResolver.accepts(channel, faction.getId(),
-                    otherFaction == null ? null : otherFaction.getId(), relation)) {
+                otherFaction == null ? null : otherFaction.getId(), relation)) {
                 continue;
             }
             other.msg(Conf.chatSpyFormat, channel.name().toLowerCase(java.util.Locale.ROOT),
-                    sender.getName(), message);
+                sender.getName(), message);
             spies++;
         }
         return spies;
@@ -111,7 +111,7 @@ public class FactionsChatListener implements Listener {
             List<String> args = new ArrayList<String>(Arrays.asList(parts));
             String tag = args.remove(0);
             matcher.appendReplacement(ret,
-                    Matcher.quoteReplacement(produceTag(tag, args, from, fpfrom, to, fpto)));
+                Matcher.quoteReplacement(produceTag(tag, args, from, fpfrom, to, fpto)));
         }
         matcher.appendTail(ret);
 
@@ -171,7 +171,7 @@ public class FactionsChatListener implements Listener {
             event.setCancelled(true);
             String message = PlainTextComponentSerializer.plainText().serialize(event.message());
             Bukkit.getScheduler().runTask(this.main,
-                    () -> ChatChannelService.send(sender, channel, message));
+                () -> ChatChannelService.send(sender, channel, message));
             return;
         }
 
@@ -184,95 +184,82 @@ public class FactionsChatListener implements Listener {
         boolean composeWithPrevious = previous != ChatRenderer.defaultRenderer();
 
         event.renderer(new FactionsRenderer(
-                previous,
-                composeWithPrevious,
-                Conf.chatSetFormatTo,
-                Conf.chatParseTags && !Conf.chatTagHandledByAnotherPlugin,
-                Conf.chatParseTagsColored));
+            previous,
+            composeWithPrevious,
+            Conf.chatSetFormatTo,
+            Conf.chatParseTags && !Conf.chatTagHandledByAnotherPlugin,
+            Conf.chatParseTagsColored));
     }
 
-    private static final class FactionsRenderer implements ChatRenderer {
-        private final ChatRenderer previous;
-        private final boolean composeWithPrevious;
-        private final String format;
-        private final boolean parsePlaceholders;
-        private final boolean relationColors;
-
-        private FactionsRenderer(ChatRenderer previous, boolean composeWithPrevious, String format,
-                                 boolean parsePlaceholders, boolean relationColors) {
-            this.previous = previous;
-            this.composeWithPrevious = composeWithPrevious;
-            this.format = format;
-            this.parsePlaceholders = parsePlaceholders;
-            this.relationColors = relationColors;
-        }
+    private record FactionsRenderer(ChatRenderer previous, boolean composeWithPrevious, String format,
+                                    boolean parsePlaceholders, boolean relationColors) implements ChatRenderer {
 
         private static String formatPrefix(String format) {
-            try {
-                return String.format(format, "", "");
-            } catch (RuntimeException ignored) {
-                return "";
-            }
-        }
-
-        private static Component deserialize(String legacy) {
-            return LEGACY.deserialize(legacy);
-        }
-
-        /**
-         * Builds the configured layout as components. The legacy serializer only parses the
-         * configured format string; display name and message are already components.
-         * Supports both %s and positional %1$s/%2$s placeholders.
-         */
-        private static Component renderFormat(String format, Component displayName,
-                                               Component message) {
-            Matcher matcher = FORMAT_PLACEHOLDER.matcher(format);
-            Component ret = Component.empty();
-            int last = 0;
-            int next = 0;
-
-            while (matcher.find()) {
-                ret = ret.append(deserialize(format.substring(last, matcher.start())));
-                int arg;
-                if (matcher.group(1) != null) {
-                    String index = matcher.group(1);
-                    arg = Integer.parseInt(index.substring(0, index.length() - 1)) - 1;
-                } else {
-                    arg = next++;
+                try {
+                    return String.format(format, "", "");
+                } catch (RuntimeException ignored) {
+                    return "";
                 }
-                if (arg == 0) {
-                    ret = ret.append(displayName);
-                } else if (arg == 1) {
-                    ret = ret.append(message);
-                }
-                last = matcher.end();
             }
 
-            return ret.append(deserialize(format.substring(last)));
-        }
+            private static Component deserialize(String legacy) {
+                return LEGACY.deserialize(legacy);
+            }
 
-        @Override
-        public Component render(Player source, Component sourceDisplayName, Component message,
-                                Audience viewer) {
-            Player recipient = viewer instanceof Player ? (Player) viewer : null;
-            FPlayer fpfrom = FPlayers.i.get(source);
-            FPlayer fpto = relationColors && recipient != null
+            /**
+             * Builds the configured layout as components. The legacy serializer only parses the
+             * configured format string; display name and message are already components.
+             * Supports both %s and positional %1$s/%2$s placeholders.
+             */
+            private static Component renderFormat(String format, Component displayName,
+                                                  Component message) {
+                Matcher matcher = FORMAT_PLACEHOLDER.matcher(format);
+                Component ret = Component.empty();
+                int last = 0;
+                int next = 0;
+
+                while (matcher.find()) {
+                    ret = ret.append(deserialize(format.substring(last, matcher.start())));
+                    int arg;
+                    if (matcher.group(1) != null) {
+                        String index = matcher.group(1);
+                        arg = Integer.parseInt(index.substring(0, index.length() - 1)) - 1;
+                    } else {
+                        arg = next++;
+                    }
+                    if (arg == 0) {
+                        ret = ret.append(displayName);
+                    } else if (arg == 1) {
+                        ret = ret.append(message);
+                    }
+                    last = matcher.end();
+                }
+
+                return ret.append(deserialize(format.substring(last)));
+            }
+
+            @Override
+            public Component render(Player source, Component sourceDisplayName, Component message,
+                                    Audience viewer) {
+                Player recipient = viewer instanceof Player ? (Player) viewer : null;
+                FPlayer fpfrom = FPlayers.i.get(source);
+                FPlayer fpto = relationColors && recipient != null
                     ? FPlayers.i.get(recipient)
                     : null;
 
-            String resolved = parsePlaceholders
+                String resolved = parsePlaceholders
                     ? parseTags(format, source, fpfrom, recipient, fpto)
                     : format;
 
-            if (composeWithPrevious) {
-                // Another chat plugin already owns the layout. Keep its renderer and prepend the
-                // Factions tag (the configured format with both %s arguments left empty), so the
-                // two plugins don't overwrite each other.
-                Component prefix = deserialize(formatPrefix(resolved));
-                return prefix.append(previous.render(source, sourceDisplayName, message, viewer));
-            }
+                if (composeWithPrevious) {
+                    // Another chat plugin already owns the layout. Keep its renderer and prepend the
+                    // Factions tag (the configured format with both %s arguments left empty), so the
+                    // two plugins don't overwrite each other.
+                    Component prefix = deserialize(formatPrefix(resolved));
+                    return prefix.append(previous.render(source, sourceDisplayName, message, viewer));
+                }
 
-            return renderFormat(resolved, sourceDisplayName, message);
+                return renderFormat(resolved, sourceDisplayName, message);
+            }
         }
-    }
 }

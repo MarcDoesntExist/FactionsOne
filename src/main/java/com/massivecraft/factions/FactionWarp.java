@@ -27,6 +27,23 @@ public final class FactionWarp {
         this.passwordHash = passwordHash;
     }
 
+    public static String hash(String password) {
+        if (password == null || password.isBlank()) {
+            return null;
+        }
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                .digest(password.getBytes(StandardCharsets.UTF_8));
+            StringBuilder result = new StringBuilder(digest.length * 2);
+            for (byte value : digest) {
+                result.append(String.format("%02x", value));
+            }
+            return result.toString();
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is not available", exception);
+        }
+    }
+
     public String getName() {
         return this.name;
     }
@@ -53,22 +70,5 @@ public final class FactionWarp {
         byte[] expected = this.passwordHash.getBytes(StandardCharsets.UTF_8);
         byte[] actual = hash(password).getBytes(StandardCharsets.UTF_8);
         return MessageDigest.isEqual(expected, actual);
-    }
-
-    public static String hash(String password) {
-        if (password == null || password.isBlank()) {
-            return null;
-        }
-        try {
-            byte[] digest = MessageDigest.getInstance("SHA-256")
-                    .digest(password.getBytes(StandardCharsets.UTF_8));
-            StringBuilder result = new StringBuilder(digest.length * 2);
-            for (byte value : digest) {
-                result.append(String.format("%02x", value));
-            }
-            return result.toString();
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 is not available", exception);
-        }
     }
 }

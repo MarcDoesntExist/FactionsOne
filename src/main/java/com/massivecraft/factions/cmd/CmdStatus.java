@@ -44,7 +44,7 @@ public class CmdStatus extends FCommand {
         msg(Lang.statusPower, faction.getPowerRounded(), faction.getPowerMaxRounded());
         msg(Lang.statusLand, faction.getLandRounded());
         msg(Lang.statusMembers, faction.getFPlayersWhereOnline(true).size(),
-                faction.getFPlayers().size());
+            faction.getFPlayers().size());
         msg(Lang.statusBank, Econ.moneyString(Econ.getBalance(faction.getAccountId())));
 
         ShieldService shields = Main.main.shieldService;
@@ -53,8 +53,8 @@ public class CmdStatus extends FCommand {
             shield = Lang.shieldInactive;
         } else {
             shield = String.format(Lang.shieldState,
-                    shields.isGrace(faction) ? Lang.shieldGrace : Lang.shieldActive,
-                    shields.remainingMinutes(faction));
+                shields.isGrace(faction) ? Lang.shieldGrace : Lang.shieldActive,
+                shields.remainingMinutes(faction));
         }
         msg(Lang.statusShield, shield);
 

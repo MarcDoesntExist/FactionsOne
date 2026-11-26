@@ -56,14 +56,14 @@ public final class ClaimValueListener implements Listener {
     public void onClaim(LandClaimEvent event) {
         FLocation location = event.getLocation();
         this.service.markDirtyForced(location.getWorldName(), (int) location.getX(),
-                (int) location.getZ());
+            (int) location.getZ());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onUnclaim(LandUnclaimEvent event) {
         FLocation location = event.getLocation();
         this.service.markRemoved(location.getWorldName(), (int) location.getX(),
-                (int) location.getZ());
+            (int) location.getZ());
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

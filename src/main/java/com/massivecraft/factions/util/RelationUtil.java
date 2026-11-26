@@ -36,8 +36,7 @@ public class RelationUtil {
             } else {
                 ret = thatFaction.getTagPlain();
             }
-        } else if (that instanceof FPlayer) {
-            FPlayer fplayerthat = (FPlayer) that;
+        } else if (that instanceof final FPlayer fplayerthat) {
             if (that == me) {
                 ret = "you";
             } else if (thatFaction == myFaction) {
@@ -76,7 +75,7 @@ public class RelationUtil {
 
         // The faction with the lowest wish "wins"
         if (thatFaction.getRelationWish(myFaction)
-                .isLessThan(myFaction.getRelationWish(thatFaction))) {
+            .isLessThan(myFaction.getRelationWish(thatFaction))) {
             ret = thatFaction.getRelationWish(myFaction);
         } else {
             ret = myFaction.getRelationWish(thatFaction);
@@ -91,7 +90,7 @@ public class RelationUtil {
                 //Main.main.log("getRelationOfThatToMe it was a player and role is "+ret);
             }
         } else if (!ignorePeaceful && (thatFaction.getFlag(FFlag.PEACEFUL) || myFaction
-                .getFlag(FFlag.PEACEFUL))) {
+            .getFlag(FFlag.PEACEFUL))) {
             ret = Rel.TRUCE;
         }
 
@@ -114,11 +113,11 @@ public class RelationUtil {
     public static Color getColorOfThatToMe(RelationParticipator that, RelationParticipator me) {
         Faction thatFaction = getFaction(that);
         if (thatFaction != null && thatFaction != getFaction(me)) {
-            if (thatFaction.getFlag(FFlag.FRIENDLYFIRE) == true) {
+            if (thatFaction.getFlag(FFlag.FRIENDLYFIRE)) {
                 return Conf.colorFriendlyFire;
             }
 
-            if (thatFaction.getFlag(FFlag.PVP) == false) {
+            if (!thatFaction.getFlag(FFlag.PVP)) {
                 return Conf.colorNoPVP;
             }
         }

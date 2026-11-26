@@ -24,10 +24,10 @@ public record BankStatus(int pendingJournal, int pendingCompensations, int pendi
             }
         }
         return new BankStatus(
-                pending,
-                journal == null ? 0 : journal.pendingCompensationCount(),
-                mailbox == null ? 0 : mailbox.pendingCount(),
-                mailbox == null ? 0 : mailbox.unknownClaims().size(),
-                mailbox == null ? 0 : mailbox.unknownRefunds().size());
+            pending,
+            journal == null ? 0 : journal.pendingCompensationCount(),
+            mailbox == null ? 0 : mailbox.pendingCount(),
+            mailbox == null ? 0 : mailbox.unknownClaims().size(),
+            mailbox == null ? 0 : mailbox.unknownRefunds().size());
     }
 }

@@ -49,9 +49,9 @@ public class CmdAdminBank extends FCommand {
         BankStatus status = BankStatus.of(Main.main.bankJournal, Main.main.mailbox);
         msg(Lang.bankStatusJournal, status.pendingJournal(), status.pendingCompensations());
         msg(Lang.bankStatusMailbox, status.pendingMailbox(), status.unknownDeliveries(),
-                status.unknownRefunds());
+            status.unknownRefunds());
         msg(Lang.bankStatusRetention, Conf.bankJournalRetentionDays,
-                Conf.idempotencyRetentionDays, Conf.mailboxRetentionDays);
+            Conf.idempotencyRetentionDays, Conf.mailboxRetentionDays);
         long last = StorageRetention.lastCompactedAt();
         if (last <= 0L) {
             msg(Lang.bankStatusNeverCompacted);

@@ -13,12 +13,12 @@ public final class ShopPerkService {
 
     public boolean apply(Faction faction, FeatureConfig.ShopOffer offer) {
         if (faction == null || offer == null
-                || offer.type() != FeatureConfig.ShopOfferType.PERK
-                || offer.perk() == null) {
+            || offer.type() != FeatureConfig.ShopOfferType.PERK
+            || offer.perk() == null) {
             return false;
         }
         long until = System.currentTimeMillis()
-                + offer.durationMinutes() * 60_000L;
+            + offer.durationMinutes() * 60_000L;
         return switch (offer.perk()) {
             case POWER_BOOST -> {
                 if (offer.perkAmount() <= 0.0 || offer.durationMinutes() <= 0) {
@@ -28,7 +28,7 @@ public final class ShopPerkService {
                 yield true;
             }
             case MONEY -> offer.perkAmount() > 0.0
-                    && Econ.modifyMoney(faction, offer.perkAmount(), null, "shop perk");
+                && Econ.modifyMoney(faction, offer.perkAmount(), null, "shop perk");
             case POINTS -> {
                 if (offer.perkAmount() <= 0.0) {
                     yield false;

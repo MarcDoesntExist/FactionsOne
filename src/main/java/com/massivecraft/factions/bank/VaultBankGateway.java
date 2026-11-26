@@ -23,6 +23,17 @@ public final class VaultBankGateway implements BankGateway {
         this.economy = economy;
     }
 
+    private static OfflinePlayer resolve(String accountId) {
+        if (accountId == null) {
+            return null;
+        }
+        try {
+            return Bukkit.getOfflinePlayer(UUID.fromString(accountId));
+        } catch (IllegalArgumentException legacyNameKey) {
+            return Bukkit.getOfflinePlayer(accountId);
+        }
+    }
+
     @Override
     public boolean available() {
         return this.economy != null && this.economy.isEnabled();
@@ -82,16 +93,5 @@ public final class VaultBankGateway implements BankGateway {
     @Override
     public String format(double amount) {
         return available() ? this.economy.format(amount) : String.format("%.2f", amount);
-    }
-
-    private static OfflinePlayer resolve(String accountId) {
-        if (accountId == null) {
-            return null;
-        }
-        try {
-            return Bukkit.getOfflinePlayer(UUID.fromString(accountId));
-        } catch (IllegalArgumentException legacyNameKey) {
-            return Bukkit.getOfflinePlayer(accountId);
-        }
     }
 }

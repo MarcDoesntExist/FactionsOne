@@ -41,13 +41,13 @@ import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.struct.TerritoryAccess;
 import com.massivecraft.factions.util.AutoLeaveTask;
 import com.massivecraft.factions.util.BetrayalTracker;
+import com.massivecraft.factions.util.EconLandRewardTask;
+import com.massivecraft.factions.util.LazyLocation;
+import com.massivecraft.factions.util.MissionResetTask;
 import com.massivecraft.factions.util.StuckService;
 import com.massivecraft.factions.util.TeleportWarmupService;
 import com.massivecraft.factions.value.ClaimValueListener;
 import com.massivecraft.factions.value.ClaimValueService;
-import com.massivecraft.factions.util.EconLandRewardTask;
-import com.massivecraft.factions.util.LazyLocation;
-import com.massivecraft.factions.util.MissionResetTask;
 import com.massivecraft.factions.zcore.MPlugin;
 import com.massivecraft.factions.zcore.util.DataVersionService;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -91,7 +91,6 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     // Listeners
     public final FactionsPlayerListener playerListener;
     public final FactionsChatListener chatListener;
-    private com.massivecraft.factions.integration.placeholder.FactionsPlaceholderExpansion placeholderExpansion;
     public final FactionsEntityListener entityListener;
     public final FactionsExploitListener exploitListener;
     public final FactionsBlockListener blockListener;
@@ -121,6 +120,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     public FactionMailbox mailbox;
     public MapIntegration mapIntegration;
     public BetrayalTracker betrayalTracker;
+    private com.massivecraft.factions.integration.placeholder.FactionsPlaceholderExpansion placeholderExpansion;
     // Persistance related
     /**
      * Gson must skip static final constants such as baseCommandAliases, but it
@@ -210,7 +210,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         this.flyService = new FlyService();
         this.shieldService = new ShieldService(Clock.systemUTC());
         this.rankingService = new FactionRankingService(Clock.systemUTC(), Conf.rankingCacheSeconds,
-                FactionRankingService::collectLive);
+            FactionRankingService::collectLive);
         this.claimValueService = new ClaimValueService(this);
         this.stuckService = new StuckService(this, this.teleportWarmupService);
         this.tntBankService = new TntBankService(this.featureService);
@@ -218,10 +218,10 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         this.bankJournal = new BankJournal(storage.resolve("bank-journal.jsonl"), getLogger());
         this.idempotencyStore = new IdempotencyStore(storage.resolve("idempotency.json"), getLogger());
         this.taxPeriodJournal = new TaxPeriodJournal(storage.resolve("tax-journal.jsonl"),
-                getLogger());
+            getLogger());
         this.mailbox = new FactionMailbox(storage.resolve("mailbox.json"), this.idempotencyStore,
-                Clock.systemUTC(), Conf.mailboxMaxPerPlayer,
-                TimeUnit.DAYS.toMillis(Math.max(1, Conf.mailboxTtlDays)), getLogger());
+            Clock.systemUTC(), Conf.mailboxMaxPerPlayer,
+            TimeUnit.DAYS.toMillis(Math.max(1, Conf.mailboxTtlDays)), getLogger());
         compactStorage();
 
         this.betrayalTracker = new BetrayalTracker();
@@ -252,15 +252,15 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         }
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             this.placeholderExpansion =
-                    new com.massivecraft.factions.integration.placeholder.FactionsPlaceholderExpansion(
-                            this);
+                new com.massivecraft.factions.integration.placeholder.FactionsPlaceholderExpansion(
+                    this);
             this.placeholderExpansion.register();
         }
 
         Essentials.setup();
         Econ.setup();
         this.factionTaxService = new FactionTaxService(BankService.get(), Clock.systemUTC(),
-                this.idempotencyStore, this.taxPeriodJournal);
+            this.idempotencyStore, this.taxPeriodJournal);
         BankService.get().retryPendingCompensations();
 
         if (Conf.worldGuardChecking) {
@@ -290,7 +290,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         getServer().getPluginManager().registerEvents(this.teleportWarmupService, this);
         getServer().getPluginManager().registerEvents(this.flyService, this);
         getServer().getPluginManager().registerEvents(
-                new ClaimValueListener(this.claimValueService), this);
+            new ClaimValueListener(this.claimValueService), this);
 
         this.claimValueService.start();
 
@@ -372,7 +372,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         if (Conf.autoLeaveRoutineRunsEveryXMinutes > 0.0) {
             long ticks = (long) (20 * 60 * Conf.autoLeaveRoutineRunsEveryXMinutes);
             AutoLeaveTask = getServer().getScheduler()
-                    .scheduleSyncRepeatingTask(this, new AutoLeaveTask(), ticks, ticks);
+                .scheduleSyncRepeatingTask(this, new AutoLeaveTask(), ticks, ticks);
         }
     }
 
@@ -384,10 +384,10 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         }
 
         if (Conf.econEnabled && Conf.econLandRewardTaskRunsEveryXMinutes > 0.0
-                && Conf.econLandReward > 0.0) {
+            && Conf.econLandReward > 0.0) {
             long ticks = 20L * 60 * Conf.econLandRewardTaskRunsEveryXMinutes;
             econLandRewardTaskID = getServer().getScheduler()
-                    .scheduleSyncRepeatingTask(this, new EconLandRewardTask(), ticks, ticks);
+                .scheduleSyncRepeatingTask(this, new EconLandRewardTask(), ticks, ticks);
         }
     }
 
@@ -402,7 +402,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         if (Conf.taxEnabled && Conf.taxIntervalMinutes > 0) {
             long ticks = Math.min(Integer.MAX_VALUE, 20L * 60L * Conf.taxIntervalMinutes);
             factionTaxTaskID = getServer().getScheduler()
-                    .scheduleSyncRepeatingTask(this, new FactionTaxTask(), ticks, ticks);
+                .scheduleSyncRepeatingTask(this, new FactionTaxTask(), ticks, ticks);
         }
     }
 
@@ -419,7 +419,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         }
         long ticks = Math.min(Integer.MAX_VALUE, 20L * 60L * Conf.bankCompensationIntervalMinutes);
         bankCompensationTaskID = this.getServer().getScheduler()
-                .scheduleSyncRepeatingTask(this, new BankCompensationTask(), ticks, ticks);
+            .scheduleSyncRepeatingTask(this, new BankCompensationTask(), ticks, ticks);
     }
 
     public void startMailboxExpiryTask(boolean restartIfRunning) {
@@ -435,7 +435,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         }
         long ticks = Math.min(Integer.MAX_VALUE, 20L * 60L * Conf.mailboxExpiryCheckMinutes);
         mailboxExpiryTaskID = this.getServer().getScheduler()
-                .scheduleSyncRepeatingTask(this, new MailboxExpiryTask(), ticks, ticks);
+            .scheduleSyncRepeatingTask(this, new MailboxExpiryTask(), ticks, ticks);
     }
 
     public void startMissionResetTask(boolean restartIfRunning) {
@@ -450,14 +450,14 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
             return;
         }
         long ticks = Math.min(Integer.MAX_VALUE,
-                20L * 60L * Conf.missionResetCheckMinutes);
+            20L * 60L * Conf.missionResetCheckMinutes);
         missionResetTaskID = this.getServer().getScheduler()
-                .scheduleSyncRepeatingTask(this, new MissionResetTask(), ticks, ticks);
+            .scheduleSyncRepeatingTask(this, new MissionResetTask(), ticks, ticks);
     }
 
     public boolean refundMailboxClaim(FactionMailbox.Claim claim) {
         return claim != null && claim.sourceAccount() != null && !claim.sourceAccount().isBlank()
-                && BankService.get().creditAccount(claim.sourceAccount(), claim.amount());
+            && BankService.get().creditAccount(claim.sourceAccount(), claim.amount());
     }
 
     /**
@@ -473,8 +473,8 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
             this.getServer().getScheduler().cancelTask(mapAutoUpdateTask);
         }
         mapAutoUpdateTask = getServer().getScheduler()
-                .scheduleSyncRepeatingTask(this, this::updateAutoMaps,
-                        MAP_AUTO_UPDATE_TICKS, MAP_AUTO_UPDATE_TICKS);
+            .scheduleSyncRepeatingTask(this, this::updateAutoMaps,
+                MAP_AUTO_UPDATE_TICKS, MAP_AUTO_UPDATE_TICKS);
     }
 
     private void updateAutoMaps() {
@@ -497,12 +497,12 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     public boolean onCommand(@NonNull CommandSender sender, Command command, String label, String[] split) {
         if ("fc".equalsIgnoreCase(command.getName())) {
             this.cmdBase.cmdChat.cmdChatFaction.execute(sender,
-                    new ArrayList<String>(Arrays.asList(split)));
+                new ArrayList<String>(Arrays.asList(split)));
             return true;
         }
         if ("ac".equalsIgnoreCase(command.getName())) {
             this.cmdBase.cmdChat.cmdChatAlly.execute(sender,
-                    new ArrayList<String>(Arrays.asList(split)));
+                new ArrayList<String>(Arrays.asList(split)));
             return true;
         }
         if ("fa".equalsIgnoreCase(command.getName())) {
@@ -556,7 +556,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         if (event == null)
             return false;
         return (isPlayerFactionChatting(event.getPlayer()) || isFactionsCommand(
-                PlainTextComponentSerializer.plainText().serialize(event.message())));
+            PlainTextComponentSerializer.plainText().serialize(event.message())));
     }
 
     // Does player have Faction Chat enabled? If so, chat plugins should preferably not do channels,
@@ -660,7 +660,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     // check if player is allowed to build/destroy in a particular location
     public boolean isPlayerAllowedToBuildHere(Player player, Location location) {
         return FactionsBlockListener
-                .playerCanBuildDestroyBlock(player, location.getBlock(), "", true);
+            .playerCanBuildDestroyBlock(player, location.getBlock(), "", true);
     }
 
     // check if player is allowed to interact with the specified block (doors/chests/whatever)

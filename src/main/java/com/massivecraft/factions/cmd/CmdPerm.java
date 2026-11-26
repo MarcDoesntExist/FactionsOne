@@ -51,7 +51,7 @@ public class CmdPerm extends FCommand {
 
         if (!this.argIsSet(1)) {
             msg(p.txt.titleize(net.kyori.adventure.text.Component.text("Perms for ")
-                    .append(faction.describeTo(fme, true))));
+                .append(faction.describeTo(fme, true))));
             msg(FPerm.getStateHeaders());
             for (FPerm perm : FPerm.values()) {
                 msg(perm.getStateInfo(faction.getPermittedRelations(perm), true));
@@ -64,7 +64,7 @@ public class CmdPerm extends FCommand {
             return;
         if (!this.argIsSet(2)) {
             msg(p.txt.titleize(net.kyori.adventure.text.Component.text("Perm for ")
-                    .append(faction.describeTo(fme, true))));
+                .append(faction.describeTo(fme, true))));
             msg(FPerm.getStateHeaders());
             msg(perm.getStateInfo(faction.getPermittedRelations(perm), true));
             return;
@@ -85,7 +85,7 @@ public class CmdPerm extends FCommand {
         // Do the change
         faction.setRelationPermitted(perm, rel, val);
         faction.addLog(this.senderIsConsole ? "console" : fme.getName(), "PERM",
-                perm.name() + " " + rel.name() + "=" + val);
+            perm.name() + " " + rel.name() + "=" + val);
 
         // The following is to make sure the leader always has the right to change perms if that is our goal.
         if (perm == FPerm.PERMS && FPerm.PERMS.getDefault().contains(Rel.LEADER)) {
@@ -93,7 +93,7 @@ public class CmdPerm extends FCommand {
         }
 
         msg(p.txt.titleize(net.kyori.adventure.text.Component.text("Perm for ")
-                .append(faction.describeTo(fme, true))));
+            .append(faction.describeTo(fme, true))));
         msg(FPerm.getStateHeaders());
         msg(perm.getStateInfo(faction.getPermittedRelations(perm), true));
     }

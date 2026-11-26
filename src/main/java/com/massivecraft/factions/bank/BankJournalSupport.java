@@ -9,18 +9,19 @@ import com.massivecraft.factions.iface.EconomyParticipator;
  *
  * @author MarcDoesntExists
  */
-final class BankJournalSupport {
+record BankJournalSupport(BankJournal journal) {
 
-    private final BankJournal journal;
-
-    BankJournalSupport(BankJournal journal) {
-        this.journal = journal;
+    static String actor(EconomyParticipator invoker) {
+        if (invoker == null) {
+            return "console";
+        }
+        return invoker instanceof FPlayer ? ((FPlayer) invoker).getName() : invoker.getAccountId();
     }
 
     String start(String operation, String from, String to, double amount, String actor,
                  String compensationAccount, double compensationAmount, String detail) {
         return this.journal == null ? "" : this.journal.begin(operation, from, to, amount, actor,
-                compensationAccount, compensationAmount, detail);
+            compensationAccount, compensationAmount, detail);
     }
 
     boolean failed(String journalId) {
@@ -42,16 +43,5 @@ final class BankJournalSupport {
         if (this.journal != null && journalId != null && !journalId.isEmpty()) {
             this.journal.compensationPending(journalId, detail);
         }
-    }
-
-    BankJournal journal() {
-        return this.journal;
-    }
-
-    static String actor(EconomyParticipator invoker) {
-        if (invoker == null) {
-            return "console";
-        }
-        return invoker instanceof FPlayer ? ((FPlayer) invoker).getName() : invoker.getAccountId();
     }
 }

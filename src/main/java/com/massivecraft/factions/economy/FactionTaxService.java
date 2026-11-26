@@ -7,7 +7,6 @@ import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.Factions;
 import com.massivecraft.factions.Main;
-import de.erethon.factionsone.api.FactionsAPI;
 import com.massivecraft.factions.bank.BankService;
 import com.massivecraft.factions.bank.IdempotencyStore;
 import com.massivecraft.factions.event.FactionTaxCollectedEvent;
@@ -15,6 +14,7 @@ import com.massivecraft.factions.event.FactionTaxFailedEvent;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.zcore.Lang;
+import de.erethon.factionsone.api.FactionsAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 
@@ -35,16 +35,11 @@ import java.util.Set;
  */
 public final class FactionTaxService {
 
-    public enum RetryResult {
-        CHARGED, NONE, NO_ECONOMY, FAILED
-    }
-
     private final BankService bank;
     private final Clock clock;
     private final IdempotencyStore idempotency;
     private final TaxPeriodJournal journal;
     private boolean warnedNoEconomy;
-
     public FactionTaxService(BankService bank, Clock clock) {
         this(bank, clock, null, null);
     }
@@ -62,6 +57,46 @@ public final class FactionTaxService {
         if (journal != null) {
             journal.recover(idempotency);
         }
+    }
+
+    /**
+     * A resolved period (paid or ambiguous) must never be charged by the
+     * periodic run again. Aborted periods moved no money and may be retried.
+     */
+    static boolean isResolved(TaxPeriodJournal.Entry entry) {
+        return entry != null && (entry.state() == TaxPeriodJournal.State.SETTLED
+            || entry.state() == TaxPeriodJournal.State.TAX_UNKNOWN);
+    }
+
+    /**
+     * Counts members that contribute the per-member tax. A configured exempt
+     * role only removes its members from that component; base and per-chunk
+     * charges still apply.
+     */
+    static int taxableMembers(Faction faction) {
+        int members = faction.getFPlayers().size();
+        if (Conf.taxExemptRoles == null || Conf.taxExemptRoles.isEmpty()) {
+            return members;
+        }
+        int exempt = 0;
+        for (FPlayer member : faction.getFPlayers()) {
+            Rel role = member.getRole();
+            if (role == null) {
+                continue;
+            }
+            for (String configured : Conf.taxExemptRoles) {
+                if (configured != null && role.name().equalsIgnoreCase(configured.trim())) {
+                    exempt++;
+                    break;
+                }
+            }
+        }
+        return Math.max(0, members - exempt);
+    }
+
+    private static boolean isEligible(Faction faction) {
+        return faction != null && faction.isNormal() && !faction.getFlag(FFlag.PERMANENT)
+            && !faction.getFPlayers().isEmpty();
     }
 
     /**
@@ -96,7 +131,7 @@ public final class FactionTaxService {
             }
 
             double due = TaxCalculator.due(taxableMembers(faction), faction.getLandRounded(),
-                    this.bank.balance(faction), settings);
+                this.bank.balance(faction), settings);
             if (due <= 0.0) {
                 faction.setLastTaxAt(now);
                 continue;
@@ -107,13 +142,13 @@ public final class FactionTaxService {
             if (!force) {
                 claim = key;
                 TaxPeriodJournal.Entry existing = this.journal == null
-                        ? null : this.journal.entry(claim);
+                    ? null : this.journal.entry(claim);
                 if (isResolved(existing)) {
                     faction.setLastTaxAt(now);
                     continue;
                 }
                 if (existing == null && this.journal != null
-                        && !this.journal.begin(claim, faction.getId(), due, now)) {
+                    && !this.journal.begin(claim, faction.getId(), due, now)) {
                     continue;
                 }
                 if (this.idempotency != null) {
@@ -133,10 +168,10 @@ public final class FactionTaxService {
                 // resolved only by the explicit retry, never by a blanket run.
                 TaxPeriodJournal.Entry existing = this.journal.entry(key);
                 if (existing != null
-                        && existing.state() == TaxPeriodJournal.State.TAX_UNKNOWN) {
+                    && existing.state() == TaxPeriodJournal.State.TAX_UNKNOWN) {
                     if (Main.main != null) {
                         Main.main.getLogger().warning("Skipping unknown tax period " + key
-                                + "; use /f tax run " + faction.getId() + " retry.");
+                            + "; use /f tax run " + faction.getId() + " retry.");
                     }
                     continue;
                 }
@@ -184,7 +219,7 @@ public final class FactionTaxService {
             return RetryResult.NO_ECONOMY;
         }
         if (entry.amount() > 0.0 && !this.bank.modifyMoney(faction, -entry.amount(),
-                "to pay the faction tax", "manual retry of " + entry.key())) {
+            "to pay the faction tax", "manual retry of " + entry.key())) {
             return RetryResult.FAILED;
         }
         long now = this.clock.millis();
@@ -194,72 +229,38 @@ public final class FactionTaxService {
         faction.setLastTaxAt(now);
         faction.addLog("tax", "TAX_PAID", this.bank.format(entry.amount()) + " retry");
         this.fire(new FactionTaxCollectedEvent(faction.getId(), faction.getTagPlain(),
-                entry.amount(), now));
+            entry.amount(), now));
         return RetryResult.CHARGED;
     }
 
-    /** Current amount one period would cost the faction. */
+    /**
+     * Current amount one period would cost the faction.
+     */
     public double dueFor(Faction faction) {
         if (faction == null) {
             return 0.0;
         }
         return TaxCalculator.due(taxableMembers(faction), faction.getLandRounded(),
-                this.bank.balance(faction), this.settings());
+            this.bank.balance(faction), this.settings());
     }
 
     /**
-     * A resolved period (paid or ambiguous) must never be charged by the
-     * periodic run again. Aborted periods moved no money and may be retried.
+     * Configured interval in minutes, at least one.
      */
-    static boolean isResolved(TaxPeriodJournal.Entry entry) {
-        return entry != null && (entry.state() == TaxPeriodJournal.State.SETTLED
-                || entry.state() == TaxPeriodJournal.State.TAX_UNKNOWN);
-    }
-
-    /** Configured interval in minutes, at least one. */
     public long intervalMinutes() {
         return Math.max(1, Conf.taxIntervalMinutes);
     }
 
-    /** Configured interval in milliseconds. */
+    /**
+     * Configured interval in milliseconds.
+     */
     public long intervalMillis() {
         return this.intervalMinutes() * 60_000L;
     }
 
-    /**
-     * Counts members that contribute the per-member tax. A configured exempt
-     * role only removes its members from that component; base and per-chunk
-     * charges still apply.
-     */
-    static int taxableMembers(Faction faction) {
-        int members = faction.getFPlayers().size();
-        if (Conf.taxExemptRoles == null || Conf.taxExemptRoles.isEmpty()) {
-            return members;
-        }
-        int exempt = 0;
-        for (FPlayer member : faction.getFPlayers()) {
-            Rel role = member.getRole();
-            if (role == null) {
-                continue;
-            }
-            for (String configured : Conf.taxExemptRoles) {
-                if (configured != null && role.name().equalsIgnoreCase(configured.trim())) {
-                    exempt++;
-                    break;
-                }
-            }
-        }
-        return Math.max(0, members - exempt);
-    }
-
     private TaxSettings settings() {
         return new TaxSettings(Conf.taxEnabled, Conf.taxBase, Conf.taxPerMember, Conf.taxPerChunk,
-                Conf.taxCap, Conf.taxPercent, TaxSettings.Mode.parse(Conf.taxMode));
-    }
-
-    private static boolean isEligible(Faction faction) {
-        return faction != null && faction.isNormal() && !faction.getFlag(FFlag.PERMANENT)
-                && !faction.getFPlayers().isEmpty();
+            Conf.taxCap, Conf.taxPercent, TaxSettings.Mode.parse(Conf.taxMode));
     }
 
     private void handleShortfall(Faction faction, double due, long now) {
@@ -306,8 +307,8 @@ public final class FactionTaxService {
             return;
         }
         FLocation target = claims.stream()
-                .min(Comparator.comparing(FLocation::getCoordString))
-                .orElse(null);
+            .min(Comparator.comparing(FLocation::getCoordString))
+            .orElse(null);
         Faction wilderness = Factions.i.get("0");
         if (target == null || wilderness == null) {
             return;
@@ -320,5 +321,9 @@ public final class FactionTaxService {
         if (Bukkit.getServer() != null) {
             Bukkit.getServer().getPluginManager().callEvent(event);
         }
+    }
+
+    public enum RetryResult {
+        CHARGED, NONE, NO_ECONOMY, FAILED
     }
 }

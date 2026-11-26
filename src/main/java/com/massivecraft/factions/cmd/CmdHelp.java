@@ -1,7 +1,6 @@
 package com.massivecraft.factions.cmd;
 
 import com.massivecraft.factions.Conf;
-import com.massivecraft.factions.Main;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.Permission;
 import net.kyori.adventure.text.Component;
@@ -90,9 +89,9 @@ public class CmdHelp extends FCommand {
         if (Econ.isSetup() && Conf.econEnabled && Conf.bankEnabled) {
             pageLines = new ArrayList<Component>();
             pageLines
-                    .add(p.txt.parse("<i>Your faction has a bank which is used to pay for certain"));
+                .add(p.txt.parse("<i>Your faction has a bank which is used to pay for certain"));
             pageLines
-                    .add(p.txt.parse("<i>things, so it will need to have money deposited into it."));
+                .add(p.txt.parse("<i>things, so it will need to have money deposited into it."));
             pageLines.add(p.txt.parse("<i>To learn more, use the money command."));
             pageLines.add(Component.empty());
             pageLines.add(p.cmdBase.cmdMoney.getUseageTemplate(true));
@@ -114,7 +113,7 @@ public class CmdHelp extends FCommand {
         pageLines.add(p.cmdBase.cmdLeader.getUseageTemplate(true));
         pageLines.add(p.cmdBase.cmdTitle.getUseageTemplate(true));
         pageLines
-                .add(p.txt.parse("<i>Player titles are just for fun. No rules connected to them."));
+            .add(p.txt.parse("<i>Player titles are just for fun. No rules connected to them."));
         helpPages.add(pageLines);
 
         pageLines = new ArrayList<Component>();
@@ -134,7 +133,7 @@ public class CmdHelp extends FCommand {
         pageLines.add(p.cmdBase.cmdRelationEnemy.getUseageTemplate(true));
         pageLines.add(p.txt.parse("<i>Set the relation you WISH to have with another faction."));
         pageLines
-                .add(p.txt.parse("<i>Your default relation with other factions will be neutral."));
+            .add(p.txt.parse("<i>Your default relation with other factions will be neutral."));
         pageLines.add(p.txt.parse("<i>If BOTH factions choose \"ally\" you will be allies."));
         pageLines.add(p.txt.parse("<i>If ONE faction chooses \"enemy\" you will be enemies."));
         helpPages.add(pageLines);
@@ -148,18 +147,18 @@ public class CmdHelp extends FCommand {
         pageLines.add(p.txt.parse("<i>When you die you lose power. It is restored over time."));
         pageLines.add(p.txt.parse("<i>The power of a faction is the sum of all member power."));
         pageLines
-                .add(p.txt.parse("<i>The power of a faction determines how much land it can hold."));
+            .add(p.txt.parse("<i>The power of a faction determines how much land it can hold."));
         pageLines.add(p.txt.parse("<i>You can claim land from factions with too little power."));
         helpPages.add(pageLines);
 
         pageLines = new ArrayList<Component>();
         pageLines.add(p.txt.parse("<i>Only faction members can build and destroy in their own"));
         pageLines
-                .add(p.txt.parse("<i>territory. Usage of the following items is also restricted:"));
+            .add(p.txt.parse("<i>territory. Usage of the following items is also restricted:"));
         pageLines.add(p.txt.parse("<i>Door, Chest, Furnace, Dispenser, Diode."));
         pageLines.add(Component.empty());
         pageLines
-                .add(p.txt.parse("<i>Make sure to put pressure plates in front of doors for your"));
+            .add(p.txt.parse("<i>Make sure to put pressure plates in front of doors for your"));
         pageLines.add(p.txt.parse("<i>guest visitors. Otherwise they can't get through. You can"));
         pageLines.add(p.txt.parse("<i>also use this to create member only areas."));
         pageLines.add(p.txt.parse("<i>As dispensers are protected, you can create traps without"));
@@ -173,8 +172,8 @@ public class CmdHelp extends FCommand {
         pageLines.add(p.txt.parse("<c>/f claim warzone <i>claim land for the War Zone"));
         pageLines.add(p.txt.parse("<c>/f autoclaim [safezone|warzone] <i>take a guess"));
         pageLines.add(p.txt.parse("<i>Note: ")
-                .append(p.cmdBase.cmdUnclaim.getUseageTemplate(false))
-                .append(p.txt.parse(" <i>works on safe/war zones as well.")));
+            .append(p.cmdBase.cmdUnclaim.getUseageTemplate(false))
+            .append(p.txt.parse(" <i>works on safe/war zones as well.")));
         helpPages.add(pageLines);
 
         pageLines = new ArrayList<Component>();

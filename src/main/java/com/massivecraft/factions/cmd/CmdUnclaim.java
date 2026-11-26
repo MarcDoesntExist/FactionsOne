@@ -1,6 +1,10 @@
 package com.massivecraft.factions.cmd;
 
-import com.massivecraft.factions.*;
+import com.massivecraft.factions.Board;
+import com.massivecraft.factions.Conf;
+import com.massivecraft.factions.FLocation;
+import com.massivecraft.factions.Faction;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.event.LandUnclaimEvent;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.FPerm;
@@ -50,23 +54,23 @@ public class CmdUnclaim extends FCommand {
 
             if (Conf.bankEnabled && Conf.bankFactionPaysLandCosts) {
                 if (!Econ.modifyMoney(myFaction, refund, "to unclaim this land",
-                        "for unclaiming this land"))
+                    "for unclaiming this land"))
                     return;
             } else {
                 if (!Econ
-                        .modifyMoney(fme, refund, "to unclaim this land", "for unclaiming this land"))
+                    .modifyMoney(fme, refund, "to unclaim this land", "for unclaiming this land"))
                     return;
             }
         }
 
         Board.removeAt(flocation);
         otherFaction.addLog(senderIsConsole ? "console" : fme.getName(), "UNCLAIM",
-                flocation.getCoordString());
+            flocation.getCoordString());
         myFaction.msg("%s<i> unclaimed some land.", fme.describeTo(myFaction, true));
 
         if (Conf.logLandUnclaims)
             Main.main.log(fme.getName() + " unclaimed land at (" + flocation.getCoordString()
-                    + ") from the faction: " + otherFaction.getTagPlain());
+                + ") from the faction: " + otherFaction.getTagPlain());
     }
 
 }

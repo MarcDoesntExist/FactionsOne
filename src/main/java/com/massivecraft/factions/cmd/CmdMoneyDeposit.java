@@ -4,11 +4,9 @@ import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.FeatureConfig;
 import com.massivecraft.factions.Main;
-import com.massivecraft.factions.iface.EconomyParticipator;
 import com.massivecraft.factions.integration.Econ;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Permission;
-import com.massivecraft.factions.util.Color;
 
 
 /**
@@ -48,13 +46,13 @@ public class CmdMoneyDeposit extends FCommand {
         boolean success = Econ.transferMoney(fme, fme, faction, amount);
         if (success && amount > 0.0 && Main.main.featureService != null) {
             Main.main.featureService.progress(faction,
-                    FeatureConfig.MissionType.BANK_DEPOSIT, (int) Math.floor(amount));
+                FeatureConfig.MissionType.BANK_DEPOSIT, (int) Math.floor(amount));
         }
 
         if (success && Conf.logMoneyTransactions)
             Main.main.log(Main.main.txt
-                    .parse("%s deposited %s in the faction bank: %s", fme.getName(),
-                            Econ.moneyString(amount), faction.describeTo(null)));
+                .parse("%s deposited %s in the faction bank: %s", fme.getName(),
+                    Econ.moneyString(amount), faction.describeTo(null)));
     }
 
 }

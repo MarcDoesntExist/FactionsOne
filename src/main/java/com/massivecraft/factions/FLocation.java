@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -43,7 +44,7 @@ public class FLocation {
 
     public FLocation(Location location) {
         this(location.getWorld().getName(), blockToChunk(location.getBlockX()),
-                blockToChunk(location.getBlockZ()));
+            blockToChunk(location.getBlockZ()));
     }
 
     public FLocation(Player player) {
@@ -132,7 +133,7 @@ public class FLocation {
     }
 
     public String getCoordString() {
-        return "" + x + "," + z;
+        return x + "," + z;
     }
 
     //----------------------------------------------//
@@ -193,12 +194,9 @@ public class FLocation {
     public boolean equals(Object obj) {
         if (obj == this)
             return true;
-        if (!(obj instanceof FLocation))
+        if (!(obj instanceof final FLocation that))
             return false;
 
-        FLocation that = (FLocation) obj;
-        return this.x == that.x && this.z == that.z && (this.worldName == null ?
-                that.worldName == null :
-                this.worldName.equals(that.worldName));
+        return this.x == that.x && this.z == that.z && (Objects.equals(this.worldName, that.worldName));
     }
 }

@@ -43,27 +43,15 @@ import java.util.logging.Logger;
 public final class BankJournal {
 
     private static final int CURRENT_VERSION = 2;
-
-    public enum State {
-        PENDING, COMMITTED, ABORTED, COMPENSATION_PENDING, COMPENSATED
-    }
-
-    public record Entry(String id, long at, State state, String operation, String from,
-                        String to, double amount, String actor, String compensationAccount,
-                        double compensationAmount, String detail) {
-    }
-
     private final Path file;
     private final Logger logger;
     private final Clock clock;
     private final Gson gson = new GsonBuilder().create();
     private final Map<String, Entry> latest = new LinkedHashMap<>();
     private boolean locked;
-
     public BankJournal(Path file, Logger logger) {
         this(file, logger, Clock.systemUTC());
     }
-
     public BankJournal(Path file, Logger logger, Clock clock) {
         this.file = file;
         this.logger = logger;
@@ -71,12 +59,25 @@ public final class BankJournal {
         load();
     }
 
+    private static boolean isTerminal(State state) {
+        return state == State.COMMITTED || state == State.ABORTED
+            || state == State.COMPENSATED;
+    }
+
+    private static JsonElement parseLine(String line) {
+        try {
+            return JsonParser.parseString(line);
+        } catch (RuntimeException invalid) {
+            return null;
+        }
+    }
+
     public synchronized String begin(String operation, String from, String to, double amount,
                                      String actor, String compensationAccount,
                                      double compensationAmount, String detail) {
         String id = UUID.randomUUID().toString();
         Entry entry = new Entry(id, this.clock.millis(), State.PENDING, operation, from, to,
-                amount, actor, compensationAccount, compensationAmount, detail);
+            amount, actor, compensationAccount, compensationAmount, detail);
         return append(entry) ? id : null;
     }
 
@@ -108,9 +109,9 @@ public final class BankJournal {
         List<Entry> pending = new ArrayList<>();
         for (Entry entry : this.latest.values()) {
             if (entry.state() != State.COMPENSATION_PENDING
-                    || entry.compensationAccount() == null
-                    || entry.compensationAccount().isBlank()
-                    || entry.compensationAmount() <= 0.0) {
+                || entry.compensationAccount() == null
+                || entry.compensationAccount().isBlank()
+                || entry.compensationAmount() <= 0.0) {
                 continue;
             }
             pending.add(entry);
@@ -155,11 +156,6 @@ public final class BankJournal {
         return this.file;
     }
 
-    private static boolean isTerminal(State state) {
-        return state == State.COMMITTED || state == State.ABORTED
-                || state == State.COMPENSATED;
-    }
-
     private boolean rewrite(Map<String, Entry> entries) {
         if (this.locked) {
             return false;
@@ -168,7 +164,7 @@ public final class BankJournal {
             BackupService.backupBeforeWrite(this.file);
         }
         Path temporary = this.file.resolveSibling(
-                this.file.getFileName() + "." + UUID.randomUUID() + ".tmp");
+            this.file.getFileName() + "." + UUID.randomUUID() + ".tmp");
         try {
             Path parent = this.file.getParent();
             if (parent != null) {
@@ -181,14 +177,14 @@ public final class BankJournal {
             Files.writeString(temporary, text.toString(), StandardCharsets.UTF_8);
             try {
                 Files.move(temporary, this.file, StandardCopyOption.REPLACE_EXISTING,
-                        StandardCopyOption.ATOMIC_MOVE);
+                    StandardCopyOption.ATOMIC_MOVE);
             } catch (AtomicMoveNotSupportedException fallback) {
                 Files.move(temporary, this.file, StandardCopyOption.REPLACE_EXISTING);
             }
             return true;
         } catch (IOException exception) {
             this.logger.log(Level.SEVERE, "Could not compact bank journal " + this.file,
-                    exception);
+                exception);
             return false;
         } finally {
             try {
@@ -205,8 +201,8 @@ public final class BankJournal {
             return false;
         }
         return append(new Entry(current.id(), this.clock.millis(), state, current.operation(),
-                current.from(), current.to(), current.amount(), current.actor(),
-                current.compensationAccount(), current.compensationAmount(), detail));
+            current.from(), current.to(), current.amount(), current.actor(),
+            current.compensationAccount(), current.compensationAmount(), detail));
     }
 
     private boolean append(Entry entry) {
@@ -222,7 +218,7 @@ public final class BankJournal {
             boolean empty = !Files.exists(this.file) || Files.size(this.file) == 0L;
             String text = empty ? headerLine() + "\n" + line : line;
             Files.writeString(this.file, text, StandardCharsets.UTF_8,
-                    StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             this.latest.put(entry.id(), entry);
             return true;
         } catch (IOException exception) {
@@ -240,7 +236,7 @@ public final class BankJournal {
             lines = Files.readAllLines(this.file, StandardCharsets.UTF_8);
         } catch (IOException exception) {
             this.logger.log(Level.SEVERE, "Could not read bank journal " + this.file,
-                    exception);
+                exception);
             VersionedFile.quarantine(this.file, this.logger);
             return;
         }
@@ -269,8 +265,8 @@ public final class BankJournal {
         if (headerVersion != null && headerVersion > CURRENT_VERSION) {
             this.locked = true;
             this.logger.severe("Bank journal " + this.file + " uses version " + headerVersion
-                    + " but this build supports " + CURRENT_VERSION
-                    + "; refusing to load or append.");
+                + " but this build supports " + CURRENT_VERSION
+                + "; refusing to load or append.");
             return;
         }
 
@@ -288,13 +284,13 @@ public final class BankJournal {
                 }
             } catch (RuntimeException malformed) {
                 this.logger.log(Level.WARNING,
-                        "Ignoring a malformed bank journal line in " + this.file, malformed);
+                    "Ignoring a malformed bank journal line in " + this.file, malformed);
             }
         }
 
         if (headerVersion == null && validEntries == 0 && firstNonBlank >= 0) {
             this.logger.severe("Bank journal " + this.file
-                    + " has no readable records; quarantining it.");
+                + " has no readable records; quarantining it.");
             VersionedFile.quarantine(this.file, this.logger);
             this.latest.clear();
             return;
@@ -302,13 +298,13 @@ public final class BankJournal {
 
         if (headerVersion == null || headerVersion < CURRENT_VERSION) {
             int fromVersion = headerVersion == null
-                    ? VersionedFile.LEGACY_VERSION : headerVersion;
+                ? VersionedFile.LEGACY_VERSION : headerVersion;
             if (rewrite(this.latest)) {
                 this.logger.info("Migrated bank journal " + this.file + " from version "
-                        + fromVersion + " to " + CURRENT_VERSION);
+                    + fromVersion + " to " + CURRENT_VERSION);
             } else {
                 this.logger.warning("Could not migrate bank journal " + this.file
-                        + " to version " + CURRENT_VERSION);
+                    + " to version " + CURRENT_VERSION);
             }
         }
     }
@@ -319,12 +315,13 @@ public final class BankJournal {
         return this.gson.toJson(header);
     }
 
-    private static JsonElement parseLine(String line) {
-        try {
-            return JsonParser.parseString(line);
-        } catch (RuntimeException invalid) {
-            return null;
-        }
+    public enum State {
+        PENDING, COMMITTED, ABORTED, COMPENSATION_PENDING, COMPENSATED
+    }
+
+    public record Entry(String id, long at, State state, String operation, String from,
+                        String to, double amount, String actor, String compensationAccount,
+                        double compensationAmount, String detail) {
     }
 
     /**
@@ -370,8 +367,8 @@ public final class BankJournal {
                 return null;
             }
             return new Entry(this.id, this.at, parsed, this.operation, this.from, this.to,
-                    this.amount, this.actor, this.compensationAccount, this.compensationAmount,
-                    this.detail);
+                this.amount, this.actor, this.compensationAccount, this.compensationAmount,
+                this.detail);
         }
     }
 }

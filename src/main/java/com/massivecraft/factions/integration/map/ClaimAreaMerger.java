@@ -32,8 +32,8 @@ public final class ClaimAreaMerger {
         Map<String, TreeMap<Integer, TreeSet<Integer>>> byWorld = new TreeMap<>();
         for (ClaimKey claim : claims) {
             byWorld.computeIfAbsent(claim.world(), ignored -> new TreeMap<>())
-                    .computeIfAbsent(claim.z(), ignored -> new TreeSet<>())
-                    .add(claim.x());
+                .computeIfAbsent(claim.z(), ignored -> new TreeSet<>())
+                .add(claim.x());
         }
 
         List<ClaimRect> result = new ArrayList<>();
@@ -41,8 +41,8 @@ public final class ClaimAreaMerger {
             mergeWorld(world.getKey(), world.getValue(), result);
         }
         result.sort(Comparator.comparing(ClaimRect::world)
-                .thenComparingInt(ClaimRect::minZ)
-                .thenComparingInt(ClaimRect::minX));
+            .thenComparingInt(ClaimRect::minZ)
+            .thenComparingInt(ClaimRect::minX));
         return result;
     }
 
@@ -59,7 +59,7 @@ public final class ClaimAreaMerger {
                 int[] span = entry.getValue();
                 if (span[1] != z - 1 || !runs.contains(entry.getKey())) {
                     result.add(new ClaimRect(world, entry.getKey().minX(), span[0],
-                            entry.getKey().maxX(), span[1]));
+                        entry.getKey().maxX(), span[1]));
                     iterator.remove();
                 }
             }
@@ -77,7 +77,7 @@ public final class ClaimAreaMerger {
         for (Map.Entry<Range, int[]> entry : open.entrySet()) {
             int[] span = entry.getValue();
             result.add(new ClaimRect(world, entry.getKey().minX(), span[0],
-                    entry.getKey().maxX(), span[1]));
+                entry.getKey().maxX(), span[1]));
         }
     }
 

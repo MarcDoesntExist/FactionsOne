@@ -82,7 +82,7 @@ public class FCmdRoot extends FCommand {
         super();
         this.aliases.addAll(Conf.baseCommandAliases);
         this.aliases
-                .removeAll(Collections.singletonList(null));  // remove any nulls from extra commas
+            .removeAll(Collections.singletonList(null));  // remove any nulls from extra commas
 
         //this.requiredArgs.add("");
         //this.optionalArgs.put("","")

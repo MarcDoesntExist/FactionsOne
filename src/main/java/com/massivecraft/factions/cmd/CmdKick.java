@@ -53,7 +53,7 @@ public class CmdKick extends FCommand {
         }
 
         if (you.getRole() == Rel.COLEADER && fme != null && fme.getRole() != Rel.LEADER
-                && !(this.senderIsConsole || fme.hasAdminMode())) {
+            && !(this.senderIsConsole || fme.hasAdminMode())) {
             msg("<b>Only the faction leader can kick a co-leader.");
             return;
         }
@@ -74,31 +74,31 @@ public class CmdKick extends FCommand {
 
         // trigger the leave event (cancellable) [reason:kicked]
         FPlayerLeaveEvent event = new FPlayerLeaveEvent(you, you.getFaction(),
-                FPlayerLeaveEvent.PlayerLeaveReason.KICKED);
+            FPlayerLeaveEvent.PlayerLeaveReason.KICKED);
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled())
             return;
 
         // then make 'em pay (if applicable)
         if (!payForCommand(Conf.econCostKick, "to kick someone from the faction",
-                "for kicking someone from the faction"))
+            "for kicking someone from the faction"))
             return;
 
         yourFaction.addLog(senderIsConsole ? "console" : fme.getName(), "KICK", you.getName());
         yourFaction
-                .msg("%s<i> kicked %s<i> from the faction! :O", fme.describeTo(yourFaction, true),
-                        you.describeTo(yourFaction, true));
+            .msg("%s<i> kicked %s<i> from the faction! :O", fme.describeTo(yourFaction, true),
+                you.describeTo(yourFaction, true));
         you.msg("%s<i> kicked you from %s<i>! :O", fme.describeTo(you, true),
-                yourFaction.describeTo(you));
+            yourFaction.describeTo(you));
         if (yourFaction != myFaction) {
             fme.msg("<i>You kicked %s<i> from the faction %s<i>!", you.describeTo(fme),
-                    yourFaction.describeTo(fme));
+                yourFaction.describeTo(fme));
         }
 
         if (Conf.logFactionKick)
             Main.main.log(
-                    (senderIsConsole ? "A console command" : fme.getName()) + " kicked " + you.getName()
-                            + " from the faction: " + yourFaction.getTagPlain());
+                (senderIsConsole ? "A console command" : fme.getName()) + " kicked " + you.getName()
+                    + " from the faction: " + yourFaction.getTagPlain());
 
         if (you.getRole() == Rel.LEADER)
             yourFaction.promoteNewLeader();

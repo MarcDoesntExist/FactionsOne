@@ -12,11 +12,11 @@ import java.util.Map;
  */
 public class EM {
     public static Map<Class<? extends Entity>, EntityCollection<? extends Entity>> class2Entities =
-            new LinkedHashMap<Class<? extends Entity>, EntityCollection<? extends Entity>>();
+        new LinkedHashMap<Class<? extends Entity>, EntityCollection<? extends Entity>>();
 
     @SuppressWarnings("unchecked")
     public static <T extends Entity> EntityCollection<T> getEntitiesCollectionForEntityClass(
-            Class<T> entityClass) {
+        Class<T> entityClass) {
         return (EntityCollection<T>) class2Entities.get(entityClass);
     }
 
@@ -32,28 +32,28 @@ public class EM {
     @SuppressWarnings("unchecked")
     public static <T extends Entity> void attach(T entity) {
         EntityCollection<T> ec =
-                (EntityCollection<T>) getEntitiesCollectionForEntityClass(entity.getClass());
+            (EntityCollection<T>) getEntitiesCollectionForEntityClass(entity.getClass());
         ec.attach(entity);
     }
 
     @SuppressWarnings("unchecked")
     public static <T extends Entity> void detach(T entity) {
         EntityCollection<T> ec =
-                (EntityCollection<T>) getEntitiesCollectionForEntityClass(entity.getClass());
+            (EntityCollection<T>) getEntitiesCollectionForEntityClass(entity.getClass());
         ec.detach(entity);
     }
 
     @SuppressWarnings("unchecked")
     public static <T extends Entity> boolean attached(T entity) {
         EntityCollection<T> ec =
-                (EntityCollection<T>) getEntitiesCollectionForEntityClass(entity.getClass());
+            (EntityCollection<T>) getEntitiesCollectionForEntityClass(entity.getClass());
         return ec.attached(entity);
     }
 
     @SuppressWarnings("unchecked")
     public static <T extends Entity> boolean detached(T entity) {
         EntityCollection<T> ec =
-                (EntityCollection<T>) getEntitiesCollectionForEntityClass(entity.getClass());
+            (EntityCollection<T>) getEntitiesCollectionForEntityClass(entity.getClass());
         return ec.detached(entity);
     }
 

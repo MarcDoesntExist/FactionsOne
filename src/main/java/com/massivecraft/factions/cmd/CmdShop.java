@@ -31,10 +31,10 @@ public final class CmdShop extends FCommand {
         }
         if (!this.argIsSet(0)) {
             msg("<gold>Faction shop <gray>(points: <white>%s<gray>)",
-                    this.myFaction.getFactionPoints());
+                this.myFaction.getFactionPoints());
             for (FeatureConfig.ShopOffer offer : service.getConfig().shopOffers()) {
                 msg("<aqua>%s <gray>- %s x%s for %s points",
-                        offer.id(), offer.material(), offer.amount(), offer.cost());
+                    offer.id(), offer.material(), offer.amount(), offer.cost());
             }
             return;
         }

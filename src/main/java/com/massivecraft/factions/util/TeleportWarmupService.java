@@ -25,9 +25,6 @@ public final class TeleportWarmupService implements Listener {
     private final Main plugin;
     private final Map<UUID, Pending> pending = new HashMap<>();
 
-    private record Pending(int taskId, Runnable onCancel) {
-    }
-
     public TeleportWarmupService(Main plugin) {
         this.plugin = plugin;
     }
@@ -79,7 +76,7 @@ public final class TeleportWarmupService implements Listener {
         Location from = event.getFrom();
         Location to = event.getTo();
         if (to == null || from.getWorld() != to.getWorld() || from.getBlockX() != to.getBlockX()
-                || from.getBlockY() != to.getBlockY() || from.getBlockZ() != to.getBlockZ()) {
+            || from.getBlockY() != to.getBlockY() || from.getBlockZ() != to.getBlockZ()) {
             this.cancel(event.getPlayer().getUniqueId());
             event.getPlayer().sendMessage(this.plugin.txt.parse(Lang.teleportCancelled));
         }
@@ -95,5 +92,8 @@ public final class TeleportWarmupService implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         this.cancel(event.getPlayer().getUniqueId());
+    }
+
+    private record Pending(int taskId, Runnable onCancel) {
     }
 }

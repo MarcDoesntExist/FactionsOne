@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  * retried automatically; an operator decides with
  * {@code /f mail reconcile <id> refunded|retry-refund} after checking the
  * source account.
- *
+ * <p>
  * Extracted from {@link FactionMailbox}.
  *
  * @author MarcDoesntExists
@@ -38,13 +38,26 @@ final class MailboxExpiry {
         this.persist = persist;
     }
 
+    private static FactionMailbox.Claim withState(FactionMailbox.Claim claim,
+                                                  FactionMailbox.State state, long completedAt) {
+        return new FactionMailbox.Claim(claim.id(), claim.playerId(), claim.amount(),
+            claim.sourceAccount(), claim.source(), claim.reason(), claim.createdAt(),
+            claim.expiresAt(), state, claim.refunded(), completedAt);
+    }
+
+    private static FactionMailbox.Claim withRefunded(FactionMailbox.Claim claim, boolean refunded) {
+        return new FactionMailbox.Claim(claim.id(), claim.playerId(), claim.amount(),
+            claim.sourceAccount(), claim.source(), claim.reason(), claim.createdAt(),
+            claim.expiresAt(), claim.state(), refunded, claim.completedAt());
+    }
+
     int expireStale(Map<String, FactionMailbox.Claim> claims, FactionMailbox.Refund refund) {
         long now = this.clock.millis();
         int expired = 0;
         for (FactionMailbox.Claim claim : new ArrayList<>(claims.values())) {
             if (claim.state() == FactionMailbox.State.PENDING && claim.expiresAt() <= now) {
                 FactionMailbox.Claim updated = withState(claim,
-                        FactionMailbox.State.EXPIRED, now);
+                    FactionMailbox.State.EXPIRED, now);
                 claims.put(claim.id(), updated);
                 this.persist.getAsBoolean();
                 refundOne(claims, updated, refund);
@@ -80,11 +93,11 @@ final class MailboxExpiry {
         }
         if (refunded) {
             claims.put(claim.id(), withRefunded(withState(claim,
-                    FactionMailbox.State.EXPIRED, claim.completedAt()), true));
+                FactionMailbox.State.EXPIRED, claim.completedAt()), true));
         } else {
             this.idempotency.release(FactionMailbox.refundKey(claim.id()));
             claims.put(claim.id(), withState(claim, FactionMailbox.State.EXPIRED,
-                    claim.completedAt()));
+                claim.completedAt()));
         }
         return this.persist.getAsBoolean();
     }
@@ -127,11 +140,11 @@ final class MailboxExpiry {
     private void markUnknown(Map<String, FactionMailbox.Claim> claims,
                              FactionMailbox.Claim claim) {
         claims.put(claim.id(), withState(claim, FactionMailbox.State.REFUND_UNKNOWN,
-                claim.completedAt()));
+            claim.completedAt()));
         this.persist.getAsBoolean();
         this.logger.warning("Mailbox refund " + claim.id()
-                + " has an unknown status; use /f mail reconcile " + claim.id()
-                + " refunded|retry-refund.");
+            + " has an unknown status; use /f mail reconcile " + claim.id()
+            + " refunded|retry-refund.");
     }
 
     private void markRefunded(Map<String, FactionMailbox.Claim> claims,
@@ -139,18 +152,5 @@ final class MailboxExpiry {
         FactionMailbox.Claim latest = claims.getOrDefault(claim.id(), claim);
         claims.put(latest.id(), withRefunded(latest, true));
         this.persist.getAsBoolean();
-    }
-
-    private static FactionMailbox.Claim withState(FactionMailbox.Claim claim,
-                                                  FactionMailbox.State state, long completedAt) {
-        return new FactionMailbox.Claim(claim.id(), claim.playerId(), claim.amount(),
-                claim.sourceAccount(), claim.source(), claim.reason(), claim.createdAt(),
-                claim.expiresAt(), state, claim.refunded(), completedAt);
-    }
-
-    private static FactionMailbox.Claim withRefunded(FactionMailbox.Claim claim, boolean refunded) {
-        return new FactionMailbox.Claim(claim.id(), claim.playerId(), claim.amount(),
-                claim.sourceAccount(), claim.source(), claim.reason(), claim.createdAt(),
-                claim.expiresAt(), claim.state(), refunded, claim.completedAt());
     }
 }

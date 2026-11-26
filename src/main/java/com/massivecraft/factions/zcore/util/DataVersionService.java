@@ -37,8 +37,8 @@ public final class DataVersionService {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final DateTimeFormatter TIMESTAMP = DateTimeFormatter
-            .ofPattern("yyyyMMdd-HHmmss")
-            .withZone(ZoneOffset.UTC);
+        .ofPattern("yyyyMMdd-HHmmss")
+        .withZone(ZoneOffset.UTC);
 
     private DataVersionService() {
     }
@@ -58,8 +58,8 @@ public final class DataVersionService {
 
             if (storedVersion > Migrations.CURRENT_VERSION) {
                 logger.severe("Data folder uses version " + storedVersion
-                        + " but this build supports up to " + Migrations.CURRENT_VERSION
-                        + "; refusing to load it.");
+                    + " but this build supports up to " + Migrations.CURRENT_VERSION
+                    + "; refusing to load it.");
                 return false;
             }
 
@@ -70,7 +70,7 @@ public final class DataVersionService {
             if (hasExistingData(dataFolder)) {
                 Path snapshot = createSnapshot(dataFolder, storedVersion);
                 logger.info("Backed up unversioned data to "
-                        + snapshot.toAbsolutePath());
+                    + snapshot.toAbsolutePath());
             }
 
             Migrations.migrate(dataFolder, storedVersion, Migrations.CURRENT_VERSION);
@@ -78,7 +78,7 @@ public final class DataVersionService {
             return true;
         } catch (IOException | RuntimeException ex) {
             logger.log(Level.SEVERE,
-                    "Could not prepare the data folder; refusing to enable.", ex);
+                "Could not prepare the data folder; refusing to enable.", ex);
             return false;
         }
     }
@@ -94,7 +94,7 @@ public final class DataVersionService {
         }
         JsonElement version = parsed.getAsJsonObject().get("version");
         if (version == null || !version.isJsonPrimitive()
-                || !version.getAsJsonPrimitive().isNumber()) {
+            || !version.getAsJsonPrimitive().isNumber()) {
             throw new IOException("Data version file has no numeric version");
         }
 
@@ -113,7 +113,7 @@ public final class DataVersionService {
     private static boolean hasExistingData(Path dataFolder) throws IOException {
         try (Stream<Path> stream = Files.list(dataFolder)) {
             return stream.anyMatch(path -> Files.isRegularFile(path)
-                    && !path.getFileName().toString().equals(VERSION_FILE));
+                && !path.getFileName().toString().equals(VERSION_FILE));
         }
     }
 
@@ -129,21 +129,21 @@ public final class DataVersionService {
             List<Path> files;
             try (Stream<Path> stream = Files.list(dataFolder)) {
                 files = stream
-                        .filter(Files::isRegularFile)
-                        .filter(path -> !path.getFileName().toString().equals(VERSION_FILE))
-                        .toList();
+                    .filter(Files::isRegularFile)
+                    .filter(path -> !path.getFileName().toString().equals(VERSION_FILE))
+                    .toList();
             }
 
             for (Path file : files) {
                 Files.copy(file, temporary.resolve(file.getFileName()),
-                        StandardCopyOption.REPLACE_EXISTING);
+                    StandardCopyOption.REPLACE_EXISTING);
             }
 
             Files.writeString(temporary.resolve("MANIFEST.txt"),
-                    "FactionsOne data snapshot\n"
-                            + "created=" + Instant.now() + "\n"
-                            + "fromVersion=" + fromVersion + "\n"
-                            + "toVersion=" + Migrations.CURRENT_VERSION + "\n");
+                "FactionsOne data snapshot\n"
+                    + "created=" + Instant.now() + "\n"
+                    + "fromVersion=" + fromVersion + "\n"
+                    + "toVersion=" + Migrations.CURRENT_VERSION + "\n");
 
             moveDirectory(temporary, snapshot);
             return snapshot;

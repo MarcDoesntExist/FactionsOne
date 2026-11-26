@@ -61,7 +61,7 @@ public class CmdDemote extends FCommand {
             }
             myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.RECRUIT);
             myFaction.msg("%s<i> was demoted to being a recruit in your faction.",
-                    you.describeTo(myFaction, true));
+                you.describeTo(myFaction, true));
         } else if (you.getRole() == Rel.OFFICER) {
             if (!fme.getRole().isAtLeast(Rel.COLEADER)) {
                 msg("<b>You must be a co-leader or the leader to demote an officer to member.");
@@ -73,7 +73,7 @@ public class CmdDemote extends FCommand {
             }
             myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.MEMBER);
             myFaction.msg("%s<i> was demoted to being a member in your faction.",
-                    you.describeTo(myFaction, true));
+                you.describeTo(myFaction, true));
         } else if (you.getRole() == Rel.COLEADER) {
             if (!fme.getRole().isAtLeast(Rel.LEADER)) {
                 msg("<b>You must be the leader to demote a co-leader to officer.");
@@ -85,7 +85,7 @@ public class CmdDemote extends FCommand {
             }
             myFaction.addLog(fme.getName(), "ROLE", you.getName() + " -> " + Rel.OFFICER);
             myFaction.msg("%s<i> was demoted to being an officer in your faction.",
-                    you.describeTo(myFaction, true));
+                you.describeTo(myFaction, true));
         }
     }
 

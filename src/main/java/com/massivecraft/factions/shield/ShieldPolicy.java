@@ -30,7 +30,9 @@ public final class ShieldPolicy {
         return now + clamped * HOUR_MILLIS;
     }
 
-    /** Remaining whole minutes, rounded up; zero when the window is over. */
+    /**
+     * Remaining whole minutes, rounded up; zero when the window is over.
+     */
     public static long remainingMinutes(long until, long now) {
         if (!active(until, now)) {
             return 0;

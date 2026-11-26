@@ -16,25 +16,22 @@ import java.util.function.DoubleConsumer;
  */
 public final class BankService {
 
-    public enum Result {
-        SUCCESS, DISABLED, INVALID_AMOUNT, NOT_ENOUGH_MONEY, BACKEND_ERROR, FORBIDDEN, CANCELLED
-    }
     private static final double EPSILON = 1.0e-6;
     private static volatile BankService installed = new BankService(null);
-
     private final BankGateway gateway;
     private final BooleanSupplier enabled;
     private final DoubleConsumer universeMirror;
     private final AccountLocks locks = new AccountLocks();
     private final BankJournalSupport journalSupport;
-
     public BankService(BankGateway gateway) {
         this(gateway, () -> true, delta -> {
         }, null);
     }
+
     public BankService(BankGateway gateway, BooleanSupplier enabled, DoubleConsumer universeMirror) {
         this(gateway, enabled, universeMirror, null);
     }
+
     public BankService(BankGateway gateway, BooleanSupplier enabled, DoubleConsumer universeMirror,
                        BankJournal journal) {
         this.gateway = gateway;
@@ -42,35 +39,82 @@ public final class BankService {
         this.universeMirror = universeMirror;
         this.journalSupport = new BankJournalSupport(journal);
     }
+
     public static BankService get() {
         return installed;
     }
+
     public static void install(BankGateway gateway, BooleanSupplier enabled,
                                DoubleConsumer universeMirror) {
         installed = new BankService(gateway, enabled, universeMirror);
     }
+
     public static void install(BankGateway gateway, BooleanSupplier enabled,
                                DoubleConsumer universeMirror, BankJournal journal) {
         installed = new BankService(gateway, enabled, universeMirror, journal);
     }
+
+    private static void invalidateRanking() {
+        if (Main.main != null && Main.main.rankingService != null) {
+            Main.main.rankingService.invalidate();
+        }
+    }
+
+    private static String label(EconomyParticipator participant) {
+        if (participant instanceof Faction) {
+            return ((Faction) participant).getTagPlain();
+        }
+        return participant.getAccountId();
+    }
+
+    private static String nullSafe(String value) {
+        return value == null ? "" : value;
+    }
+
+    private static Long minorUnits(double amount) {
+        if (!Double.isFinite(amount)) {
+            return null;
+        }
+        long minor = Math.round(amount * 100.0);
+        return minor <= 0 ? null : minor;
+    }
+
+    private static double exactAmount(long minor) {
+        return minor / 100.0;
+    }
+
+    private static void logFailure(String fromAccount, String toAccount, double amount) {
+        String message = "Bank transfer failed and the refund did not complete: "
+            + String.format("%.2f", amount) + " from " + fromAccount + " to " + toAccount
+            + ". Reconcile these accounts manually.";
+        if (Main.main != null) {
+            Main.main.log(message);
+        }
+    }
+
     public boolean available() {
         return this.enabled.getAsBoolean() && this.gateway != null && this.gateway.available();
     }
+
     public String format(double amount) {
         return this.gateway == null ? String.format("%.2f", amount) : this.gateway.format(amount);
     }
+
     public boolean hasAccount(String accountId) {
         return available() && accountId != null && this.gateway.hasAccount(accountId);
     }
+
     public double balance(EconomyParticipator participant) {
         return participant == null ? 0.0 : balance(participant.getAccountId());
     }
+
     public double balance(String accountId) {
         if (!available() || accountId == null) {
             return 0.0;
         }
         return this.locks.withLockedAccount(accountId, () -> this.gateway.balance(accountId));
     }
+
     public Result transfer(EconomyParticipator invoker, EconomyParticipator from,
                            EconomyParticipator to, double amount, boolean notify) {
         if (!available()) {
@@ -98,20 +142,20 @@ public final class BankService {
 
         double exact = exactAmount(minor);
         Faction eventFaction = to instanceof Faction ? (Faction) to
-                : from instanceof Faction ? (Faction) from : null;
+            : from instanceof Faction ? (Faction) from : null;
         BankTransactionEvent.Type eventType = from instanceof Faction && to instanceof Faction
-                ? BankTransactionEvent.Type.TRANSFER
-                : to instanceof Faction ? BankTransactionEvent.Type.DEPOSIT
-                : BankTransactionEvent.Type.WITHDRAW;
+            ? BankTransactionEvent.Type.TRANSFER
+            : to instanceof Faction ? BankTransactionEvent.Type.DEPOSIT
+            : BankTransactionEvent.Type.WITHDRAW;
         if (!BankTransactionEvent.fire(eventFaction, eventType, exact,
-                BankJournalSupport.actor(invoker))) {
+            BankJournalSupport.actor(invoker))) {
             if (notify && invoker != null) {
                 invoker.msg(Lang.bankTransactionCancelled);
             }
             return Result.CANCELLED;
         }
         String journalId = this.journalSupport.start("transfer", fromAccount, toAccount, exact,
-                BankJournalSupport.actor(invoker), fromAccount, exact, "transfer");
+            BankJournalSupport.actor(invoker), fromAccount, exact, "transfer");
         if (this.journalSupport.failed(journalId)) {
             return Result.BACKEND_ERROR;
         }
@@ -144,13 +188,14 @@ public final class BankService {
         }
         if (result == Result.NOT_ENOUGH_MONEY && notify && invoker != null) {
             invoker.msg("<h>%s<b> can't afford to transfer <h>%s<b> to %s<b>.",
-                    from.describeTo(invoker, true), format(exact), to.describeTo(invoker));
+                from.describeTo(invoker, true), format(exact), to.describeTo(invoker));
         } else if (result == Result.BACKEND_ERROR && notify && invoker != null) {
             invoker.msg("Unable to transfer %s<b> to <h>%s<b> from <h>%s<b>.", format(exact),
-                    to.describeTo(invoker), from.describeTo(invoker, true));
+                to.describeTo(invoker), from.describeTo(invoker, true));
         }
         return result;
     }
+
     public boolean hasAtLeast(EconomyParticipator participant, double amount, String toDoThis) {
         if (!available()) {
             return true;
@@ -173,10 +218,11 @@ public final class BankService {
         }
         if (toDoThis != null && !toDoThis.isEmpty()) {
             participant.msg("<h>%s<i> can't afford <h>%s<i> %s.",
-                    participant.describeTo(participant, true), format(exact), toDoThis);
+                participant.describeTo(participant, true), format(exact), toDoThis);
         }
         return false;
     }
+
     public boolean modifyMoney(EconomyParticipator participant, double delta, String toDoThis,
                                String forDoingThis) {
         if (!available() || participant == null || !Double.isFinite(delta)) {
@@ -201,6 +247,7 @@ public final class BankService {
         }
         return debit(participant, exact, toDoThis, forDoingThis);
     }
+
     public boolean creditAccount(String accountId, double amount) {
         if (!available() || accountId == null) {
             return false;
@@ -211,6 +258,7 @@ public final class BankService {
         }
         return rawCredit(accountId, exactAmount(minor));
     }
+
     public boolean debitAccount(String accountId, double amount) {
         if (!available() || accountId == null) {
             return false;
@@ -221,12 +269,13 @@ public final class BankService {
         }
         return rawDebit(accountId, exactAmount(minor));
     }
+
     public boolean setAccountBalance(String accountId, double amount) {
         if (!available() || accountId == null || !Double.isFinite(amount) || amount < 0.0) {
             return false;
         }
         String journalId = this.journalSupport.start("set", accountId, accountId, amount, "system",
-                null, 0.0, "set");
+            null, 0.0, "set");
         if (this.journalSupport.failed(journalId)) {
             return false;
         }
@@ -244,22 +293,24 @@ public final class BankService {
         this.journalSupport.finish(journalId, success, "set");
         return success;
     }
+
     public boolean modifyUniverseMoney(String accountId, double delta) {
         if (!available() || accountId == null || accountId.isEmpty() || !Double.isFinite(delta)
-                || delta == 0.0 || !this.gateway.hasAccount(accountId)) {
+            || delta == 0.0 || !this.gateway.hasAccount(accountId)) {
             return false;
         }
         String journalId = this.journalSupport.start("universe", delta < 0 ? accountId : "",
-                delta < 0 ? "" : accountId, Math.abs(delta), "system", null, 0.0, "universe");
+            delta < 0 ? "" : accountId, Math.abs(delta), "system", null, 0.0, "universe");
         if (this.journalSupport.failed(journalId)) {
             return false;
         }
         boolean success = this.locks.withLockedAccount(accountId, () -> delta < 0
-                ? this.gateway.withdraw(accountId, -delta)
-                : this.gateway.deposit(accountId, delta));
+            ? this.gateway.withdraw(accountId, -delta)
+            : this.gateway.deposit(accountId, delta));
         this.journalSupport.finish(journalId, success, "universe");
         return success;
     }
+
     public int retryPendingCompensations() {
         BankJournal journal = this.journalSupport.journal();
         if (journal == null || !available()) {
@@ -270,8 +321,8 @@ public final class BankService {
             boolean credited;
             try {
                 credited = this.locks.withLockedAccount(entry.compensationAccount(),
-                        () -> this.gateway.deposit(entry.compensationAccount(),
-                                entry.compensationAmount()));
+                    () -> this.gateway.deposit(entry.compensationAccount(),
+                        entry.compensationAmount()));
             } catch (RuntimeException exception) {
                 if (Main.main != null) {
                     Main.main.log("Bank compensation for " + entry.id() + " failed: " + exception);
@@ -281,24 +332,27 @@ public final class BankService {
             if (credited) {
                 if (!journal.compensated(entry.id(), "retry") && Main.main != null) {
                     Main.main.log("Bank compensation " + entry.id()
-                            + " was credited but its journal record could not be written.");
+                        + " was credited but its journal record could not be written.");
                 }
                 repaired++;
             }
         }
         return repaired;
     }
+
     public BankJournal journal() {
         return this.journalSupport.journal();
     }
+
     public int pendingCompensations() {
         BankJournal journal = this.journalSupport.journal();
         return journal == null ? 0 : journal.pendingCompensationCount();
     }
+
     private boolean credit(EconomyParticipator participant, double exact, String forDoingThis) {
         String accountId = participant.getAccountId();
         String journalId = this.journalSupport.start("credit", "", accountId, exact, "system", null,
-                0.0, nullSafe(forDoingThis));
+            0.0, nullSafe(forDoingThis));
         if (this.journalSupport.failed(journalId)) {
             return false;
         }
@@ -307,7 +361,7 @@ public final class BankService {
         if (!success) {
             if (forDoingThis != null && !forDoingThis.isEmpty()) {
                 participant.msg("<h>%s<i> would have gained <h>%s<i> %s, but the deposit failed.",
-                        participant.describeTo(participant, true), format(exact), forDoingThis);
+                    participant.describeTo(participant, true), format(exact), forDoingThis);
             }
             return false;
         }
@@ -315,20 +369,21 @@ public final class BankService {
         this.universeMirror.accept(-exact);
         if (forDoingThis != null && !forDoingThis.isEmpty()) {
             participant.msg("<h>%s<i> gained <h>%s<i> %s.",
-                    participant.describeTo(participant, true), format(exact), forDoingThis);
+                participant.describeTo(participant, true), format(exact), forDoingThis);
         }
         if (participant instanceof Faction) {
             ((Faction) participant).addLog("bank", "BANK_CREDIT",
-                    format(exact) + " " + nullSafe(forDoingThis));
+                format(exact) + " " + nullSafe(forDoingThis));
         }
         invalidateRanking();
         return true;
     }
+
     private boolean debit(EconomyParticipator participant, double exact, String toDoThis,
                           String forDoingThis) {
         String accountId = participant.getAccountId();
         String journalId = this.journalSupport.start("debit", accountId, "", exact, "system", null,
-                0.0, nullSafe(forDoingThis));
+            0.0, nullSafe(forDoingThis));
         if (this.journalSupport.failed(journalId)) {
             return false;
         }
@@ -337,7 +392,7 @@ public final class BankService {
         if (!success) {
             if (toDoThis != null && !toDoThis.isEmpty()) {
                 participant.msg("<h>%s<i> can't afford <h>%s<i> %s.",
-                        participant.describeTo(participant, true), format(exact), toDoThis);
+                    participant.describeTo(participant, true), format(exact), toDoThis);
             }
             return false;
         }
@@ -345,22 +400,25 @@ public final class BankService {
         this.universeMirror.accept(exact);
         if (forDoingThis != null && !forDoingThis.isEmpty()) {
             participant.msg("<h>%s<i> lost <h>%s<i> %s.",
-                    participant.describeTo(participant, true), format(exact), forDoingThis);
+                participant.describeTo(participant, true), format(exact), forDoingThis);
         }
         if (participant instanceof Faction) {
             ((Faction) participant).addLog("bank", "BANK_DEBIT",
-                    format(exact) + " " + nullSafe(forDoingThis));
+                format(exact) + " " + nullSafe(forDoingThis));
         }
         invalidateRanking();
         return true;
     }
+
     private boolean rawCredit(String accountId, double exact) {
         return this.locks.withLockedAccount(accountId, () -> this.gateway.deposit(accountId, exact));
     }
+
     private boolean rawDebit(String accountId, double exact) {
         return this.locks.withLockedAccount(accountId,
-                () -> this.gateway.withdraw(accountId, exact));
+            () -> this.gateway.withdraw(accountId, exact));
     }
+
     private void audit(EconomyParticipator invoker, EconomyParticipator from,
                        EconomyParticipator to, double exact) {
         String actor = BankJournalSupport.actor(invoker);
@@ -372,36 +430,8 @@ public final class BankService {
         }
         invalidateRanking();
     }
-    private static void invalidateRanking() {
-        if (Main.main != null && Main.main.rankingService != null) {
-            Main.main.rankingService.invalidate();
-        }
-    }
-    private static String label(EconomyParticipator participant) {
-        if (participant instanceof Faction) {
-            return ((Faction) participant).getTagPlain();
-        }
-        return participant.getAccountId();
-    }
-    private static String nullSafe(String value) {
-        return value == null ? "" : value;
-    }
-    private static Long minorUnits(double amount) {
-        if (!Double.isFinite(amount)) {
-            return null;
-        }
-        long minor = Math.round(amount * 100.0);
-        return minor <= 0 ? null : minor;
-    }
-    private static double exactAmount(long minor) {
-        return minor / 100.0;
-    }
-    private static void logFailure(String fromAccount, String toAccount, double amount) {
-        String message = "Bank transfer failed and the refund did not complete: "
-                + String.format("%.2f", amount) + " from " + fromAccount + " to " + toAccount
-                + ". Reconcile these accounts manually.";
-        if (Main.main != null) {
-            Main.main.log(message);
-        }
+
+    public enum Result {
+        SUCCESS, DISABLED, INVALID_AMOUNT, NOT_ENOUGH_MONEY, BACKEND_ERROR, FORBIDDEN, CANCELLED
     }
 }

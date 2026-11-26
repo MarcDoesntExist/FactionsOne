@@ -43,7 +43,7 @@ public final class BankAccess {
         }
 
         invoker.msg("<h>%s<i> lacks permission to control <h>%s's<i> money.",
-                invoker.describeTo(invoker, true), target.describeTo(invoker));
+            invoker.describeTo(invoker, true), target.describeTo(invoker));
         return false;
     }
 }

@@ -37,23 +37,23 @@ public final class BankNotifier {
         if (invoker == null) {
             for (FPlayer recipient : recipients) {
                 recipient.msg("<h>%s<i> was transfered from <h>%s<i> to <h>%s<i>.",
-                        amount, from.describeTo(recipient), to.describeTo(recipient));
+                    amount, from.describeTo(recipient), to.describeTo(recipient));
             }
         } else if (invoker == from) {
             for (FPlayer recipient : recipients) {
                 recipient.msg("<h>%s<i> <h>gave %s<i> to <h>%s<i>.",
-                        from.describeTo(recipient, true), amount, to.describeTo(recipient));
+                    from.describeTo(recipient, true), amount, to.describeTo(recipient));
             }
         } else if (invoker == to) {
             for (FPlayer recipient : recipients) {
                 recipient.msg("<h>%s<i> <h>took %s<i> from <h>%s<i>.",
-                        to.describeTo(recipient, true), amount, from.describeTo(recipient));
+                    to.describeTo(recipient, true), amount, from.describeTo(recipient));
             }
         } else {
             for (FPlayer recipient : recipients) {
                 recipient.msg("<h>%s<i> transfered <h>%s<i> from <h>%s<i> to <h>%s<i>.",
-                        invoker.describeTo(recipient, true), amount,
-                        from.describeTo(recipient), to.describeTo(recipient));
+                    invoker.describeTo(recipient, true), amount,
+                    from.describeTo(recipient), to.describeTo(recipient));
             }
         }
     }

@@ -36,12 +36,12 @@ public final class MissionsMenu extends PagedMenu {
 
     private MissionsMenu(Player player, GuiConfig config, Faction faction) {
         super(player, config, config.title("menu.missions.title", Lang.missionTitle),
-                config.rows("menu.missions.rows", 6),
-                clicker -> {
-                    FPlayer fplayer = FPlayers.i.get(clicker);
-                    return fplayer != null && fplayer.getFaction() == faction
-                            && FPerm.MISSIONS.has(clicker, faction, false);
-                });
+            config.rows("menu.missions.rows", 6),
+            clicker -> {
+                FPlayer fplayer = FPlayers.i.get(clicker);
+                return fplayer != null && fplayer.getFaction() == faction
+                    && FPerm.MISSIONS.has(clicker, faction, false);
+            });
         this.faction = faction;
         this.build();
     }
@@ -67,36 +67,36 @@ public final class MissionsMenu extends PagedMenu {
                 List<Component> lore = new ArrayList<Component>();
                 lore.add(Main.main.txt.parse(Lang.missionLoreDescription, mission.description()));
                 lore.add(Main.main.txt.parse(Lang.missionLoreProgress, progress,
-                        mission.target()));
+                    mission.target()));
                 lore.add(Main.main.txt.parse(Lang.missionLoreReward,
-                        mission.rewardPoints()));
+                    mission.rewardPoints()));
                 lore.add(Main.main.txt.parse(Lang.missionLorePeriod,
-                        mission.period().name().toLowerCase(Locale.ROOT)));
+                    mission.period().name().toLowerCase(Locale.ROOT)));
                 if (mission.period() != FeatureConfig.MissionPeriod.NONE) {
                     long nextReset = service.nextResetAt(this.faction);
                     if (nextReset > 0) {
                         lore.add(Main.main.txt.parse(Lang.missionLoreNextReset,
-                                this.format.format(new Date(nextReset))));
+                            this.format.format(new Date(nextReset))));
                     }
                 }
                 if (mission.rewardMoney() > 0.0) {
                     lore.add(Main.main.txt.parse(Lang.missionLoreMoney,
-                            String.format(Locale.ROOT, "%.2f", mission.rewardMoney())));
+                        String.format(Locale.ROOT, "%.2f", mission.rewardMoney())));
                 }
                 if (!mission.rewardItems().isEmpty()) {
                     lore.add(Main.main.txt.parse(Lang.missionLoreItems,
-                            String.join(", ", mission.rewardItems())));
+                        String.join(", ", mission.rewardItems())));
                 }
                 lore.add(Main.main.txt.parse(done ? Lang.missionCompleted
-                        : progress >= mission.target() ? Lang.missionClick
-                        : Lang.missionNotReady));
+                    : progress >= mission.target() ? Lang.missionClick
+                    : Lang.missionNotReady));
                 meta.lore(lore);
                 icon.setItemMeta(meta);
             }
             entries.add(new MenuItem(icon, clicker -> {
                 FPlayer fplayer = FPlayers.i.get(clicker);
                 FeatureService.Result result = service.claimMission(fplayer, this.faction,
-                        mission.id());
+                    mission.id());
                 if (result == FeatureService.Result.SUCCESS) {
                     clicker.sendMessage(Main.main.txt.parse(Lang.missionClaimed));
                     new MissionsMenu(clicker, this.config).open();

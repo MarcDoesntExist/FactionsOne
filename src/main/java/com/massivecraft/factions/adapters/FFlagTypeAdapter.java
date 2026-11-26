@@ -18,7 +18,7 @@ import java.lang.reflect.Type;
 public class FFlagTypeAdapter implements JsonDeserializer<FFlag> {
     @Override
     public FFlag deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-            throws JsonParseException {
+        throws JsonParseException {
         if (json == null || json.isJsonNull() || !json.isJsonPrimitive()) {
             return null;
         }

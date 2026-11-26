@@ -88,15 +88,15 @@ public class CmdAccess extends FCommand {
         }
 
         msg("<i>%s has been %s<i> the access list for this territory.", target,
-                p.txt.parse(added ? "<lime>added to" : "<rose>removed from"));
+            p.txt.parse(added ? "<lime>added to" : "<rose>removed from"));
         showAccessList(territory, locFaction);
     }
 
     private void showAccessList(TerritoryAccess territory, Faction locFaction) {
         msg("<i>Host faction %s has %s<i> in this territory.", locFaction.getTagPlain(),
-                p.txt.parse(territory.isHostFactionAllowed() ?
-                        "<lime>normal access" :
-                        "<rose>restricted access"));
+            p.txt.parse(territory.isHostFactionAllowed() ?
+                "<lime>normal access" :
+                "<rose>restricted access"));
         String players = territory.fplayerList();
         String factions = territory.factionList();
 
@@ -112,4 +112,4 @@ public class CmdAccess extends FCommand {
 
             msg("Players with explicit access: " + players);
     }
-}	
+}

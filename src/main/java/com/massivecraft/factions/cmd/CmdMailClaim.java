@@ -62,8 +62,8 @@ public class CmdMailClaim extends FCommand {
 
     private FactionMailbox.Result claim(String claimId) {
         return Main.main.mailbox.claim(fme.getId(), claimId,
-                claim -> BankService.get().creditAccount(claim.playerId(), claim.amount()),
-                claim -> Main.main.refundMailboxClaim(claim));
+            claim -> BankService.get().creditAccount(claim.playerId(), claim.amount()),
+            claim -> Main.main.refundMailboxClaim(claim));
     }
 
     private void report(FactionMailbox.Result result, String claimId) {

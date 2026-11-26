@@ -64,7 +64,7 @@ public abstract class SpiralTask implements Runnable {
 
         // get this party started
         this.setTaskID(
-                Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(Main.main, this, 2, 2));
+            Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(Main.main, this, 2, 2));
     }
 
     private static long now() {
