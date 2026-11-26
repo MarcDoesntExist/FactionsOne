@@ -6,6 +6,8 @@ the project uses semantic versioning.
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-11-26
+
 ### Fixed
 
 - Claim values refresh within a second when hoppers move items into or out of
