@@ -7,6 +7,7 @@ import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Rel;
 import com.massivecraft.factions.util.MiscUtil;
 import com.massivecraft.factions.zcore.Lang;
+import io.papermc.paper.event.entity.EntityMoveEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -192,6 +193,27 @@ public class FactionsEntityListener implements Listener {
         }
         FFlag explosionFlag = entity instanceof TNTPrimed ? FFlag.TNT : FFlag.EXPLOSIONS;
         return faction.getFlag(explosionFlag) && !faction.hasOfflineExplosionProtection();
+    }
+
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onEntityMove(EntityMoveEvent event) {
+        Entity entity = event.getEntity();
+        if (!Conf.monsters.contains(entity.getType()))
+            return;
+        if (!event.hasChangedBlock())
+            return;
+
+        FLocation from = new FLocation(event.getFrom());
+        FLocation to = new FLocation(event.getTo());
+        if (from.equals(to))
+            return;
+
+        Faction fromFaction = Board.getFactionAt(from);
+        Faction toFaction = Board.getFactionAt(to);
+        if (fromFaction == toFaction || toFaction.getFlag(FFlag.MONSTERS))
+            return;
+
+        event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.NORMAL)

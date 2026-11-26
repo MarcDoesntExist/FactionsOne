@@ -14,6 +14,9 @@ the project uses semantic versioning.
   clicked, so placing liquid across a claim boundary is rejected.
 - Sponge absorption is cancelled when it would change water in a different
   faction's territory, preventing cross-claim drainage.
+- Hostile monsters can no longer walk from wilderness into a claim whose
+  `monsters` flag is disabled; movement inside the same territory is left
+  untouched.
 
 ### Added
 
