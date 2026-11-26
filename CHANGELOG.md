@@ -8,6 +8,8 @@ the project uses semantic versioning.
 
 ### Fixed
 
+- `/f top value` refreshes immediately after a claim value scan instead of
+  waiting for the ranking cache, and reports when the metric is disabled.
 - Waterlogged TNT no longer bypasses the target faction's TNT flag, offline
   protection or shield when it breaks the six high-blast-resistance blocks.
 - Bucket empty/fill now checks the block actually changed, not only the block

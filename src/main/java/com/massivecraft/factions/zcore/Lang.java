@@ -164,6 +164,8 @@ public class Lang {
     public static final String topEmpty = "<i>No factions to rank yet.";
     public static final String topInvalidMetric =
             "<b>Unknown metric. Use power, land, members, bank, points or value.";
+    public static final String claimValueDisabled =
+            "<b>Claim value ranking is disabled in the configuration.";
     public static final String powerFactionBreakdown = "<i>Faction: <h>%d/%d <i>power from <h>%d<i> member(s) on <h>%d<i> claim(s); bonus/malus <h>%s<i>.";
     public static final String showState = "<a>Status: <i>%s <a>| <i>%s <a>| <i>%s";
     public static final String showRaidable = "raidable (claims exceed power)";

@@ -109,11 +109,13 @@ public final class ClaimValueService {
             return;
         }
         removeChunk(key(world, x, z));
+        invalidateRanking();
     }
 
     public void removeFaction(String factionId) {
         this.totals.removeFaction(factionId);
         this.chunkRefs.keySet().removeIf(key -> this.totals.factionOf(key) == null);
+        invalidateRanking();
     }
 
     public void requestFullScan() {
@@ -131,10 +133,15 @@ public final class ClaimValueService {
             enqueueAll();
         }
         int budget = Math.max(1, Conf.claimValueChunksPerTick);
+        boolean scanned = false;
         while (budget-- > 0 && !this.queue.isEmpty()) {
             ChunkRef ref = this.queue.poll();
             this.queued.remove(ref.key());
             scan(ref);
+            scanned = true;
+        }
+        if (scanned) {
+            invalidateRanking();
         }
     }
 
@@ -209,6 +216,12 @@ public final class ClaimValueService {
         this.totals.remove(key);
         this.chunkRefs.remove(key);
         this.queued.remove(key);
+    }
+
+    private void invalidateRanking() {
+        if (this.plugin.rankingService != null) {
+            this.plugin.rankingService.invalidate();
+        }
     }
 
     private static String key(String world, int x, int z) {

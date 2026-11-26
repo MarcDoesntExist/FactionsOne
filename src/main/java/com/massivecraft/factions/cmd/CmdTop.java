@@ -1,5 +1,6 @@
 package com.massivecraft.factions.cmd;
 
+import com.massivecraft.factions.Conf;
 import com.massivecraft.factions.Main;
 import com.massivecraft.factions.gui.TopMenu;
 import com.massivecraft.factions.integration.Econ;
@@ -38,10 +39,17 @@ public class CmdTop extends FCommand {
     public void perform() {
         String rawMetric = this.argAsString(0, "power");
         if ("menu".equalsIgnoreCase(rawMetric)) {
-            FactionRankEntry.Metric menuMetric = FactionRankEntry.Metric.parse(
-                    this.argAsString(1, "power"));
+            String rawMenuMetric = this.argAsString(1, "power");
+            FactionRankEntry.Metric menuMetric = FactionRankEntry.Metric.parse(rawMenuMetric);
+            if (menuMetric == null && rawMenuMetric.matches("\\d+")) {
+                menuMetric = FactionRankEntry.Metric.POWER;
+            }
             if (menuMetric == null) {
                 msg(Lang.topInvalidMetric);
+                return;
+            }
+            if (menuMetric == FactionRankEntry.Metric.VALUE && !Conf.claimValueEnabled) {
+                msg(Lang.claimValueDisabled);
                 return;
             }
             if (!(this.sender instanceof Player)) {
@@ -56,6 +64,10 @@ public class CmdTop extends FCommand {
         FactionRankEntry.Metric metric = FactionRankEntry.Metric.parse(rawMetric);
         if (metric == null) {
             msg(Lang.topInvalidMetric);
+            return;
+        }
+        if (metric == FactionRankEntry.Metric.VALUE && !Conf.claimValueEnabled) {
+            msg(Lang.claimValueDisabled);
             return;
         }
         this.print(metric, this.argAsInt(1, 10));
