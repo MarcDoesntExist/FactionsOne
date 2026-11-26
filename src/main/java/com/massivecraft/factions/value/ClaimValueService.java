@@ -38,7 +38,10 @@ import java.util.Set;
 public final class ClaimValueService {
 
     private final Main plugin;
+    private static final long DIRTY_THROTTLE_MS = 1000L;
+
     private final Map<String, ChunkRef> chunkRefs = new HashMap<String, ChunkRef>();
+    private final DirtyThrottle dirtyThrottle = new DirtyThrottle(DIRTY_THROTTLE_MS);
     private final ClaimValueTotals totals = new ClaimValueTotals();
     private final Deque<ChunkRef> queue = new ArrayDeque<ChunkRef>();
     private final Set<String> queued = new HashSet<String>();
@@ -65,6 +68,7 @@ public final class ClaimValueService {
         this.queue.clear();
         this.queued.clear();
         this.chunkRefs.clear();
+        this.dirtyThrottle.clear();
         this.totals.clear();
     }
 
@@ -81,6 +85,25 @@ public final class ClaimValueService {
         }
         markDirty(location.getWorld().getName(), location.getBlockX() >> 4,
                 location.getBlockZ() >> 4);
+    }
+
+    /**
+     * Marks a chunk dirty at most once per second. Container automation can
+     * fire many move events per tick; the queue already deduplicates, but this
+     * avoids rescanning the same chunk on every hopper cycle.
+     */
+    public void markDirtyThrottled(Location location) {
+        if (!Conf.claimValueEnabled || location == null || location.getWorld() == null) {
+            return;
+        }
+        String world = location.getWorld().getName();
+        int x = location.getBlockX() >> 4;
+        int z = location.getBlockZ() >> 4;
+        String key = key(world, x, z);
+        if (!this.dirtyThrottle.allow(key, System.currentTimeMillis())) {
+            return;
+        }
+        markDirty(world, x, z);
     }
 
     public void markDirty(String world, int x, int z) {

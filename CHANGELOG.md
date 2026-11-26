@@ -6,6 +6,11 @@ the project uses semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Claim values refresh within a second when hoppers move items into or out of
+  claimed containers, throttled to one scan per second per chunk.
+
 ## [1.6.0] - 2026-11-26
 
 ### Fixed
