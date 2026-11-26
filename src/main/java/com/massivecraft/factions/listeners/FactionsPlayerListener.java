@@ -1,7 +1,7 @@
 package com.massivecraft.factions.listeners;
 
 import com.massivecraft.factions.*;
-import com.massivecraft.factions.api.SkyAPI;
+import de.erethon.factionsone.api.FactionsAPI;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
@@ -218,7 +218,7 @@ public class FactionsPlayerListener implements Listener {
                 }
                 int count = attempt.increment();
                 if (count >= 10) {
-                    FPlayer me = SkyAPI.getFPlayer(uuid);
+                    FPlayer me = FactionsAPI.getFPlayer(uuid);
                     me.msg("<b>Ouch, that is starting to hurt. You should give it a rest.");
                     player.damage(NumberConversions.floor((double) count / 10));
                 }

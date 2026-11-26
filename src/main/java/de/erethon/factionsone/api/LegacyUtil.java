@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package com.massivecraft.factions.api;
+package de.erethon.factionsone.api;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -34,14 +34,15 @@ public class LegacyUtil {
 
     public static final Set<Material> DOORS = new HashSet<>();
     public static final Set<Material> MATERIALS_WITH_HIGH_BLAST_RESISTANCE = new HashSet<>();
-    public static String version = Bukkit.getMinecraftVersion();
+    public static String version = Bukkit.getServer() == null
+            ? "" : Bukkit.getMinecraftVersion();
     // This build targets Paper 26.3 (api-version 26.3). The pre-1.13 branches
     // below are kept only so the shared helper stays source-compatible.
     public static boolean is1_7 = false;
     public static boolean is1_8 = false;
     public static boolean is1_13 = true;
     public static final Material COMMAND_BLOCK =
-            Material.valueOf(is1_13 ? "COMMAND_BLOCK" : "COMMAND");
+            Material.valueOf("COMMAND_BLOCK");
     public static final Material LAVA = Material.valueOf(is1_13 ? "LAVA" : "STATIONARY_LAVA");
     public static final Material WATER = Material.valueOf(is1_13 ? "WATER" : "STATIONARY_WATER");
     public static final Material ENCHANTING_TABLE =

@@ -1,4 +1,4 @@
-package com.massivecraft.factions.api;
+package de.erethon.factionsone.api;
 
 import com.massivecraft.factions.Board;
 import com.massivecraft.factions.FLocation;
@@ -27,7 +27,7 @@ import java.util.UUID;
  * @author Daniel Saukel
  * @author MarcDoesntExists
  */
-public class SkyAPI {
+public class FactionsAPI {
 
     public static Faction getFaction(String id) {
         return id == null ? null : Factions.i.get(id);

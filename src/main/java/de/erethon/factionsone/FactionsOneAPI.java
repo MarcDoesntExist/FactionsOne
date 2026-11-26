@@ -21,7 +21,7 @@ package de.erethon.factionsone;
 import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.Faction;
-import com.massivecraft.factions.api.SkyAPI;
+import de.erethon.factionsone.api.FactionsAPI;
 
 import java.util.Set;
 import java.util.UUID;
@@ -29,7 +29,7 @@ import java.util.UUID;
 /**
  * API additions that are specific to FactionsOne.
  *
- * <p>Kept as a delegating facade over {@link SkyAPI} so that plugins compiled
+ * <p>Kept as a delegating facade over {@link FactionsAPI} so that plugins compiled
  * against the original FactionsOne API keep linking without changes.</p>
  *
  * @author Daniel Saukel
@@ -40,14 +40,14 @@ public class FactionsOneAPI {
      * @return All of the claims of the faction.
      */
     public static Set<FLocation> getFactionClaims(Faction faction) {
-        return SkyAPI.getFactionClaims(faction);
+        return FactionsAPI.getFactionClaims(faction);
     }
 
     /**
      * Unclaims all of the land of the faction.
      */
     public static void unclaimAll(Faction faction) {
-        SkyAPI.unclaimAll(faction);
+        FactionsAPI.unclaimAll(faction);
     }
 
     /**
@@ -55,7 +55,7 @@ public class FactionsOneAPI {
      * @return The FPlayer that has this UUID
      */
     public static FPlayer getFPlayer(UUID uuid) {
-        return SkyAPI.getFPlayer(uuid);
+        return FactionsAPI.getFPlayer(uuid);
     }
 
 }

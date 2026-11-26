@@ -7,7 +7,7 @@ import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.Factions;
 import com.massivecraft.factions.Main;
-import com.massivecraft.factions.api.SkyAPI;
+import de.erethon.factionsone.api.FactionsAPI;
 import com.massivecraft.factions.bank.BankService;
 import com.massivecraft.factions.bank.IdempotencyStore;
 import com.massivecraft.factions.event.FactionTaxCollectedEvent;
@@ -301,7 +301,7 @@ public final class FactionTaxService {
     }
 
     private void unclaimOne(Faction faction) {
-        Set<FLocation> claims = SkyAPI.getFactionClaims(faction);
+        Set<FLocation> claims = FactionsAPI.getFactionClaims(faction);
         if (claims.isEmpty()) {
             return;
         }

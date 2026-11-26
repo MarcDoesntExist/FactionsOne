@@ -5,7 +5,7 @@ import com.massivecraft.factions.FLocation;
 import com.massivecraft.factions.FPlayer;
 import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.Main;
-import com.massivecraft.factions.api.SkyAPI;
+import de.erethon.factionsone.api.FactionsAPI;
 import com.massivecraft.factions.zcore.Lang;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -89,7 +89,7 @@ public final class StuckService {
         FLocation best = null;
         double bestDistance = Double.MAX_VALUE;
         FLocation fallback = null;
-        for (FLocation claim : SkyAPI.getFactionClaims(faction)) {
+        for (FLocation claim : FactionsAPI.getFactionClaims(faction)) {
             if (fallback == null && claim.getWorld() != null) {
                 fallback = claim;
             }

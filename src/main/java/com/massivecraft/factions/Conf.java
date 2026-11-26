@@ -1,6 +1,6 @@
 package com.massivecraft.factions;
 
-import com.massivecraft.factions.api.LegacyUtil;
+import de.erethon.factionsone.api.LegacyUtil;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;

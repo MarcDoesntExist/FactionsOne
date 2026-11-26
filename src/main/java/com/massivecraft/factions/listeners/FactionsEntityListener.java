@@ -1,7 +1,7 @@
 package com.massivecraft.factions.listeners;
 
 import com.massivecraft.factions.*;
-import com.massivecraft.factions.api.LegacyUtil;
+import de.erethon.factionsone.api.LegacyUtil;
 import com.massivecraft.factions.event.PowerLossEvent;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.Rel;
