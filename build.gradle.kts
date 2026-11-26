@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "de.erethon"
-version = "1.6.3"
+version = "1.6.4"
 description = "FactionsOne (Factions) for Paper 26.3"
 
 repositories {

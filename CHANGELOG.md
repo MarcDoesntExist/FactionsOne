@@ -6,6 +6,15 @@ the project uses semantic versioning.
 
 ## [Unreleased]
 
+## [1.6.4] - 2026-11-26
+
+### Fixed
+
+- BlueMap 5.29 rejected every claim overlay refresh because the shape-marker
+  builder now requires its label before `build()`. The Factions layer is
+  created again, and a failed refresh logs the full stack trace instead of only
+  the exception name.
+
 ## [1.6.3] - 2026-11-26
 
 ### Fixed
