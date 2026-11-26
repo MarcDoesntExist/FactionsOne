@@ -75,6 +75,10 @@ public class CmdReload extends FCommand {
 
         Conf.migrateColeaderPermissions();
         Conf.migrateExtendedPermissions();
+        if (Main.main.claimValueService != null) {
+            // Prices or claim rules may have changed: rebuild the derived values.
+            Main.main.claimValueService.requestFullScan();
+        }
         Main.main.startFactionTaxTask(true);
         Main.main.startBankCompensationTask(true);
         Main.main.startMailboxExpiryTask(true);

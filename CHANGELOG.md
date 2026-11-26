@@ -6,6 +6,11 @@ the project uses semantic versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- `/f reload` schedules a fresh claim value scan so changed prices or
+  `claimValue*` settings apply without waiting for the periodic refresh.
+
 ## [1.6.2] - 2026-11-26
 
 ### Fixed
