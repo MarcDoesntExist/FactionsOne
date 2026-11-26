@@ -20,6 +20,12 @@ the project uses semantic versioning.
 
 ### Added
 
+- `/f top value` ranks factions by the value of spawners and container
+  contents inside their claims. Prices are configurable with
+  `claimValueSpawners`, `claimValueContainers` and `claimValueItems`; the scan
+  runs in small slices (`claimValueChunksPerTick`), refreshes dirty chunks after
+  claims, block changes and container closes, and `claimValueEnabled` turns the
+  metric off.
 - Betrayal rules for alliances: declaring war on an ally now requires setting
   the relation to neutral first, and attacking a former ally within
   `betrayalWindowSeconds` costs `betrayalPowerPenalty` power. Both values are

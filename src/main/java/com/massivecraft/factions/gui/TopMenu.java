@@ -52,6 +52,7 @@ public final class TopMenu extends PagedMenu {
             case LAND -> String.valueOf(entry.land());
             case MEMBERS -> String.valueOf(entry.members());
             case POINTS -> String.valueOf(entry.points());
+            case VALUE -> String.format(java.util.Locale.ROOT, "%.0f", entry.claimValue());
         };
     }
 }

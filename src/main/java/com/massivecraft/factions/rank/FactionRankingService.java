@@ -2,8 +2,10 @@ package com.massivecraft.factions.rank;
 
 import com.massivecraft.factions.Faction;
 import com.massivecraft.factions.Factions;
+import com.massivecraft.factions.Main;
 import com.massivecraft.factions.bank.BankService;
 import com.massivecraft.factions.struct.FFlag;
+import com.massivecraft.factions.value.ClaimValueService;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -68,6 +70,7 @@ public final class FactionRankingService {
 
     /** Live provider used by the plugin; separated so tests can inject rows. */
     public static List<FactionRankEntry> collectLive() {
+        ClaimValueService values = Main.main == null ? null : Main.main.claimValueService;
         List<FactionRankEntry> entries = new ArrayList<>();
         for (Faction faction : Factions.i.get()) {
             if (!faction.isNormal() || faction.getFlag(FFlag.PERMANENT)) {
@@ -80,7 +83,8 @@ public final class FactionRankingService {
                     faction.getLandRounded(),
                     faction.getFPlayers().size(),
                     BankService.get().balance(faction),
-                    faction.getFactionPoints()));
+                    faction.getFactionPoints(),
+                    values == null ? 0.0 : values.value(faction.getId())));
         }
         return entries;
     }

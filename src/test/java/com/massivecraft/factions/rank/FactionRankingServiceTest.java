@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FactionRankingServiceTest {
 
     private static FactionRankEntry entry(String tag, double power) {
-        return new FactionRankEntry(tag.toLowerCase(), tag, power, 0, 1, 0.0, 0);
+        return new FactionRankEntry(tag.toLowerCase(), tag, power, 0, 1, 0.0, 0, 0.0);
     }
 
     @Test

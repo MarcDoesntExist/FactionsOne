@@ -38,12 +38,18 @@ public class CmdTop extends FCommand {
     public void perform() {
         String rawMetric = this.argAsString(0, "power");
         if ("menu".equalsIgnoreCase(rawMetric)) {
-            if (!(this.sender instanceof Player)) {
-                this.print(FactionRankEntry.Metric.POWER, 10);
+            FactionRankEntry.Metric menuMetric = FactionRankEntry.Metric.parse(
+                    this.argAsString(1, "power"));
+            if (menuMetric == null) {
+                msg(Lang.topInvalidMetric);
                 return;
             }
-            new TopMenu(this.me, Main.main.guiConfig, FactionRankEntry.Metric.POWER,
-                    Main.main.rankingService.top(FactionRankEntry.Metric.POWER, 50)).open();
+            if (!(this.sender instanceof Player)) {
+                this.print(menuMetric, 10);
+                return;
+            }
+            new TopMenu(this.me, Main.main.guiConfig, menuMetric,
+                    Main.main.rankingService.top(menuMetric, 50)).open();
             return;
         }
 
@@ -75,6 +81,7 @@ public class CmdTop extends FCommand {
             case LAND -> String.valueOf(entry.land());
             case MEMBERS -> String.valueOf(entry.members());
             case POINTS -> String.valueOf(entry.points());
+            case VALUE -> String.format(Locale.ROOT, "%.0f", entry.claimValue());
         };
     }
 }

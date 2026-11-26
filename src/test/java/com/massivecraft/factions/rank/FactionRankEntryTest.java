@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class FactionRankEntryTest {
 
     private static FactionRankEntry entry(String tag, double power, int land) {
-        return new FactionRankEntry(tag.toLowerCase(), tag, power, land, 1, 0.0, 0);
+        return new FactionRankEntry(tag.toLowerCase(), tag, power, land, 1, 0.0, 0, 0.0);
     }
 
     @Test
@@ -47,11 +47,13 @@ class FactionRankEntryTest {
 
     @Test
     void metricValuesMatchTheirColumn() {
-        FactionRankEntry row = new FactionRankEntry("a", "Alpha", 12.5, 7, 3, 40.0, 9);
+        FactionRankEntry row = new FactionRankEntry("a", "Alpha", 12.5, 7, 3, 40.0, 9, 250.0);
         assertEquals(12.5, FactionRankEntry.Metric.POWER.value(row));
         assertEquals(7.0, FactionRankEntry.Metric.LAND.value(row));
         assertEquals(3.0, FactionRankEntry.Metric.MEMBERS.value(row));
         assertEquals(40.0, FactionRankEntry.Metric.BANK.value(row));
         assertEquals(9.0, FactionRankEntry.Metric.POINTS.value(row));
+        assertEquals(250.0, FactionRankEntry.Metric.VALUE.value(row));
+        assertEquals(FactionRankEntry.Metric.VALUE, FactionRankEntry.Metric.parse("value"));
     }
 }

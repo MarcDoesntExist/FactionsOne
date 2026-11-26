@@ -29,6 +29,8 @@ import com.massivecraft.factions.rank.FactionRankingService;
 import com.massivecraft.factions.shield.ShieldService;
 import com.massivecraft.factions.util.StuckService;
 import com.massivecraft.factions.util.TeleportWarmupService;
+import com.massivecraft.factions.value.ClaimValueListener;
+import com.massivecraft.factions.value.ClaimValueService;
 import com.massivecraft.factions.struct.FFlag;
 import com.massivecraft.factions.struct.FPerm;
 import com.massivecraft.factions.struct.Rel;
@@ -100,6 +102,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     public FlyService flyService;
     public ShieldService shieldService;
     public FactionRankingService rankingService;
+    public ClaimValueService claimValueService;
     public TeleportWarmupService teleportWarmupService;
     public StuckService stuckService;
     public TntBankService tntBankService;
@@ -181,6 +184,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         this.shieldService = new ShieldService(Clock.systemUTC());
         this.rankingService = new FactionRankingService(Clock.systemUTC(), Conf.rankingCacheSeconds,
                 FactionRankingService::collectLive);
+        this.claimValueService = new ClaimValueService(this);
         this.stuckService = new StuckService(this, this.teleportWarmupService);
         this.tntBankService = new TntBankService(this.featureService);
         Path storage = getDataFolder().toPath();
@@ -258,6 +262,10 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         getServer().getPluginManager().registerEvents(this.menuManager, this);
         getServer().getPluginManager().registerEvents(this.teleportWarmupService, this);
         getServer().getPluginManager().registerEvents(this.flyService, this);
+        getServer().getPluginManager().registerEvents(
+                new ClaimValueListener(this.claimValueService), this);
+
+        this.claimValueService.start();
 
         this.mapIntegration = new MapIntegration(this);
         this.mapIntegration.start();
@@ -281,6 +289,10 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
 
     @Override
     public void onDisable() {
+        if (this.claimValueService != null) {
+            this.claimValueService.close();
+            this.claimValueService = null;
+        }
         if (this.mapIntegration != null) {
             this.mapIntegration.close();
             this.mapIntegration = null;

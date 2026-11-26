@@ -9,7 +9,7 @@ import java.util.Locale;
  * @author MarcDoesntExists
  */
 public record FactionRankEntry(String id, String tag, double power, int land, int members,
-                               double bank, int points) {
+                               double bank, int points, double claimValue) {
 
     /** Sortable metrics exposed by {@code /f top}. */
     public enum Metric {
@@ -17,7 +17,8 @@ public record FactionRankEntry(String id, String tag, double power, int land, in
         LAND("land"),
         MEMBERS("members"),
         BANK("bank"),
-        POINTS("points");
+        POINTS("points"),
+        VALUE("value");
 
         private final String key;
 
@@ -36,6 +37,7 @@ public record FactionRankEntry(String id, String tag, double power, int land, in
                 case MEMBERS -> entry.members();
                 case BANK -> entry.bank();
                 case POINTS -> entry.points();
+                case VALUE -> entry.claimValue();
             };
         }
 

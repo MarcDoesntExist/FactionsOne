@@ -243,6 +243,16 @@ public class Conf {
     public static int shieldMaxHours = 168;
     // Ranking and exploration helpers
     public static int rankingCacheSeconds = 30;
+    // A6 claim value ranking: spawners and container contents inside claims.
+    // Values are keyed by the uppercase Bukkit enum name and are configurable.
+    public static boolean claimValueEnabled = true;
+    public static int claimValueChunksPerTick = 2;
+    public static long claimValueRefreshMinutes = 10L;
+    public static Map<String, Double> claimValueSpawners =
+            new LinkedHashMap<String, Double>();
+    public static Map<String, Double> claimValueContainers =
+            new LinkedHashMap<String, Double>();
+    public static Map<String, Double> claimValueItems = new LinkedHashMap<String, Double>();
     public static int nearDefaultRadiusChunks = 50;
     public static int nearMaxRadiusChunks = 200;
     public static int stuckWarmupSeconds = 3;
@@ -352,10 +362,70 @@ public class Conf {
         monsters.add(EntityType.WITCH);
         monsters.add(EntityType.WITHER);
         monsters.add(EntityType.ZOMBIE);
+
+        claimValueSpawners.put("ZOMBIE", 100.0);
+        claimValueSpawners.put("SKELETON", 100.0);
+        claimValueSpawners.put("BLAZE", 250.0);
+        claimValueSpawners.put("WITHER_SKELETON", 200.0);
+        claimValueSpawners.put("MAGMA_CUBE", 120.0);
+        claimValueSpawners.put("SPIDER", 80.0);
+        claimValueSpawners.put("CAVE_SPIDER", 80.0);
+        claimValueSpawners.put("ENDERMAN", 150.0);
+        claimValueSpawners.put("SILVERFISH", 60.0);
+        claimValueSpawners.put("GUARDIAN", 150.0);
+        claimValueSpawners.put("PIG", 40.0);
+        claimValueSpawners.put("COW", 40.0);
+        claimValueSpawners.put("SHEEP", 40.0);
+        claimValueSpawners.put("CHICKEN", 40.0);
+
+        claimValueContainers.put("CHEST", 5.0);
+        claimValueContainers.put("TRAPPED_CHEST", 5.0);
+        claimValueContainers.put("BARREL", 3.0);
+        claimValueContainers.put("SHULKER_BOX", 20.0);
+        claimValueContainers.put("HOPPER", 2.0);
+        claimValueContainers.put("DISPENSER", 2.0);
+        claimValueContainers.put("DROPPER", 2.0);
+        claimValueContainers.put("FURNACE", 1.0);
+        claimValueContainers.put("BLAST_FURNACE", 2.0);
+        claimValueContainers.put("SMOKER", 2.0);
+        claimValueContainers.put("BREWING_STAND", 3.0);
+        claimValueContainers.put("ENDER_CHEST", 50.0);
+
+        claimValueItems.put("DIAMOND", 5.0);
+        claimValueItems.put("EMERALD", 6.0);
+        claimValueItems.put("NETHERITE_INGOT", 40.0);
+        claimValueItems.put("NETHERITE_SCRAP", 10.0);
+        claimValueItems.put("ANCIENT_DEBRIS", 8.0);
+        claimValueItems.put("GOLD_INGOT", 2.0);
+        claimValueItems.put("IRON_INGOT", 1.0);
+        claimValueItems.put("GOLD_BLOCK", 18.0);
+        claimValueItems.put("IRON_BLOCK", 9.0);
+        claimValueItems.put("DIAMOND_BLOCK", 45.0);
+        claimValueItems.put("EMERALD_BLOCK", 54.0);
+        claimValueItems.put("NETHERITE_BLOCK", 360.0);
+        claimValueItems.put("ELYTRA", 250.0);
+        claimValueItems.put("TOTEM_OF_UNDYING", 150.0);
+        claimValueItems.put("ENCHANTED_GOLDEN_APPLE", 100.0);
+        claimValueItems.put("GOLDEN_APPLE", 20.0);
+        claimValueItems.put("BEACON", 500.0);
+        claimValueItems.put("NETHER_STAR", 400.0);
+        claimValueItems.put("SHULKER_SHELL", 30.0);
+        claimValueItems.put("BLAZE_ROD", 5.0);
+        claimValueItems.put("ENDER_PEARL", 2.0);
+        claimValueItems.put("GHAST_TEAR", 10.0);
     }
 
     public static void load() {
         Main.main.persist.loadOrSaveDefault(i, Conf.class, "conf");
+        if (claimValueSpawners == null) {
+            claimValueSpawners = new LinkedHashMap<String, Double>();
+        }
+        if (claimValueContainers == null) {
+            claimValueContainers = new LinkedHashMap<String, Double>();
+        }
+        if (claimValueItems == null) {
+            claimValueItems = new LinkedHashMap<String, Double>();
+        }
         if (factionPermDefaults != null) {
             factionPermDefaults.keySet().removeIf(Objects::isNull);
             factionPermDefaults.values().removeIf(Objects::isNull);
