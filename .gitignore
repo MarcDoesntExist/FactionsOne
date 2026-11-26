@@ -31,3 +31,6 @@
 
 # Runtime files
 /server.pid
+
+# Local helper scripts
+/scripts/
