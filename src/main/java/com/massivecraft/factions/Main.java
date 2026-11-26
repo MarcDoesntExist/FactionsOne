@@ -13,6 +13,7 @@ import com.massivecraft.factions.bank.IdempotencyStore;
 import com.massivecraft.factions.bank.StorageRetention;
 import com.massivecraft.factions.mailbox.FactionMailbox;
 import com.massivecraft.factions.mailbox.MailboxExpiryTask;
+import com.massivecraft.factions.cmd.FCmdAdminRoot;
 import com.massivecraft.factions.cmd.FCmdRoot;
 import com.massivecraft.factions.economy.FactionTaxService;
 import com.massivecraft.factions.economy.TaxPeriodJournal;
@@ -86,6 +87,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
     public final FactionsServerListener serverListener;
     // Commands
     public FCmdRoot cmdBase;
+    public FCmdAdminRoot cmdAdminBase;
     public CmdAutoHelp cmdAutoHelp;
     // GUI
     public GuiConfig guiConfig;
@@ -192,6 +194,7 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         // Add Base Commands
         this.cmdAutoHelp = new CmdAutoHelp();
         this.cmdBase = new FCmdRoot();
+        this.cmdAdminBase = new FCmdAdminRoot();
 
         // Keep the existing plugin.yml registration, but wire suggestions into
         // the same FCommand tree used for execution.
@@ -199,6 +202,11 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         if (command != null) {
             command.setExecutor(this);
             command.setTabCompleter(this);
+        }
+        PluginCommand adminCommand = this.getCommand("fa");
+        if (adminCommand != null) {
+            adminCommand.setExecutor(this);
+            adminCommand.setTabCompleter(this);
         }
         for (String chatCommand : new String[]{"fc", "ac"}) {
             PluginCommand root = this.getCommand(chatCommand);
@@ -452,6 +460,10 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
                     new ArrayList<String>(Arrays.asList(split)));
             return true;
         }
+        if ("fa".equalsIgnoreCase(command.getName())) {
+            this.cmdAdminBase.execute(sender, new ArrayList<String>(Arrays.asList(split)));
+            return true;
+        }
         this.cmdBase.execute(sender, new ArrayList<String>(Arrays.asList(split)));
         return true;
     }
@@ -470,6 +482,9 @@ public class Main extends MPlugin implements CommandExecutor, TabCompleter {
         }
         if ("ac".equalsIgnoreCase(command.getName())) {
             return this.cmdBase.cmdChat.cmdChatAlly.tabComplete(sender, tokens);
+        }
+        if ("fa".equalsIgnoreCase(command.getName())) {
+            return this.cmdAdminBase.tabComplete(sender, tokens);
         }
         return this.cmdBase.tabComplete(sender, tokens);
     }

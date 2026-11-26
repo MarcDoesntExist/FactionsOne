@@ -8,6 +8,9 @@ commands:
   factions:
     description: The Factions base command
     aliases: [ f ]
+  fa:
+    description: The Factions admin command
+    aliases: [ fadmin ]
   fc:
     description: Send a message to your faction
     aliases: [ fchat ]

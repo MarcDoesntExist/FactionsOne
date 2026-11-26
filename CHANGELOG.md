@@ -20,6 +20,9 @@ the project uses semantic versioning.
 
 ### Added
 
+- Separate `/fa` namespace for server administration commands (`bypass`/`admin`,
+  `reload`, `saveall`, `config`, `powerboost`, `disband`, `kick`, `join`), with
+  its own help and tab completion; `/f` remains unchanged.
 - Optional BlueMap claim overlay (`mapEnabled`, default `false`): claimed
   chunks are merged into rectangles and refreshed after claim, unclaim and
   relation changes. Colors follow the relation to `mapReferenceFaction` when
